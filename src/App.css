@@ -44,6 +44,7 @@
   width: 25vw;
   color: #000;
   height: 100%;
+  max-height: 60vh;
   text-align: left;
   -webkit-user-select: none;
   -khtml-user-select: none;

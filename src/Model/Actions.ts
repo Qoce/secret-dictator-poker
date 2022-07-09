@@ -3,15 +3,17 @@ import Player from "./../Interface/Player"
 import Players from "./Players"
 import Phase from "../Interface/Phase"
 import Game from "./Game"
+import Rng from "./Rng"
 
 let actions = new Map<Phase, (args: ActionArgs) => boolean>() //{[key in Phase]: (args: ActionArgs) => boolean}
 let actionHistory : ActionArgs[] = []
 let actionLog : (string | JSX.Element)[][][] = [[]]
+let actionIndex = 0
 
 export default {
-  onAction(){
-
-  },
+  startingSeed: Rng.nextInt(1e9),
+  onAction(){},
+  onReset: [] as (() => void)[],
   register(phase: Phase, action: (args: ActionArgs) => boolean){
     if(phase in actions) throw 'Error: Action for ' + phase + ' already registered!'
     actions.set(phase, action)
@@ -19,35 +21,58 @@ export default {
   fire(args: ActionArgs){
     let player = Players.get(args.p)
     let target = args.t && Players.get(args.t)
+
+    //Rollback to where this action differs from the log and remove all actions after it
+    if(actionIndex < actionHistory.length){
+      actionHistory.splice(actionIndex)
+      actionLog.splice(actionIndex + 1)
+      this.resimulate()
+    }
     if(player.canAct && (!target || target.targetable)) {
       actionLog.push([])
       actionHistory.push(args)
       let am = actions.get(Game.getPhase())
       if(am) am(args)
+      actionIndex++
     }
     this.onAction()
-    //TODO: force-rerender
   },
   clearHistory(){
     actionHistory = []
-    actionLog = []
+    actionLog = [[]]
+    actionIndex = 0
   },
-  resimulate(){
-    //TODO: reset game / rewind
-    for(let ev of actionHistory){
+  resimulate(upTo : number = actionHistory.length){
+    Rng.setSeed(this.startingSeed)
+    Players.reset()
+    this.onReset.forEach(f => f())
+
+    Game.setPhase(Phase.poker)
+    for(let i in actionHistory){
+      if(+i >= upTo) {
+        actionIndex = upTo
+        actionLog.splice(upTo + 1)
+        if(upTo === 0) actionLog = [[]]
+        break
+      }
       let am = actions.get(Game.getPhase())
-      if(am) am(ev)
+      if(am) am(actionHistory[i])
     }
-    //TODO: force-rerender
+    this.onAction()
+  },
+  reset(){
+    this.clearHistory()
+    this.resimulate()
   },
   log(emts : (string | JSX.Element)[] | (string | JSX.Element), params : {viewFunc?: (p: Player) => boolean, visibile?: boolean} = 
     {viewFunc: (p: Player) => true, visibile: true}){
     if(!Array.isArray(emts)) emts = [emts]
-    actionLog[actionLog.length - 1].push(emts)
+    if(actionIndex < actionHistory.length || actionHistory.length == 0) 
+      actionLog[actionLog.length - 1].push(emts)
     console.log(emts)
   },
   getActionLog(){
     console.log(actionLog)
     return actionLog
-  }
+  },
 }

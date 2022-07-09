@@ -6,4 +6,5 @@ export default interface PokerHand {
   stack: number
   couldWin: number
   net: number
+  checked: boolean
 }

@@ -4,6 +4,7 @@ import Player from './RenderPlayer'
 import Players from '../Model/Players'
 import Phase from '../Interface/Phase'
 import RenderPhase from "./RenderPhase"
+import Settings from "../Model/Settings"
 
 import SDHeader from "./SDHeader"
 import {useCallback, useState} from 'react'
@@ -13,7 +14,10 @@ import Actions from '../Model/Actions'
 require("./RenderPoker")
 require("./RenderSDBottom")
 
-Game.setPhase(Phase.poker)
+Players.reset()
+Actions.reset()
+
+
 
 export default function SDP(){
   let sel : undefined | number
@@ -23,7 +27,12 @@ export default function SDP(){
   //forces the component to rerender when an action occurs
   const [turn,forceUpdate] = useState(0)
 
-  Actions.onAction = useCallback(() => forceUpdate(turn + 1), [turn])
+  Actions.onAction = useCallback(() => {forceUpdate(turn + 1)
+    if(Settings.debug) {
+      let n = Players.next(user, p => p.canAct)
+      if(n !== false) setUser(n)
+    }
+  }, [turn, user])
 
   //if(!RenderPhase[Game.getPhase()]) throw "error: phase " + Game.getPhase() + " cannot be rendered."
   //let RP = RenderPhase[Game.getPhase()] as (args: RenderPhaseArgs) => JSX.Element | undefined
@@ -38,6 +47,7 @@ export default function SDP(){
 
 
   return (
+  <div className = "center">
   <div className = "wrapper">
     <div className = 'inLineRow'>
       <SDHeader/>
@@ -55,6 +65,7 @@ export default function SDP(){
       </div>
     </div>
     <ActionLog />
+  </div>
   </div>)
 }
 

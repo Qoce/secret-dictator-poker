@@ -9,6 +9,9 @@ import {useState} from 'react'
 import Actions from '../Model/Actions'
 import dealer from '../Model/Poker'
 import {getCardString} from './PokerUtils'
+import Game from '../Model/Game'
+import phase from '../Interface/Phase'
+import { cp } from 'fs'
 
 function getTeamString(args: {u: Player, p: Player}){
   let showHitler = args.u.role.team !== Team.liberal
@@ -118,6 +121,11 @@ function getBoldness(p : Player){
   return "normal"
 }
 
+function getTextColor(p: Player){
+  if(p.bank > 0 && (Game.getPhase() !== phase.poker || !p.curHand.folded)) return "black"
+  return "gray"
+}
+
 interface PlayerRenderArgs{
   p: Player
   u: Player
@@ -132,7 +140,7 @@ export default function RenderPlayer(args : PlayerRenderArgs){
   const [hovered, setHovered] = useState(false)
   return <div className = "board-row" 
     style = {{textDecoration: getDecoration(p), fontWeight: getBoldness(p), 
-      backgroundColor: bgc(args.u === args.p, hovered, selected)}}
+      backgroundColor: bgc(args.u === args.p, hovered, selected), color: getTextColor(p)}}
     onMouseEnter = {() => {if(p.targetable && args.u.canAct) setHovered(true)}}
     onMouseLeave = {() => {if(p.targetable && args.u.canAct) setHovered(false)}}
     onClick = {() => {

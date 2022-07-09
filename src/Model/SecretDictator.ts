@@ -40,7 +40,6 @@ export function initSD(){
   let teams : number[] = []
   for(let _ in players) teams.push(Team.liberal)
 
-  let dictIndex = RNG.nextInt(teams.length)
   teams[RNG.nextInt(teams.length)] = Team.dictator
   for(let i = 0; i < nFascist; i++){
     let j = RNG.nextInt(teams.length)

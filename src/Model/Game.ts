@@ -16,5 +16,8 @@ export default {
   setPhaseListener(phase: Phase, listener: () => void){
     if(phase in phaseListeners) throw "error: phase listener " + phase + " set twice!"
     else phaseListeners.set(phase, listener)
+  },
+  reset(){
+    p = Phase.poker
   }
 }

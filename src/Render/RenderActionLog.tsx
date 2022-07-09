@@ -7,7 +7,7 @@ export default function ActionLog(){
   return <div className = 'scroller'>
     <div>
     {
-      Actions.getActionLog().map(a => <Hoverable actionIndex = {0}>{a.map(a => <div>{a}</div>)}</Hoverable>)
+      Actions.getActionLog().map((a,i) => <Hoverable actionIndex = {i}>{a.map((a) => <div>{a}</div>)}</Hoverable>)
     }
     </div>
   </div>
@@ -15,7 +15,8 @@ export default function ActionLog(){
 
 function Hoverable(props: {actionIndex: number, children: any}){
   const [hover,setHover] = useState(false)
-  return <div onMouseEnter = {() => setHover(true)} onMouseLeave = {() => setHover(false)} style = {{textDecoration: hover ? "underline" : ""}}>
+  return <div onMouseEnter = {() => setHover(true)} onMouseLeave = {() => setHover(false)} style = {{textDecoration: hover ? "underline" : ""}}
+  onClick = {() => Actions.resimulate(props.actionIndex)}>
     
     {props.children}
   </div>

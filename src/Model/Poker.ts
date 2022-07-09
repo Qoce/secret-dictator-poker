@@ -6,6 +6,8 @@ import {getCardString} from '../Render/PokerUtils'
 import Phase from "../Interface/Phase"
 import ActionArgs from "../Interface/Action"
 import Game from "./Game"
+import Settings from "./Settings"
+import Rng from "./Rng"
 
 //Hand types:
 //Card represented as 0 to 51
@@ -103,8 +105,8 @@ function getRandomDeck() : number[]{
     sortedDeck.push(i)
   }
   for(let i = 0; i < 1000; i++){
-    let a = Math.floor(Math.random() * 52)
-    let b = Math.floor(Math.random() * 52)
+    let a = Math.floor(Rng.nextInt(52))
+    let b = Math.floor(Rng.nextInt(52))
     let temp = sortedDeck[a]
     sortedDeck[a] = sortedDeck[b]
     sortedDeck[b] = temp
@@ -115,7 +117,7 @@ function getRandomDeck() : number[]{
 type Street = "Preflop" | "Flop" | "Turn" | "River"
 
 let dealer: number = 0
-let forced: Player
+let forced: Player | false
 //decision maker
 let dm: number | false = 0
 let pot: number 
@@ -126,8 +128,20 @@ let center: number[]
 let deck: number[]
 let leftOver: number = 0
 
-let BB = 50
+let BB = Settings.BB
 
+
+Actions.onReset.push(() => {
+  dealer = 0
+  dm = 0
+  pot = 0
+  maxAmtIn = 0
+  minRaise = 0
+  street = "Preflop"
+  center = []
+  deck = getRandomDeck()
+  leftOver = 0
+})
 
 
 function startHand() : void{
@@ -257,6 +271,7 @@ function endHand(){
 function dealCenter(n: number){
   for(let i = 0; i < n; i++) center.push(deck.pop() as number)
   Actions.log([`${street}: `, ...center.slice(center.length - n).map(getCardString)])
+
 }
 
 function preparePlayer(p : Player) : void{
@@ -268,6 +283,7 @@ function preparePlayer(p : Player) : void{
     stack: p.bank,
     couldWin: 0,
     net: 0,
+    checked: false
   }
 }
 
@@ -279,7 +295,7 @@ function updateDealer() : void{
 
 function guaranteedDecision(p : Player) : boolean{
   let h = p.curHand
-  return !h.folded && h.stack > 0 && (h.amtIn < maxAmtIn || forced.curHand === h)
+  return !h.folded && h.stack > 0 && (h.amtIn < maxAmtIn || (forced && forced.curHand === h) || (maxAmtIn === 0 && !h.checked))
 }
 
 function couldContinueBetting(p: Player): boolean{
@@ -312,29 +328,31 @@ function bet(p : Player, amt : number, f = false) : boolean {
     Actions.log(p.name + " calls")
   }
   else{
+    p.curHand.checked = true
     Actions.log(p.name + " checks")
   }
   if(f) forced = p
+  else if(forced === p) forced = false
   dm = setDM(Players.next(dm, guaranteedDecision))
   if(dm === false){
     Players.applyLiving(p => {
-      p.curHand.equity += p.curHand.amtIn
+      pot += p.curHand.amtIn
       p.curHand.amtIn = 0
+    })
+    Players.applyLiving(p => {
+      p.curHand.equity += p.curHand.amtIn
+      p.curHand.checked = false
     }, p => !p.curHand.folded)
     if(Players.filter(couldContinueBetting).length <= 1){
       setDM(false)
       while(street !== "River") nextStreet()
     }
     else{
-      setDM(Players.next(dealer, couldContinueBetting))
+      setDM(Players.next(dealer, p => !p.curHand.folded))
+      console.log(Players.get(+dm).name + " is the decision maker")
+      console.log(Players.get(+dm).canAct)
     }
     nextStreet()
-  }
-  else{
-    Players.apply(p => {
-      if(dm !== false) p.canAct = p === Players.get(dm)
-      else throw Error("No player found to make decision in poker")
-    })
   }
   return true
 }
@@ -345,6 +363,7 @@ Actions.register(Phase.poker, (args: ActionArgs) => {
   if(args.v === undefined) return false
   return bet(Players.get(args.p), args.v, false)
 })
+
 
 export default function getDealer(){
   return {

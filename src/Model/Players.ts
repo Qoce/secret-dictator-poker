@@ -1,5 +1,6 @@
 import { Team } from "../Interface/Role"
 import Player from "./../Interface/Player"
+import Settings from "./Settings"
 
 class Players{
   players: Player[]
@@ -9,9 +10,12 @@ class Players{
     for(let i = 0; i < 5; i++) this.makeFakePlayer(i)
   }
   makeFakePlayer(i : number){
+    this.initPlayer("debug " + i)
+  }
+  initPlayer(n : string){
     this.players.push({
-      bank: 5000,
-      name: "debug " + i,
+      bank: Settings.startingBank,
+      name: n,
       canAct: false,
       targetable: false,
       curHand:{
@@ -21,7 +25,8 @@ class Players{
         hand: [],
         stack: 0,
         couldWin: 0,
-        net: 0
+        net: 0,
+        checked: false,
       },
       role:{
         team: Team.liberal,
@@ -31,6 +36,31 @@ class Players{
         vote: undefined,
       }
     })
+  }
+  resetPlayer(p : Player){
+    p.canAct = false
+    p.targetable = false
+    p.bank = Settings.startingBank
+    p.curHand = {
+      equity: 0,
+      amtIn: 0,
+      folded: false,
+      hand: [],
+      stack: 0,
+      couldWin: 0,
+      net: 0,
+      checked: false,
+    }
+    p.role = {
+      team: Team.liberal,
+      vision: [],
+      influence: 0,
+      spent: 0,
+      vote: undefined,
+    }
+  }
+  reset(){
+    this.apply(this.resetPlayer)
   }
   add(p : Player){
     this.players.push(p)
@@ -57,7 +87,8 @@ class Players{
     return this.players[i]
   }
   setActive(condition : ((p: Player) => boolean) | number | boolean = _ => true){
-    if(typeof condition === "number") condition = (p: Player) => this.get(condition as number) === p
+    let v = condition
+    if(typeof condition === "number") condition = (p: Player) => this.get(+v) === p
     else if(typeof condition === "boolean") condition = _ => condition as boolean
     let f = condition as (p: Player) => boolean
     this.apply(p => p.canAct = true, f)
@@ -66,7 +97,7 @@ class Players{
   filter(condition: (p: Player) => boolean){
     return this.players.filter(condition)
   }
-  all(condition: (p: Player) => boolean){
+  all(condition: (p: Player) => boolean){                              
     return this.filter(condition).length === this.players.length
   }
   allLiving(condition: (p: Player) => boolean){
@@ -77,4 +108,5 @@ class Players{
     return this.allLiving(p => !p.canAct)
   }
 }
+
 export default new Players()
