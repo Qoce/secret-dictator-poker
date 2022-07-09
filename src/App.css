@@ -1,3 +1,8 @@
+.font-loader {
+  font-family: 'UnifrakturCook';
+}
+
+
 .App {
   text-align: center;
 }
@@ -27,6 +32,173 @@
 .App-link {
   color: #61dafb;
 }
+
+.inLineRow{
+  display: table-cell;
+  padding: 1em;
+
+}
+
+.scroller > div{
+  overflow: scroll;
+  width: 25vw;
+  color: #000;
+  height: 100%;
+  text-align: left;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+.wrapper {
+  display: flex;
+}
+
+.board-row > div {
+  white-space: nowrap;
+  display: inline;
+}
+
+.board-row:after {
+  clear: both;
+  content: "";
+  display: table;
+}
+
+
+.name {
+  border: 1px solid #999;
+  float: left;
+  font-size: 27px;
+  /*font-weight: bold;*/
+  line-height: 39px;
+  height: 39px;
+  margin-right: -1px;
+  margin-top: -1px;
+  padding: 0;
+  text-align: center;
+  width: 384px;
+  font-family: UnifrakturCook;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+.textInputBig {
+  font-size: 27px;
+  font-weight: bold;
+  line-height: 39px;
+  height: 39px;
+  margin-right: -1px;
+  margin-top: -1px;
+  padding: 0;
+  text-align: center;
+  width: 384px;
+  font-family: UnifrakturCook;
+}
+
+.textInput {
+  font-family: UnifrakturCook;
+  margin-top: 5px;
+  margin-left: 5px;
+}
+
+.button {
+  font-size: 18px;
+  font-weight: bold;
+  line-height: 18px;
+  height: 26px;
+  margin-right: -1px;
+  margin-top: -1px;
+  margin-left: 5px;
+  margin-top: 5px;
+  padding: 0px;
+  text-align: center;
+  font-family: UnifrakturCook;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+.square {
+  border: 1px solid #999;
+  float: left;
+  font-size: 27px;
+  /*font-weight: bold;*/
+  line-height: 39px;
+  height: 39px;
+  margin-right: -1px;
+  margin-top: -1px;
+  padding: 0;
+  text-align: center;
+  width: 39px;
+  font-family: UnifrakturCook;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+.cards {
+  border: 1px solid #999;
+  float: left;
+  font-size: 27px;
+  /*font-weight: bold;*/
+  line-height: 39px;
+  height: 39px;
+  margin-right: -1px;
+  margin-top: -1px;
+  padding: 0;
+  text-align: center;
+  width: 102px;
+  font-family: UnifrakturCook;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+.bonus {
+  float: left;
+  font-size: 27px;
+  font-weight: bold;
+  line-height: 39px;
+  height: 39px;
+  margin-right: -1px;
+  margin-top: -1px;
+  margin-left: 12px;
+  padding: 0;
+  text-align: left;
+  width: 102px;
+  font-family: UnifrakturCook;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+.center {
+  display: flex; 
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
 
 @keyframes App-logo-spin {
   from {
