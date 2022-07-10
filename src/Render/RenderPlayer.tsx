@@ -5,15 +5,15 @@ import {useState} from 'react'
 import Actions from '../Model/Actions'
 import dealer from '../Model/Poker'
 import Game from '../Model/Game'
-import phase from '../Interface/Phase'
+import Phase from '../Interface/Phase'
 import Player from '../Interface/Player'
 import Players from '../Model/Players'
 import SDData from '../Model/SecretDictator'
 import Settings from '../Model/Settings'
 
 function getTeamString(args: {u: Player, p: Player}){
-  let showHitler = args.u.role.team !== Team.liberal
-  if(!args.u.role.vision.includes(args.p)) return ""
+  let showHitler = args.u.role.team !== Team.liberal || inEndgame()
+  if(!args.u.role.vision.includes(args.p) && !inEndgame()) return ""
   let t = args.p.role.team 
   if(!showHitler && t === Team.dictator) t = Team.fascist 
   let color = t === Team.liberal ? "Blue" : "Red"
@@ -48,14 +48,15 @@ function getTeamString(args: {u: Player, p: Player}){
 //}
 
 function bgc(isUser: boolean, hovered: boolean, selected: boolean){
-  if(isUser) return "hsl(" + SDData().bg + ",80%,65%)"
-  else if(hovered) return "hsl(" + SDData().bg + ",90%,57%)"
-  else if(selected) return "hsl(" + SDData().bg + ",90%,57%)"
+  if(isUser) return "hsl(" + SDData().bg + ",100%,40%)"
+  else if(hovered) return "hsl(" + SDData().bg + ",80%,60%)"
+  else if(selected) return "hsl(" + SDData().bg + ",80%,60%)"
 }
 
 function Name(args: {p: Player}){
+  let str = args.p.bank === 0 ? "💀 " : ""
   return <div className = "name">
-    {args.p.name}
+    {str + args.p.name}
   </div>
 }
 
@@ -80,23 +81,32 @@ function getBlindString(p: Player){
   if(d === p) return "BB"
 }
 
+function inPoker(){
+  return Game.getPhase() === Phase.poker
+}
+
+function inEndgame(){
+  return Game.getPhase() === Phase.endgame
+}
+
 function PokerPosition(args: {p: Player}){
+  if(!inPoker()) return null
   return <div className = "square">
     {getBlindString(args.p)}
   </div>
 }
 
 function Stack(args: {p: Player, u: Player}){
-  if(args.p === args.u){
-    return <div className = "cards">
-      {args.p.curHand.stack}
-    </div>
-  }
-  return null
+  let n = args.p.role.influence
+  if(inPoker()) n = args.p.curHand.stack
+  else if(inEndgame()) n = args.p.bank
+  return <div className = "cards">
+    {(args.p === args.u || inEndgame()) && n}
+  </div>
 }
 
 function Cards(args: {p: Player, u: Player}){
-  if(args.p === args.u){
+  if(args.p === args.u && inPoker()){
     return <div className = "cards">
       {args.p.curHand.hand.map(getCardString)}
     </div>
@@ -105,14 +115,12 @@ function Cards(args: {p: Player, u: Player}){
 }
 
 function AmtIn(args: {p: Player}){
+  if(!inPoker()) return null
   return <div className = "cards">
     {args.p.curHand.amtIn}
   </div>
 }
 
-function getDecoration(p: Player){
-  if(p.bank === 0) return "line-through"
-}
 
 function getBoldness(p : Player){
   if(p.canAct) return "bold"
@@ -120,8 +128,13 @@ function getBoldness(p : Player){
 }
 
 function getTextColor(p: Player){
-  if(p.bank > 0 && (Game.getPhase() !== phase.poker || !p.curHand.folded)) return "black"
-  return "gray"
+  if(p.bank === 0) return "grey"
+  if(inPoker() && !p.curHand.folded) return "black"
+  if(inPoker()) return "grey"
+  if(Players.players.filter(p => p.targetable).length > 0){
+    if(!p.targetable && !p.canAct) return "grey"
+  }
+  return "black"
 }
 
 interface PlayerRenderArgs{
@@ -137,7 +150,7 @@ export default function RenderPlayer(args : PlayerRenderArgs){
   let selected = args.selected
   const [hovered, setHovered] = useState(false)
   return <div className = "board-row" 
-    style = {{textDecoration: getDecoration(p), fontWeight: getBoldness(p), 
+    style = {{fontWeight: getBoldness(p), 
       backgroundColor: bgc(args.u === args.p, hovered, selected), color: getTextColor(p)}}
     onMouseEnter = {() => {if(p.targetable && args.u.canAct) setHovered(true)}}
     onMouseLeave = {() => {if(p.targetable && args.u.canAct) setHovered(false)}}

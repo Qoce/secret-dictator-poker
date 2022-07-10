@@ -52,12 +52,14 @@ export default {
     Players.reset()
     this.onReset.forEach(f => f())
 
+    actionLog = [[]]
+    Game.setPhase(Phase.nominate)
     Game.setPhase(Phase.poker)
+
     for(let i in actionHistory){
       if(+i >= upTo) {
         actionIndex = upTo
         actionLog.splice(upTo + 1)
-        if(upTo === 0) actionLog = [[]]
         break
       }
       let am = actions.get(Game.getPhase())
@@ -71,8 +73,7 @@ export default {
   },
   log(emts : (string | JSX.Element | logElement)[] | (string | JSX.Element | logElement)){
     if(!Array.isArray(emts)) emts = [emts]
-    if(actionIndex < actionHistory.length || actionHistory.length == 0) 
-      actionLog[actionLog.length - 1].push(emts)
+    actionLog[actionLog.length - 1].push(emts)
   },
   getActionLog(){
     return actionLog

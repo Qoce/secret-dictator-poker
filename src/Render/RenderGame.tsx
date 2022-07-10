@@ -19,6 +19,11 @@ require("./RenderSDBottom")
 Players.reset()
 Actions.reset()
 
+//Sorts the array by bank if the phase is endgame
+function egSort(){
+  if(Game.getPhase() === Phase.endgame) return [...Players.players].sort((a, b) => b.bank - a.bank)
+  return Players.players
+}
 
 
 export default function SDP(){
@@ -54,7 +59,7 @@ export default function SDP(){
       <SDHeader/>
       <div className = "center">
         <div>
-          {Players.players.map(p => 
+          {egSort().map(p => 
             <Player p = {p} selected = {selected !== undefined && Players.get(selected) === p}
             onSelected = {() => setSelected(Players.players.indexOf(p))} u = {Players.get(user)}
             setUser = {() => setUser(Players.players.indexOf(p))}/>

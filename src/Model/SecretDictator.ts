@@ -12,11 +12,11 @@ import {colorPolicy} from '../Render/SDUtils'
 
 let SpecialPhases = [
   //5,6
-  [Phase.nominate, Phase.nominate, Phase.peak, Phase.assasinate, Phase.assasinate, Phase.endgame],
+  [Phase.nominate, Phase.nominate, Phase.peak, Phase.assassinate, Phase.assassinate, Phase.endgame],
   //7,8
-  [Phase.nominate, Phase.peak, Phase.pickPres, Phase.assasinate, Phase.assasinate, Phase.endgame],
+  [Phase.nominate, Phase.peak, Phase.pickPres, Phase.assassinate, Phase.assassinate, Phase.endgame],
   //9,10
-  [Phase.peak, Phase.peak, Phase.pickPres, Phase.assasinate, Phase.assasinate, Phase.endgame]
+  [Phase.peak, Phase.peak, Phase.pickPres, Phase.assassinate, Phase.assassinate, Phase.endgame]
 ]
 
 let pCandidate: Player 
@@ -35,8 +35,13 @@ let fPassed = 0
 let initalized = false
 
 export function initSD(){
+  bribers = []
+  forcedPCandidate = undefined
+  failCount = 0
+  activeBriber = undefined
   lPassed = 0
   fPassed = 0
+
   let players = Players.players
   if(players.length < 5) throw 'not enough players to start secret dictator'
   let nFascist = Math.floor((players.length - 3) / 2)
@@ -80,8 +85,15 @@ export function initSD(){
     Actions.log({content: p.name + ": " + Team[p.role.team], visibleTo: Players.players.indexOf(p)})
   })
   pCandidate = players[RNG.nextInt(players.length)]
+  if(pCandidate.bank === 0) {
+    const nl = Players.nextLiving(pCandidate)
+    if(!nl) throw Error("no valid presidential candidate")
+    pCandidate = Players.get(nl)
+  }
 
   policyDeck = Array(Settings.fPolicyCount).fill("f").concat(Array(Settings.lPolicyCount).fill("l"))
+  discard = []
+  activePolicies = []
   //shuffles policyDeck
   RNG.randomize(policyDeck)
 }
@@ -99,7 +111,7 @@ Game.setPhaseListener(Phase.nominate, () => {
     initalized = true
   }
   Players.apply(p => p.canAct = p === pCandidate)
-  Players.apply(p => p.targetable = (p !== pCandidate && p !== president && p !== chancellor))
+  Players.apply(p => p.targetable = (p !== pCandidate && p !== president && p !== chancellor && p.bank > 0))
 })
 
 Actions.register(Phase.nominate, (args : ActionArgs) => {
@@ -112,7 +124,7 @@ Actions.register(Phase.nominate, (args : ActionArgs) => {
 })
 
 Game.setPhaseListener(Phase.vote, () => {
-  Players.apply(p => p.canAct = true)
+  Players.apply(p => p.canAct = p.bank > 0)
   Players.apply(p => p.targetable = false)
   Players.apply(p => p.role.vote = undefined)
   Players.apply(p => p.role.spent = 0)
@@ -168,6 +180,8 @@ Game.setPhaseListener(Phase.bribe, () => {
   Players.apply(p => p.canAct = p !== president && p !== chancellor)
   Players.apply(p => p.targetable = false)
   activeBriber = undefined
+  //Skip phase if there is nobody outside of the government with influence
+  if(Players.allDoneActing()) Game.setPhase(Phase.president)
 })
 
 Actions.register(Phase.bribe, (ActionArgs) => {
@@ -175,14 +189,15 @@ Actions.register(Phase.bribe, (ActionArgs) => {
   let size = ActionArgs.v
   let p = Players.get(ActionArgs.p)
   if(size < 0 || size > p.role.influence) return false
+  Actions.log([p.name + " bribes ", {content: "" + size, visibleTo: Players.players.indexOf(p)}])
   p.role.spent = size
   p.canAct = false
   if(Players.allDoneActing()) {
     bribers = Players.filter(p => p !== president && p !== chancellor && p.role.spent > 0)
-    bribers.sort((a,b) => a.role.spent - b.role.spent)
+    RNG.randomize(bribers)
+    bribers.sort((a,b) => b.role.spent - a.role.spent)
     if(bribers.length > 0){
       activeBriber = bribers[0]
-      bribers = bribers.slice(1)
       Game.setPhase(Phase.presBribe)
     }
     else{
@@ -199,10 +214,15 @@ Game.setPhaseListener(Phase.presBribe, () => {
 
 Actions.register(Phase.presBribe, (ActionArgs) => {
   if(ActionArgs.v === undefined) return false
+  if(!activeBriber) throw Error("No briber found yet we are in presBribe phase")
   if(ActionArgs.v === 1){
-    president = bribers.splice(0,1)[0]
+    Actions.log({content: "President " + pCandidate.name + " accepts bribe of " + activeBriber.role.spent + " from " + 
+      activeBriber.name, visibleTo: [Players.players.indexOf(pCandidate), Players.players.indexOf(activeBriber)]})
+    president = activeBriber
   }
   else{
+    Actions.log({content: "President " + pCandidate.name + " declines bribe of " + activeBriber.role.spent + " from " + 
+    activeBriber.name, visibleTo: [Players.players.indexOf(pCandidate), Players.players.indexOf(activeBriber)]})
     president = Players.get(ActionArgs.p)
   }
   Game.setPhase(Phase.president)
@@ -237,8 +257,8 @@ Actions.register(Phase.president, (args: ActionArgs) => {
   if(v === undefined || v < 0 || v >= activePolicies.length) return false
   activePolicies.splice(v,1)
   Actions.log([president?.name + " sends ", ...activePolicies.map(colorPolicy)])
-  if(bribers.length > 0){
-    activeBriber = bribers[0]
+  if(bribers.length > 1){
+    activeBriber = bribers[1]
     Game.setPhase(Phase.chanBribe)
   }
   else{
@@ -254,10 +274,16 @@ Game.setPhaseListener(Phase.chanBribe, () => {
 
 Actions.register(Phase.chanBribe, (ActionArgs) => {
   if(ActionArgs.v === undefined) return false
+  if(!activeBriber) throw Error("No briber found yet we are in chanBribe phase")
+  if(!cCandidate) throw Error("No cCanidate found yet we are in chanBribe phase")
   if(ActionArgs.v === 1){
-    chancellor = bribers.splice(0,1)[0]
+    Actions.log({content: "Chancellor " + cCandidate.name + " accepts bribe of " + activeBriber.role.spent + " from " + 
+      activeBriber.name, visibleTo: [Players.players.indexOf(pCandidate), Players.players.indexOf(activeBriber)]})
+    chancellor = activeBriber
   }
   else{
+    Actions.log({content: "Chancellor " + cCandidate.name + " declines bribe of " + activeBriber.role.spent + " from " + 
+      activeBriber.name, visibleTo: [Players.players.indexOf(pCandidate), Players.players.indexOf(activeBriber)]})
     chancellor = Players.get(ActionArgs.p)
   }
   Game.setPhase(Phase.chancellor)
@@ -308,22 +334,19 @@ function passPolicy(a: number, topCard = false){
   }
 }
 
-Game.setPhaseListener(Phase.assasinate, () => {
+Game.setPhaseListener(Phase.assassinate, () => {
   Players.apply(p => p.canAct = p === president)
-  Players.apply(p => p.targetable = p !== president && p.role.influence > 0)
+  Players.apply(p => p.targetable = p !== president && p.bank > 0)
 })
 
-Actions.register(Phase.assasinate, (args: ActionArgs) => {
+Actions.register(Phase.assassinate, (args: ActionArgs) => {
   if(args.t === undefined) return false
   let t = Players.get(args.t)
   t.bank = 0
   t.role.influence = 0
-  Actions.log(t.name + " assasinates " + Players.get(args.p).name)
-  if(t.role.team === Team.dictator) {
-    Actions.log(t.name + " was the dictator.")
-    liberalWin()
-  }
-  else exitSD()
+  Actions.log(t.name + " assassinates " + Players.get(args.p).name)
+  Players.updateBanks(p => p.bank)
+  if(Game.getPhase() !== Phase.endgame) exitSD()
   return true
 })
 
@@ -359,7 +382,6 @@ Game.setPhaseListener(Phase.peak, () => {
 
 Actions.register(Phase.peak, (args: ActionArgs) => {
   Actions.log(Players.get(args.p).name + " peaks at the next 3 policies")
-  Actions.log(activePolicies.toString())
   exitSD()
   return true
 })
@@ -396,27 +418,46 @@ Actions.register(Phase.veto, (args: ActionArgs) => {
   return false
 })
 
+Game.setPhaseListener(Phase.endgame, () => {})
+
+function loot(w: Player[], l: Player[]){
+  const lSum = l.map(p => p.bank).reduce((a,b) => a+b)
+  l.forEach(p => p.bank = Math.floor(p.bank / 2))
+  w.forEach(p => p.bank += Math.floor(lSum / w.length))
+}
+
 function liberalWin(){
+  const fascists = Players.filter(p => p.role.team !== Team.liberal)
+  const liberals = Players.filter(p => p.role.team === Team.liberal)
+  loot(liberals, fascists)
   Actions.log("Liberals Win")
-  exitSD(Phase.endgame)
+  exitSD(Phase.endgame, false)
 }
 
 function fascistWin(){
+  const fascists = Players.filter(p => p.role.team !== Team.liberal)
+  const liberals = Players.filter(p => p.role.team === Team.liberal)
+  loot(fascists, liberals)
   Actions.log("Fascists Win")
-  exitSD(Phase.endgame)
+  exitSD(Phase.endgame, false)
 }
 
-function exitSD(phase = Phase.poker){
+Players.onLiberalWin = liberalWin
+Players.onFascistWin = fascistWin
+
+function exitSD(phase = Phase.poker, ub: boolean = true){
   cCandidate = undefined
   discard = discard.concat(activePolicies)
   activePolicies = []
   failCount = 0
-  Players.apply(p => p.bank = p.role.influence)
+  if(ub) Players.updateBanks(p => p.role.influence)
   Game.setPhase(phase)
 }
 
+Actions.onReset.push(() => {initalized = false})
+
 export function getSpecialPhase(n: number){
-  let playerLength = 5
+  let playerLength = Players.players.length
   return SpecialPhases[Math.floor(playerLength - 5) / 2][n]
 }
 

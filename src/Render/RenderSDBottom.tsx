@@ -39,7 +39,7 @@ function confirmRenderer(title: string){
 }
 
 RenderPhase.set(Phase.nominate, confirmRenderer("Confirm Nomination"))
-RenderPhase.set(Phase.assasinate, confirmRenderer("Confirm Assasination"))
+RenderPhase.set(Phase.assassinate, confirmRenderer("Confirm Assasination"))
 RenderPhase.set(Phase.investigate, confirmRenderer("Confirm Investigation"))
 RenderPhase.set(Phase.pickPres, confirmRenderer("Confirm President"))
 
@@ -100,6 +100,8 @@ function ConsiderBribe(args: RenderPhaseArgs){
     })
   }
 
+  if(!Players.get(args.p).canAct) return null
+
   let influence = SDState().activeBriber?.role.spent
   if(!influence) throw "Error: bribe size is 0 or undefined and we are trying to render the bribe ui"
   return <div className = "center">
@@ -109,7 +111,7 @@ function ConsiderBribe(args: RenderPhaseArgs){
     <button className = "button" onClick = {decision(true)}>
       {"Accept Bribe"}
     </button>
-    <button className = "button" onClick = {decision(true)}>
+    <button className = "button" onClick = {decision(false)}>
       {"Decline Bribe"}
     </button>
   </div>
@@ -145,9 +147,6 @@ function Policies(args: PolicyArgs){
   if(!Players.get(args.p).canAct) return null
   let indicies: number[] = []
   for(let i in policies) indicies.push(+i)
-  
-  
-
 
   let veto : undefined | JSX.Element
   if(args.vetoButton && SDState().fPassed === 5){
@@ -198,4 +197,8 @@ RenderPhase.set(Phase.veto, (args: RenderPhaseArgs) => {
       {"Override Veto"}
     </button>
   </div>
+})
+
+RenderPhase.set(Phase.endgame, (args: RenderPhaseArgs) => {
+  return null
 })

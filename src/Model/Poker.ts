@@ -145,7 +145,10 @@ Actions.onReset.push(() => {
 
 
 function startHand() : void{
-  Players.apply(p => p.targetable = false)
+  Players.apply(p => {
+    p.targetable = false
+    p.curHand.stack = p.bank
+  })
   pot = 0
   maxAmtIn = 0
   minRaise = BB
@@ -263,12 +266,16 @@ function endHand(){
   for(let player in inPlayers){
     inPlayers[player].curHand.stack += inPlayers[player].curHand.net + inPlayers[player].curHand.equity
     leftOver = Math.max(leftOver, inPlayers[player].curHand.couldWin)
-    inPlayers[player].bank = inPlayers[player].curHand.stack
   }
-  Players.players.forEach((p,i) => {
+  Players.updateBanks(p => p.curHand.stack)
+  inPlayers.forEach((p,i) => {
     Actions.log([`${p.name}: `,...p.curHand.hand.map(getCardString), ` ${getScoreString(playerScores[i])} ` , renderNet(p.curHand.net)])
   })
-  Game.setPhase(Phase.nominate)
+  Players.players.filter(p => p.curHand.folded && p.bank > 0).forEach((p,i) => {
+    Actions.log([`${p.name}: `,...p.curHand.hand.map(getCardString), ` folded ` , renderNet(p.curHand.net)])
+  })
+  if(Game.getPhase() !== Phase.endgame)
+    Game.setPhase(Phase.nominate)
 }
 
 function dealCenter(n: number){
@@ -298,7 +305,10 @@ function updateDealer() : void{
 
 function guaranteedDecision(p : Player) : boolean{
   let h = p.curHand
-  return !h.folded && h.stack > 0 && (h.amtIn < maxAmtIn || (forced && forced.curHand === h) || (maxAmtIn === 0 && !h.checked))
+  if(forced){
+    if(forced === p) if(Players.next(forced,guaranteedDecision)) return true
+  }
+  return !h.folded && h.stack > 0 && (h.amtIn < maxAmtIn || (maxAmtIn === 0 && !h.checked))
 }
 
 function couldContinueBetting(p: Player): boolean{
@@ -339,10 +349,10 @@ function bet(p : Player, amt : number, f = false) : boolean {
   dm = setDM(Players.next(dm, guaranteedDecision))
   if(dm === false){
     Players.applyLiving(p => {
-      p.curHand.equity += p.curHand.amtIn
       p.curHand.checked = false
     }, p => !p.curHand.folded)
     Players.applyLiving(p => {
+      p.curHand.equity += p.curHand.amtIn
       pot += p.curHand.amtIn
       p.curHand.amtIn = 0
     })

@@ -8,7 +8,7 @@ enum phase {
   chanBribe,
   chancellor,
   peak,
-  assasinate,
+  assassinate,
   investigate,
   pickPres,
   veto,

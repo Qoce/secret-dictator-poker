@@ -70,7 +70,7 @@ class Players{
     if(i === -1) throw Error("player not found")
     let j = (i + 1) % this.players.length
     
-    while(!condition(this.players[j]) && j !== i) j = (j + 1) % this.players.length
+    while(j !== i && !condition(this.players[j])) j = (j + 1) % this.players.length
     return i !== j && j
   }
   apply(action : (p : Player) => void, condition : (p: Player) => boolean = _ => true){
@@ -107,6 +107,19 @@ class Players{
   allDoneActing(){
     return this.allLiving(p => !p.canAct)
   }
+  updateBanks(f : (p: Player) => number){
+    this.apply(p => {
+      p.bank = f(p)
+      if(p.role.team === Team.dictator && p.bank === 0){
+        this.onLiberalWin()
+      }
+    })
+    if(this.filter(p => p.role.team === Team.liberal && p.bank > 0).length === 0){
+      this.onFascistWin()
+    }
+  }
+  onFascistWin(){}
+  onLiberalWin(){}
 }
 
 export default new Players()

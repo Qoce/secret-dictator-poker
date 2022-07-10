@@ -39,7 +39,7 @@ function ProgSquare(props : ProgSquare){
 
 function getPhaseIcon(phase: Phase, liberal: boolean){
   if(phase === Phase.investigate) return "🔎"
-  if(phase === Phase.assasinate) return "🗡️"
+  if(phase === Phase.assassinate) return "🗡️"
   if(phase === Phase.peak) return "🃏"
   if(phase === Phase.pickPres) return "🕴️"
   if(phase === Phase.endgame) return liberal ? "🕊️" : "💀"
@@ -63,7 +63,7 @@ export default function SDHeader(){
   let proposalSquares: JSX.Element[] = []
   for(let i = 0; i < 3; i++){
     proposalSquares.push(
-      <ProgSquare current = {i + 1 === data.failCount} key = {i + 11}/>)
+      <ProgSquare current = {i === data.failCount} key = {i + 11}/>)
   }
   return <div className = "center">
     <div>
