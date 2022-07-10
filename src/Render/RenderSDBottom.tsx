@@ -10,33 +10,42 @@ import {useState, createRef} from 'react'
 import {VoteSquare, PolicySquare} from "./SDUtils"
 
 
-
-function confirmRenderer(title: string){
-  function renderConfirm(args: RenderPhaseArgs){
-    let target = args.t
-    let onClick : () => void = () => {return}
-    if(target !== undefined){
-      let targetable = Players.get(target).targetable
-      onClick = () => {if(targetable && Players.get(args.p).canAct) Actions.fire({
-        p: args.p,
-        t: args.t
-      })}
-    }
-
-    
-    return <button className = "button" onClick = {onClick} disabled = {target === undefined}>
-      {title}
-    </button>
-  }
-  return renderConfirm
+interface CRArgs extends RenderPhaseArgs{
+  title: string
 }
 
-RenderPhase[Phase.nominate] = confirmRenderer("Confirm Nomination")
-RenderPhase[Phase.assasinate] = confirmRenderer("Confirm Assasination")
-RenderPhase[Phase.investigate] = confirmRenderer("Confirm Investigation")
-RenderPhase[Phase.pickPres] = confirmRenderer("Confirm President")
+function Confirm(args: CRArgs){
+  //needs to have the same state as other phases
+  let target = args.t
+  let onClick : () => void = () => {return}
+  if(target !== undefined){
+    let targetable = Players.get(target).targetable
+    onClick = () => {if(targetable && Players.get(args.p).canAct) Actions.fire({
+      p: args.p,
+      t: args.t
+    })}
+  }
+  
+  return <button className = "button" onClick = {onClick} disabled = {target === undefined}>
+    {args.title}
+  </button>
+  
+}
 
-RenderPhase[Phase.vote] = function Votes(args: RenderPhaseArgs){
+function confirmRenderer(title: string){
+  return (args: RenderPhaseArgs) => {
+    return <Confirm title = {title} p = {args.p} t = {args.t}/>
+  }
+}
+
+RenderPhase.set(Phase.nominate, confirmRenderer("Confirm Nomination"))
+RenderPhase.set(Phase.assasinate, confirmRenderer("Confirm Assasination"))
+RenderPhase.set(Phase.investigate, confirmRenderer("Confirm Investigation"))
+RenderPhase.set(Phase.pickPres, confirmRenderer("Confirm President"))
+
+function Votes(args: RenderPhaseArgs){
+  const [influence, setInfluence] = useState(0)
+
   function vote(yes: boolean){
     return function sendVote(){
       Actions.fire({
@@ -46,7 +55,6 @@ RenderPhase[Phase.vote] = function Votes(args: RenderPhaseArgs){
     }
   }
 
-  const [influence, setInfluence] = useState(0)
   let p = Players.get(args.p)
   return <div className = "center">
     <div className = "board-row">
@@ -59,10 +67,12 @@ RenderPhase[Phase.vote] = function Votes(args: RenderPhaseArgs){
     </div>
   </div>
 }
+RenderPhase.set(Phase.vote, (args: RenderPhaseArgs) => {return <Votes p = {args.p} t = {args.t}/>})
 
-RenderPhase[Phase.bribe] = function Votes(args: RenderPhaseArgs){
+function Bribe(args: RenderPhaseArgs){
   const [influence, setInfluence] = useState(0)
   let p = Players.get(args.p)
+  if(p.canAct)
   return <div className = "center">
     <div className = "board-row">
       <input className = "textInput" type = 'number' min = {0} max = {p.role.influence}
@@ -77,7 +87,10 @@ RenderPhase[Phase.bribe] = function Votes(args: RenderPhaseArgs){
       </button>
     </div>
   </div>
+  return null
 }
+
+RenderPhase.set(Phase.bribe, (args: RenderPhaseArgs) => {return <Bribe p = {args.p} t = {args.t}/>})
 
 function ConsiderBribe(args: RenderPhaseArgs){
   function decision(accept: boolean){
@@ -102,64 +115,81 @@ function ConsiderBribe(args: RenderPhaseArgs){
   </div>
 }
 
-RenderPhase[Phase.presBribe] = ConsiderBribe
-RenderPhase[Phase.chanBribe] = ConsiderBribe
+RenderPhase.set(Phase.presBribe, (args: RenderPhaseArgs) => {return <ConsiderBribe p = {args.p} t = {args.t}/>})
+RenderPhase.set(Phase.chanBribe, (args: RenderPhaseArgs) => {return <ConsiderBribe p = {args.p} t = {args.t}/>})
 
-interface PolicyArgs{
+interface PolicyArgs extends RenderPhaseArgs{
   selectable: boolean,
-  inverted: boolean //if true we select all but one, if false we select one
-  vetoButton: boolean
+  inverted: boolean, //if true we select all but one, if false we select one
+  vetoButton: boolean,
+  buttonStr: string
 }
 
 
 function Policies(args: PolicyArgs){
-  return function Temp(phaseArgs: RenderPhaseArgs){
-    let policies = SDState().activePolicies
-    let [selections, setSelections] = useState(policies.map(() => false))
-    let indicies: number[] = []
-    for(let i in policies) indicies.push(+i)
-    
-    let disabled: boolean
-    if(args.inverted) disabled = selections.filter(p => p).length === policies.length - 1
-    else disabled = selections.filter(p => p).length === 1
+  let policies = SDState().activePolicies
+  
+  
+  let [selections, setSelections] = useState(policies.map(() => false))
 
-    let veto : undefined | JSX.Element
-    if(args.vetoButton && SDState().fPassed === 5){
-      <button className = "button" onClick = {() => 
-        Actions.fire({
-          p: phaseArgs.p,
-          v: -1
-        })
-      }>
-        {"Veto"}
-      </button>
-    }
+  let disabled: boolean
+  if(args.inverted) disabled = selections.filter(p => p).length !== policies.length - 1
+  else disabled = selections.filter(p => p).length !== 1
 
-    return <div className = "center">
-      <div className = "board-row">
-        {indicies.map(i => <PolicySquare team = {policies[i]} selectable = {args.selectable}
-          selected = {selections[i]} setSelected = {(s: boolean) => {
-            selections[i] = s
-            setSelections(selections)
-          }}/>)}
-      </div>
-      <button className = "button" onClick = {() =>
-        Actions.fire({
-          p: phaseArgs.p,
-          v: selections.indexOf(!args.inverted)
-        })}
-        disabled = {disabled}>
-      </button>
-      {veto}
-    </div>
+  //Look at peakPolicies instead of active policies if the phase is peak
+  if(!args.selectable) {
+    policies = SDState().peakPolicies
+    disabled = false
   }
+
+  if(!Players.get(args.p).canAct) return null
+  let indicies: number[] = []
+  for(let i in policies) indicies.push(+i)
+  
+  
+
+
+  let veto : undefined | JSX.Element
+  if(args.vetoButton && SDState().fPassed === 5){
+    <button className = "button" onClick = {() => 
+      Actions.fire({
+        p: args.p,
+        v: -1
+      })
+    }>
+      {"Veto"}
+    </button>
+  }
+
+  return <div className = "center">
+    <div className = "board-row">
+      {indicies.map(i => <PolicySquare team = {policies[i]} selectable = {args.selectable}
+        selected = {selections[i]} setSelected = {(s: boolean) => {
+          selections[i] = s
+          //sets selections to copy of itself
+          setSelections([...selections])
+        }}/>)}
+    </div>
+    <button className = "button" onClick = {() =>
+      Actions.fire({
+        p: args.p,
+        v: selections.indexOf(!args.inverted)
+      })}
+      disabled = {disabled}>
+        {args.buttonStr}
+    </button>
+    {veto}
+  </div> 
 }
 
-RenderPhase[Phase.president] = Policies({selectable: true, inverted: true, vetoButton: false})
-RenderPhase[Phase.chancellor] = Policies({selectable: true, inverted: false, vetoButton: true})
-RenderPhase[Phase.peak] = Policies({selectable: false, inverted: true, vetoButton: false})
+RenderPhase.set(Phase.president, ((args: RenderPhaseArgs) => <Policies selectable = {true} inverted = {true} vetoButton = {false}
+  p = {args.p} t = {args.t} buttonStr = "Send Policies"/>))
+RenderPhase.set(Phase.chancellor, ((args: RenderPhaseArgs) => <Policies selectable = {true} inverted = {false} vetoButton = {true}
+  p = {args.p} t = {args.t} buttonStr = "Pass Policy"/>))
+RenderPhase.set(Phase.peak, ((args: RenderPhaseArgs) => <Policies selectable = {false} inverted = {true} vetoButton = {false}
+  p = {args.p} t = {args.t} buttonStr = "Done"/>))
 
-RenderPhase[Phase.veto] = (args: RenderPhaseArgs) => {
+RenderPhase.set(Phase.veto, (args: RenderPhaseArgs) => {
   return <div className = "center">
     <button className = "button" onClick = {() => Actions.fire({p: args.p, v: 1})}> 
       {"Concur with Veto"}
@@ -168,4 +198,4 @@ RenderPhase[Phase.veto] = (args: RenderPhaseArgs) => {
       {"Override Veto"}
     </button>
   </div>
-}
+})

@@ -1,19 +1,24 @@
 import Game from "../Model/Game"
 import Phase from "../Interface/Phase"
-import SDData, {getSpecialPhase} from "../Model/SecretDictator"
+import SDData, {getSpecialPhase, setFPassed, setLPassed} from "../Model/SecretDictator"
+import settings from "../Model/Settings"
+
 
 interface SHSquare{
   passed: boolean,
   liberal: boolean,
   typeStr: string,
   shift?: number,
+  index: number
 }
 
 function SHSquare(props: SHSquare){
   let bcColor = (props.passed && (props.liberal ? "blue" : "red")) || 
     (props.liberal ? "lightBlue" : "pink") 
   return <div className = "square" style = {{backgroundColor: bcColor, 
-    marginLeft: props.shift, marginTop: "2px"}}>
+    marginLeft: props.shift, marginTop: "2px"}}
+    onClick = {() => {if(props.liberal && settings.debug) setLPassed(props.index+1);
+    else if(settings.debug) setFPassed(props.index+1)}}>
     {props.typeStr}
   </div>  
 }
@@ -47,13 +52,13 @@ export default function SDHeader(){
   for(let i = 0; i < 6; i++){
     fascistSquares.push( 
     <SHSquare liberal = {false} typeStr = {getPhaseIcon(getSpecialPhase(i), false)} 
-      passed = {data.fPassed > i} key = {i}/>)
+      passed = {data.fPassed > i} key = {i} index = {i}/>)
   }
   let liberalSquares: JSX.Element[] = []
   for(let i = 0; i < 5; i++){
     liberalSquares.push( 
     <SHSquare liberal = {true} typeStr = {i === 4 ?  "🕊️" : ""}
-      passed = {data.lPassed > i} key = {i + 6}/>)
+      passed = {data.lPassed > i} key = {i + 6} index = {i}/>)
   }
   let proposalSquares: JSX.Element[] = []
   for(let i = 0; i < 3; i++){

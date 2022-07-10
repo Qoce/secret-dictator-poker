@@ -5,3 +5,13 @@ export function getCardString(c : number){
       ["♣","♦","♥","♠"][Math.floor(c / 13)]}
   </span>
 }
+export function renderNet(net : number){
+  let str : string = "" + net
+  if(net > 0) str = "+" + str
+  let color = net > 0 ? "green" : "red"
+  if(net === 0) color = "black"
+  
+  return  <span style = {{color: color}}>
+    {str}
+  </span>
+}

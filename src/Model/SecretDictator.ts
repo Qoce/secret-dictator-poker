@@ -8,6 +8,7 @@ import Game from "./Game"
 import Settings from "./Settings"
 import { BADHINTS } from "dns"
 import ActionArgs from "../Interface/Action"
+import {colorPolicy} from '../Render/SDUtils'
 
 let SpecialPhases = [
   //5,6
@@ -26,14 +27,16 @@ let forcedPCandidate: Player | undefined
 let failCount = 0
 let bribers : Player[]
 let activeBriber : Player | undefined
-let policyDeck : ("l" | "f")[]
-let discard : ("l" | "f")[]
-let activePolicies : ("l" | "f")[]
+let policyDeck : ("l" | "f")[] = []
+let discard : ("l" | "f")[] = []
+let activePolicies : ("l" | "f")[] = []
 let lPassed = 0
 let fPassed = 0
 let initalized = false
 
 export function initSD(){
+  lPassed = 0
+  fPassed = 0
   let players = Players.players
   if(players.length < 5) throw 'not enough players to start secret dictator'
   let nFascist = Math.floor((players.length - 3) / 2)
@@ -65,6 +68,7 @@ export function initSD(){
     vision.push(v)
   }
   let i = 0
+  Actions.log("Teams:")
   Players.apply(p => {
     p.role = {
       team: teams[i],
@@ -73,10 +77,13 @@ export function initSD(){
       spent: 0,
       vote: undefined
     }
-    Actions.log("Teams:", {visibile: false})
-    Actions.log(p.name + ": " + Team[p.role.team], {visibile: false})
+    Actions.log({content: p.name + ": " + Team[p.role.team], visibleTo: Players.players.indexOf(p)})
   })
   pCandidate = players[RNG.nextInt(players.length)]
+
+  policyDeck = Array(Settings.fPolicyCount).fill("f").concat(Array(Settings.lPolicyCount).fill("l"))
+  //shuffles policyDeck
+  RNG.randomize(policyDeck)
 }
 
 function nextpCandidcate(){
@@ -89,8 +96,10 @@ function nextpCandidcate(){
 Game.setPhaseListener(Phase.nominate, () => {
   if(!initalized){
     initSD()
+    initalized = true
   }
   Players.apply(p => p.canAct = p === pCandidate)
+  Players.apply(p => p.targetable = (p !== pCandidate && p !== president && p !== chancellor))
 })
 
 Actions.register(Phase.nominate, (args : ActionArgs) => {
@@ -104,6 +113,7 @@ Actions.register(Phase.nominate, (args : ActionArgs) => {
 
 Game.setPhaseListener(Phase.vote, () => {
   Players.apply(p => p.canAct = true)
+  Players.apply(p => p.targetable = false)
   Players.apply(p => p.role.vote = undefined)
   Players.apply(p => p.role.spent = 0)
 })
@@ -117,6 +127,7 @@ Actions.register(Phase.vote, (args: ActionArgs) => {
   p.role.spent = Math.floor(Math.abs(size))
   p.role.influence -= Math.floor(Math.abs(size))
   p.canAct = false
+  Actions.log([p.name + " votes ",  {content: ["✔️", "❌"][p.role.vote ? 0 : 1] + " " + p.role.spent, visibleTo: Players.players.indexOf(p)}])
   if(Players.allDoneActing()) checkVotes()
   return true
 })
@@ -155,6 +166,7 @@ function failGovernment(){
 Game.setPhaseListener(Phase.bribe, () => {
   Players.apply(p => p.role.spent = 0)
   Players.apply(p => p.canAct = p !== president && p !== chancellor)
+  Players.apply(p => p.targetable = false)
   activeBriber = undefined
 })
 
@@ -181,6 +193,7 @@ Actions.register(Phase.bribe, (ActionArgs) => {
 })
 
 Game.setPhaseListener(Phase.presBribe, () => {
+  Players.apply(p => p.targetable = false)
   Players.apply(p => p.canAct = p === president)
 })
 
@@ -214,13 +227,16 @@ function drawPolicies(n: number){
 
 Game.setPhaseListener(Phase.president, () => {
   drawPolicies(3)
+  printPolicies(president?.name + " sees: ", activePolicies, president)
+  Players.apply(p => p.targetable = false)
   Players.apply(p => p.canAct = p === president)
 })
 
 Actions.register(Phase.president, (args: ActionArgs) => {
   let v = args.v
   if(v === undefined || v < 0 || v >= activePolicies.length) return false
-  activePolicies.slice(v)
+  activePolicies.splice(v,1)
+  Actions.log([president?.name + " sends ", ...activePolicies.map(colorPolicy)])
   if(bribers.length > 0){
     activeBriber = bribers[0]
     Game.setPhase(Phase.chanBribe)
@@ -232,6 +248,7 @@ Actions.register(Phase.president, (args: ActionArgs) => {
 })
 
 Game.setPhaseListener(Phase.chanBribe, () => {
+  Players.apply(p => p.targetable = false)
   Players.apply(p => p.canAct = p === chancellor)
 })
 
@@ -249,12 +266,19 @@ Actions.register(Phase.chanBribe, (ActionArgs) => {
 
 Game.setPhaseListener(Phase.chancellor, () => {
   Players.apply(p => p.canAct = p === chancellor)
+  printPolicies(chancellor?.name + " sees: ", activePolicies, chancellor)
 })
 
 Actions.register(Phase.chancellor, (args: ActionArgs) => {
   if(args.v === undefined) return false
-  if(args.v === -1) Game.setPhase(Phase.veto)
-  else passPolicy(args.v)
+  if(args.v === -1) {
+    Game.setPhase(Phase.veto)
+    Actions.log(chancellor?.name + " vetoes the policies")
+  }
+  else {
+    Actions.log([chancellor?.name + " passes ", colorPolicy(activePolicies[args.v])])
+    passPolicy(args.v)
+  }
   return true
 })
 
@@ -262,7 +286,7 @@ function passPolicy(a: number, topCard = false){
   if(a < 0 || a >= activePolicies.length) return false
   let policy = activePolicies.splice(a,1)[0]
   if(policy === "l"){
-    Actions.log(pCandidate + " and " + cCandidate + " have passed a liberal policy")
+    Actions.log(pCandidate?.name + " and " + cCandidate?.name + " have passed a liberal policy")
     lPassed++
     if(lPassed === 5){
       liberalWin()
@@ -274,11 +298,12 @@ function passPolicy(a: number, topCard = false){
     }
   }
   else if(policy === "f"){
-    Actions.log(pCandidate + " and " + cCandidate + " have passed a liberal policy")
-    fPassed++
-    let special = getSpecialPhase(fPassed)
+    Actions.log(pCandidate?.name + " and " + cCandidate?.name + " have passed a fascist policy")
+    let special = getSpecialPhase(fPassed++)
     if(special === Phase.endgame) fascistWin()
-    else if(topCard || special === Phase.nominate) exitSD()
+    else if(topCard || special === Phase.nominate) {
+      exitSD()
+    }
     else Game.setPhase(special)
   }
 }
@@ -294,7 +319,10 @@ Actions.register(Phase.assasinate, (args: ActionArgs) => {
   t.bank = 0
   t.role.influence = 0
   Actions.log(t.name + " assasinates " + Players.get(args.p).name)
-  if(t.role.team === Team.dictator) liberalWin()
+  if(t.role.team === Team.dictator) {
+    Actions.log(t.name + " was the dictator.")
+    liberalWin()
+  }
   else exitSD()
   return true
 })
@@ -307,21 +335,31 @@ Game.setPhaseListener(Phase.investigate, () => {
 Actions.register(Phase.investigate, (args: ActionArgs) => {
   if(args.t === undefined) return false
   Actions.log(Players.get(args.p).name + " investigates " + Players.get(args.t).name)
-  Actions.log(Players.get(args.t).name + " is " + Players.get(args.t).role.team, {
-    viewFunc: (p : Player) => p === Players.get(args.p)
-  })
+  Actions.log({content: Players.get(args.t).name + " is " + Players.get(args.t).role.team, visibleTo: args.p})
   Players.get(args.p).role.vision.push(Players.get(args.t))
   exitSD()
   return true
 })
 
+function printPolicies(label: string, policies: ("l" | "f")[], p: Player | Player[] | undefined){
+  if(!(p instanceof Array)) {
+    if(p === undefined) throw "error: printPolicies called with undefined player"
+    p = [p]
+  }
+  let pels = policies.map(colorPolicy).map(x => {return {content: x, visibleTo: 
+    (p as Player[]).map(pl => Players.players.indexOf(pl))
+  }})
+  Actions.log([label, ...pels])
+}
+
 Game.setPhaseListener(Phase.peak, () => {
   Players.apply(p => p.canAct = p === president)
+  printPolicies("Next 3 Policies: ", peakPolicies(3), president)
 })
 
 Actions.register(Phase.peak, (args: ActionArgs) => {
   Actions.log(Players.get(args.p).name + " peaks at the next 3 policies")
-  Actions.log(activePolicies.toString(), {viewFunc: p => p === president})
+  Actions.log(activePolicies.toString())
   exitSD()
   return true
 })
@@ -351,6 +389,7 @@ Actions.register(Phase.veto, (args: ActionArgs) => {
     return true
   }
   else if(args.v === 0){
+    Actions.log(president?.name + " refuses the veto.")
     Game.setPhase(Phase.chancellor)
     return true
   }
@@ -368,8 +407,6 @@ function fascistWin(){
 }
 
 function exitSD(phase = Phase.poker){
-  president = undefined
-  chancellor = undefined
   cCandidate = undefined
   discard = discard.concat(activePolicies)
   activePolicies = []
@@ -394,7 +431,15 @@ export default function getSDState(){
     president: president,
     bg: Math.floor(240 + (5 - lPassed) / (11 - lPassed - fPassed)  * 120),
     activeBriber: activeBriber,
-    activePolicies: activePolicies
+    activePolicies: activePolicies,
+    peakPolicies: policyDeck.slice(0,3)
   }
 }
 
+export function setFPassed(n: number){
+  fPassed = n
+}
+
+export function setLPassed(n: number){
+  lPassed = n
+}

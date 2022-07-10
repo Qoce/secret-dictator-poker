@@ -4,11 +4,13 @@ import Player from './RenderPlayer'
 import Players from '../Model/Players'
 import Phase from '../Interface/Phase'
 import RenderPhase from "./RenderPhase"
+import {RenderPhaseArgs} from "./RenderPhase"
 import Settings from "../Model/Settings"
 
 import SDHeader from "./SDHeader"
-import {useCallback, useState} from 'react'
+import React, {useCallback, useState} from 'react'
 import Actions from '../Model/Actions'
+import { keyboard } from '@testing-library/user-event/dist/keyboard'
 
 
 require("./RenderPoker")
@@ -23,7 +25,7 @@ export default function SDP(){
   let sel : undefined | number
   const [selected,setSelected] = useState(sel)
   const [user,setUser] = useState(1)
-
+  if(selected && !Players.get(selected).targetable) setSelected(undefined)
   //forces the component to rerender when an action occurs
   const [turn,forceUpdate] = useState(0)
 
@@ -34,17 +36,16 @@ export default function SDP(){
     }
   }, [turn, user])
 
-  //if(!RenderPhase[Game.getPhase()]) throw "error: phase " + Game.getPhase() + " cannot be rendered."
-  //let RP = RenderPhase[Game.getPhase()] as (args: RenderPhaseArgs) => JSX.Element | undefined
+  //if(!RenderPhase.get(Game.getPhase()]) throw "error: phase " + Game.getPhase() + " cannot be rendered."
+  //let RP = RenderPhase.get(Game.getPhase()] as (args: RenderPhaseArgs) => JSX.Element | undefined
 
   let renderPhase
-  if(RenderPhase[Game.getPhase()]){
-    let rr = RenderPhase[Game.getPhase()]
+  if(RenderPhase.get(Game.getPhase())){
+    let rr = RenderPhase.get(Game.getPhase())
     if(rr){
       renderPhase = rr({p: user, t: selected})
     }
   }
-
 
   return (
   <div className = "center">
@@ -61,10 +62,15 @@ export default function SDP(){
         </div>
       </div>
       <div className = "center">
-        {renderPhase}
+        {Array.from(RenderPhase.keys()).map(rp => {
+          let r = RenderPhase.get(rp)
+          if(r && Game.getPhase() === rp){
+            return React.createElement(r, {p: user, t: selected})
+          }
+        })}
       </div>
     </div>
-    <ActionLog />
+    <ActionLog p = {user}/>
   </div>
   </div>)
 }

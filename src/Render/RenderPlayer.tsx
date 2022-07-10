@@ -1,17 +1,15 @@
-
+import { cp } from 'fs'
+import {getCardString} from './PokerUtils'
 import {Team, Role} from '../Interface/Role'
-import Player from '../Interface/Player'
-import Players from '../Model/Players'
-import Settings from '../Model/Settings'
-import SDData from '../Model/SecretDictator'
-
 import {useState} from 'react'
 import Actions from '../Model/Actions'
 import dealer from '../Model/Poker'
-import {getCardString} from './PokerUtils'
 import Game from '../Model/Game'
 import phase from '../Interface/Phase'
-import { cp } from 'fs'
+import Player from '../Interface/Player'
+import Players from '../Model/Players'
+import SDData from '../Model/SecretDictator'
+import Settings from '../Model/Settings'
 
 function getTeamString(args: {u: Player, p: Player}){
   let showHitler = args.u.role.team !== Team.liberal

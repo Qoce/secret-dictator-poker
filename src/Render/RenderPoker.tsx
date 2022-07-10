@@ -120,9 +120,9 @@ function PokerAction(args: RenderPhaseArgs){
   }
 }
 
-RenderPhase[Phase.poker] = function renderPoker(args : RenderPhaseArgs){
+RenderPhase.set(Phase.poker, function renderPoker(args : RenderPhaseArgs){
   return <div className = "center">
     <Center />
     <PokerAction p = {args.p} t = {args.t}/>
   </div>
-}
+})

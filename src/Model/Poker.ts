@@ -2,7 +2,7 @@ import Actions from "./Actions"
 import Players from './Players'
 import Player from './../Interface/Player'
 import PokerHand from '../Interface/PokerHand'
-import {getCardString} from '../Render/PokerUtils'
+import {getCardString, renderNet} from '../Render/PokerUtils'
 import Phase from "../Interface/Phase"
 import ActionArgs from "../Interface/Action"
 import Game from "./Game"
@@ -145,6 +145,7 @@ Actions.onReset.push(() => {
 
 
 function startHand() : void{
+  Players.apply(p => p.targetable = false)
   pot = 0
   maxAmtIn = 0
   minRaise = BB
@@ -197,7 +198,6 @@ function endHand(){
   let inPlayers = Players.filter(p => !p.curHand.folded && p.bank > 0)
   let playerScores = inPlayers.map((p) => {
     let s = getHandScore(p.curHand.hand.concat(center))
-    Actions.log([`${p.name}: `,...p.curHand.hand.map(getCardString), ` ${getScoreString(s)}`])
     return s
   })
   let indices: number[] = Array(playerScores.length).fill(0)
@@ -265,6 +265,9 @@ function endHand(){
     leftOver = Math.max(leftOver, inPlayers[player].curHand.couldWin)
     inPlayers[player].bank = inPlayers[player].curHand.stack
   }
+  Players.players.forEach((p,i) => {
+    Actions.log([`${p.name}: `,...p.curHand.hand.map(getCardString), ` ${getScoreString(playerScores[i])} ` , renderNet(p.curHand.net)])
+  })
   Game.setPhase(Phase.nominate)
 }
 
@@ -336,21 +339,19 @@ function bet(p : Player, amt : number, f = false) : boolean {
   dm = setDM(Players.next(dm, guaranteedDecision))
   if(dm === false){
     Players.applyLiving(p => {
-      pot += p.curHand.amtIn
-      p.curHand.amtIn = 0
-    })
-    Players.applyLiving(p => {
       p.curHand.equity += p.curHand.amtIn
       p.curHand.checked = false
     }, p => !p.curHand.folded)
+    Players.applyLiving(p => {
+      pot += p.curHand.amtIn
+      p.curHand.amtIn = 0
+    })
     if(Players.filter(couldContinueBetting).length <= 1){
       setDM(false)
       while(street !== "River") nextStreet()
     }
     else{
       setDM(Players.next(dealer, p => !p.curHand.folded))
-      console.log(Players.get(+dm).name + " is the decision maker")
-      console.log(Players.get(+dm).canAct)
     }
     nextStreet()
   }

@@ -37,3 +37,8 @@ export function PolicySquare(props: PolicySquare){
     {props.team.toUpperCase()}
   </div>  
 }
+
+export function colorPolicy(p: "l" | "f"){
+  if(p === "l") return <span style = {{color: "blue", fontWeight: "bold"}}> L </span>
+  else return <span style = {{color: "red", fontWeight: "bold"}}> F </span>
+}

@@ -1,11 +1,12 @@
 import Player from "../Interface/Player"
 import Phase from "../Interface/Phase"
+import React from "react"
 
 export interface RenderPhaseArgs{
   p: number
   t?: number
 }
 
-let actions : {[key in Phase]?: (args: RenderPhaseArgs) => JSX.Element | undefined} = {}
+let actions: Map<Phase, React.FunctionComponent<RenderPhaseArgs>> = new Map<Phase, React.FunctionComponent<RenderPhaseArgs>> ()
 
 export default actions
