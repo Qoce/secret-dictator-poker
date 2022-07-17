@@ -32,7 +32,7 @@ export function PolicySquare(props: PolicySquare){
   return <div className = "square" style = {{backgroundColor: bgColor, marginLeft: 5 ,
     marginTop: "2px", border: "2px solid", borderColor: hovered ? "green" : "grey"}}
      onClick = {() => {if(props.selectable) props.setSelected(!props.selected)}} 
-     onMouseEnter = {() => setHovered(true)} 
+     onMouseEnter = {() => {if(props.selectable) setHovered(true)}} 
      onMouseLeave = {() => setHovered(false)}>
     {props.team.toUpperCase()}
   </div>  

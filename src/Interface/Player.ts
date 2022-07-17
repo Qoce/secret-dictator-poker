@@ -8,4 +8,5 @@ export default interface Player {
   name: string
   canAct: boolean
   targetable: boolean
+  bankVision: Player[]
 }

@@ -128,7 +128,7 @@ let center: number[]
 let deck: number[]
 let leftOver: number = 0
 
-let BB = Settings.BB
+let BB = Settings.getNumber("BB")
 
 
 Actions.onReset.push(() => {
@@ -145,6 +145,7 @@ Actions.onReset.push(() => {
 
 
 function startHand() : void{
+  if(!initialized) initPoker()
   Players.apply(p => {
     p.targetable = false
     p.curHand.stack = p.bank
@@ -262,17 +263,17 @@ function endHand(){
 
   //Give players their net payouts
   //Put any leftover unsplittable chips in the next hand's pot
-  
+  let winners 
   for(let player in inPlayers){
     inPlayers[player].curHand.stack += inPlayers[player].curHand.net + inPlayers[player].curHand.equity
     leftOver = Math.max(leftOver, inPlayers[player].curHand.couldWin)
   }
   Players.updateBanks(p => p.curHand.stack)
   inPlayers.forEach((p,i) => {
-    Actions.log([`${p.name}: `,...p.curHand.hand.map(getCardString), ` ${getScoreString(playerScores[i])} ` , renderNet(p.curHand.net)])
+    Actions.log([p, ": ",...p.curHand.hand.map(getCardString), ` ${getScoreString(playerScores[i])} ` , renderNet(p.curHand.net)])
   })
   Players.players.filter(p => p.curHand.folded && p.bank > 0).forEach((p,i) => {
-    Actions.log([`${p.name}: `,...p.curHand.hand.map(getCardString), ` folded ` , renderNet(p.curHand.net)])
+    Actions.log([p, ": ",{content: p.curHand.hand.map(getCardString), visibleTo: Players.players.indexOf(p)}, ` folded ` , renderNet(p.curHand.net)])
   })
   if(Game.getPhase() !== Phase.endgame)
     Game.setPhase(Phase.nominate)
@@ -281,7 +282,6 @@ function endHand(){
 function dealCenter(n: number){
   for(let i = 0; i < n; i++) center.push(deck.pop() as number)
   Actions.log([`${street}: `, ...center.slice(center.length - n).map(getCardString)])
-
 }
 
 function preparePlayer(p : Player) : void{
@@ -295,6 +295,7 @@ function preparePlayer(p : Player) : void{
     net: 0,
     checked: false
   }
+  if(p.bankVision.length === 0) p.bankVision.push(p)
 }
 
 function updateDealer() : void{
@@ -330,19 +331,19 @@ function bet(p : Player, amt : number, f = false) : boolean {
   if(p.curHand.amtIn > maxAmtIn){
     minRaise = Math.max(p.curHand.amtIn - maxAmtIn, BB)
     maxAmtIn = p.curHand.amtIn
-    if(f) Actions.log(p.name + " posts blind of " + p.curHand.amtIn)
-    else Actions.log(p.name + " raises to " + p.curHand.amtIn)
+    if(f) Actions.log([p , " posts blind of " + p.curHand.amtIn])
+    else Actions.log([p , " raises to " + p.curHand.amtIn])
   }
   else if(p.curHand.amtIn + amt < maxAmtIn && p.curHand.stack > 0){
     p.curHand.folded = true
-    Actions.log(p.name + " folds")
+    Actions.log([p , " folds"])
   }
   else if(p.curHand.amtIn){
-    Actions.log(p.name + " calls")
+    Actions.log([p , " calls"])
   }
   else{
     p.curHand.checked = true
-    Actions.log(p.name + " checks")
+    Actions.log([p , " checks"])
   }
   if(f) forced = p
   else if(forced === p) forced = false
@@ -368,7 +369,12 @@ function bet(p : Player, amt : number, f = false) : boolean {
   return true
 }
 
+let initialized = false
 
+export function initPoker(){
+  BB = Settings.getNumber("BB")
+  dealer = Rng.nextInt(Players.players.length)
+}
 
 Actions.register(Phase.poker, (args: ActionArgs) => {
   if(args.v === undefined) return false

@@ -7,12 +7,12 @@ import Rng from "./Rng"
 
 let actions = new Map<Phase, (args: ActionArgs) => boolean>() //{[key in Phase]: (args: ActionArgs) => boolean}
 let actionHistory : ActionArgs[] = []
-let actionLog : (string | JSX.Element | logElement)[][][] = [[]]
+let actionLog : (string | JSX.Element | Player | logElement)[][][] = [[]]
 let actionIndex = 0
 
 export interface logElement{
   visibleTo: number[] | number
-  content: string | JSX.Element
+  content: string | JSX.Element | Player | (string | JSX.Element | Player)[]
 }
 
 export default {
@@ -63,7 +63,10 @@ export default {
         break
       }
       let am = actions.get(Game.getPhase())
-      if(am) am(actionHistory[i])
+      if(am) {
+        actionLog.push([])
+        am(actionHistory[i])
+      }
     }
     this.onAction()
   },
@@ -71,7 +74,7 @@ export default {
     this.clearHistory()
     this.resimulate()
   },
-  log(emts : (string | JSX.Element | logElement)[] | (string | JSX.Element | logElement)){
+  log(emts : (string | JSX.Element | Player | logElement)[] | (string | JSX.Element | Player | logElement)){
     if(!Array.isArray(emts)) emts = [emts]
     actionLog[actionLog.length - 1].push(emts)
   },

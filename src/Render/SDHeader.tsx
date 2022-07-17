@@ -1,7 +1,7 @@
 import Game from "../Model/Game"
 import Phase from "../Interface/Phase"
 import SDData, {getSpecialPhase, setFPassed, setLPassed} from "../Model/SecretDictator"
-import settings from "../Model/Settings"
+import Settings from "../Model/Settings"
 
 
 interface SHSquare{
@@ -17,8 +17,8 @@ function SHSquare(props: SHSquare){
     (props.liberal ? "lightBlue" : "pink") 
   return <div className = "square" style = {{backgroundColor: bcColor, 
     marginLeft: props.shift, marginTop: "2px"}}
-    onClick = {() => {if(props.liberal && settings.debug) setLPassed(props.index+1);
-    else if(settings.debug) setFPassed(props.index+1)}}>
+    onClick = {() => {if(props.liberal && Settings.getBool('debug')) setLPassed(props.index+1);
+    else if(Settings.getBool('debug')) setFPassed(props.index+1)}}>
     {props.typeStr}
   </div>  
 }

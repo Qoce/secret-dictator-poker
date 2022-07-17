@@ -7,14 +7,14 @@ class Players{
 
   constructor(){
     this.players = []
-    for(let i = 0; i < 5; i++) this.makeFakePlayer(i)
+    for(let i = 0; i < 10; i++) this.makeFakePlayer(i)
   }
   makeFakePlayer(i : number){
     this.initPlayer("debug " + i)
   }
   initPlayer(n : string){
     this.players.push({
-      bank: Settings.startingBank,
+      bank: Settings.getNumber("startingBank"),
       name: n,
       canAct: false,
       targetable: false,
@@ -34,13 +34,14 @@ class Players{
         influence: 0,
         spent: 0,
         vote: undefined,
-      }
+      },
+      bankVision: []
     })
   }
   resetPlayer(p : Player){
     p.canAct = false
     p.targetable = false
-    p.bank = Settings.startingBank
+    p.bank = Settings.getNumber('startingBank')
     p.curHand = {
       equity: 0,
       amtIn: 0,

@@ -58,6 +58,7 @@ function Votes(args: RenderPhaseArgs){
   let p = Players.get(args.p)
   return <div className = "center">
     <div className = "board-row">
+      <div> {Settings.getNumber('freeInfluence') + " + "}</div>
       <input className = "textInput" type = 'number' min = {0} max = {p.role.influence}
         onChange = {(event) => setInfluence(+event.target.value)}/>
     </div>
@@ -73,10 +74,11 @@ function Bribe(args: RenderPhaseArgs){
   const [influence, setInfluence] = useState(0)
   let p = Players.get(args.p)
   if(p.canAct)
-  return <div className = "center">
-    <div className = "board-row">
+  return <div>
+    <div>
       <input className = "textInput" type = 'number' min = {0} max = {p.role.influence}
         onChange = {(event) => setInfluence(+event.target.value)}/>
+    </div>
       <button className = "button" onClick = {() => {
         Actions.fire({
           p: args.p,
@@ -86,7 +88,6 @@ function Bribe(args: RenderPhaseArgs){
         {influence > 0 ? "Send Bribe" : "No Bribe"}
       </button>
     </div>
-  </div>
   return null
 }
 
