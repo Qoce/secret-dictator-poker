@@ -12,7 +12,8 @@ let actionIndex = 0
 
 export interface logElement{
   visibleTo: number[] | number
-  content: string | JSX.Element | Player | (string | JSX.Element | Player)[]
+  content: string | JSX.Element | Player | logElement | (string | JSX.Element | Player | logElement)[]
+  delayed?: boolean
 }
 
 export default {

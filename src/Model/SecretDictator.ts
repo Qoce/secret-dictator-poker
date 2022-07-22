@@ -114,6 +114,7 @@ function topCardToEnd(){
 }
 
 Game.setPhaseListener(Phase.nominate, () => {
+  let wasUninitialized = !initalized
   if(!initalized){
     initSD()
     initalized = true
@@ -122,6 +123,10 @@ Game.setPhaseListener(Phase.nominate, () => {
 
   Players.apply(p => p.canAct = p === pCandidate)
   Players.apply(p => p.targetable = (p !== pCandidate && p !== president && p !== chancellor && p.bank > 0))
+  if(!wasUninitialized && Players.filter(p => p.canAct)) {
+    Actions.log([pCandidate, " has no legal chancellor choices. Their government fails."])
+    failGovernment()
+  }
 })
 
 Actions.register(Phase.nominate, (args : ActionArgs) => {
@@ -186,7 +191,6 @@ function failGovernment(){
   else{
     drawPolicies(1)
     passPolicy(0, true)
-    Game.setPhase(Phase.nominate)
   }
 }
 

@@ -52,7 +52,7 @@ settings.register("lPolicyCount", {value: 6, name: "Fascist Policy Cards"})
 settings.register("investigationPower", {value: "Role", name: "Investigation Power", 
   values: ["Role", "Role + Bank", "Role + Bank + Cards"]})
 settings.register("debug", {value: true, name: "Debug Mode"})
-settings.register("showGov", {value: false, name: "Show True Government"})
-settings.register("seeBriber", {value: false, name: "See Briber Identity"})
+settings.register("showGov", {value: false, name: "Show True Government"}) //merge with seeBriber
+settings.register("seeBriber", {value: false, name: "See Briber Identity"}) //TODO: maybe make this an enum: never, after, before, everyone
 
 export default settings
