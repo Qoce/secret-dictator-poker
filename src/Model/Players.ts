@@ -1,5 +1,6 @@
 import { Team } from "../Interface/Role"
 import Player from "./../Interface/Player"
+import Actions from "./Actions"
 import Settings from "./Settings"
 
 class Players{
@@ -109,15 +110,22 @@ class Players{
     return this.allLiving(p => !p.canAct)
   }
   updateBanks(f : (p: Player) => number){
+    let liberalsWon = false
     this.apply(p => {
       p.bank = f(p)
-      if(p.role.team === Team.dictator && p.bank === 0){
-        this.onLiberalWin()
+      if(p.bank === 0){
+        Actions.log([p, " has died"])
+        if(p.role.team === Team.dictator){
+          Actions.log([p, " was the dictator"])
+          liberalsWon = true
+        }
       }
     })
-    if(this.filter(p => p.role.team === Team.liberal && p.bank > 0).length === 0){
-      this.onFascistWin()
+    if(liberalsWon) {
+      this.onLiberalWin()
     }
+    else if(this.filter(p => p.role.team === Team.liberal && p.bank > 0).length === 0)
+      this.onFascistWin()  
   }
   onFascistWin(){}
   onLiberalWin(){}

@@ -103,15 +103,18 @@ function Stack(args: {p: Player, u: Player}){
   let n = args.p.role.influence
   if(inPoker()) n = args.p.curHand.stack
   else if(inEndgame()) n = args.p.bank
+  
   return <div className = "cards">
-    {args.u.bankVision.includes(args.p) && Settings.getString("investigationPower") !== "Role" && n}
+    {(inEndgame() || args.u === args.p ||
+    (args.u.bankVision.includes(args.p) && Settings.getString("investigationPower") !== "Role"))
+    && n}
   </div>
 }
 
 function Cards(args: {p: Player, u: Player}){
   if(inPoker()){
-    const show = Settings.getString("investigationPower") === "Role + Bank + Cards" && 
-      args.u.bankVision.includes(args.p)
+    const show = args.p === args.u || (Settings.getString("investigationPower") === "Role + Bank + Cards" && 
+      args.u.bankVision.includes(args.p))
     return <div className = "cards">
       {show ? args.p.curHand.hand.map(getCardString) : null}
     </div>
@@ -128,7 +131,7 @@ function AmtIn(args: {p: Player}){
 
 function Government(args: {p: Player, chan?: Player, pres: Player}){
   if(app.status !== "inGame") return null
-  if(inPoker()) return null
+  if(inPoker() || inEndgame()) return null
   let str = ""
   if(args.p === args.chan) str = "C"
   else if(args.p === args.pres) str = "P"
@@ -143,7 +146,7 @@ function inGovernment(){
 }
 
 function getBoldness(p : Player){
-  if(inGovernment() && !Settings.getBool("showGov")) return "normal"
+  if(inGovernment() && Settings.getString("bribeInfo") !== "Show True Government") return "normal"
   if(p.canAct) return "bold"
   return "normal"
 }

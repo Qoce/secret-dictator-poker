@@ -4,6 +4,7 @@ import {useState, useRef, useEffect} from 'react'
 import Player from '../Interface/Player'
 import Settings from '../Model/Settings'
 import { debug } from 'console'
+import react from 'react'
 
 export default function ActionLog(args: {p: number, height: number}){
   let a : any
@@ -16,9 +17,9 @@ export default function ActionLog(args: {p: number, height: number}){
   return <div className = 'scroller' style={{height: args.height}}>
     <div style={{height: args.height}}>
       {
-      Actions.getActionLog().map((a, i) => <Hoverable actionIndex = {i}>{
-        a.map((b, j) => <div style = {{marginLeft: j > 0 ? "30px" : undefined}}>
-        {flatten(b.map((c) =>  renderContent(c,args.p)))} 
+      Actions.getActionLog().map((a, i) => <Hoverable actionIndex = {i} key = {i}>{
+        a.map((b, j) => <div style = {{marginLeft: j > 0 ? "30px" : undefined}} key = {i * 100 + j}>
+        {flatten(b.map((c,k) => renderContent(c,args.p, i * 1e4 + j * 1e2 + k)))} 
         <div ref = {scrollRef}/>
         </div>)
       }</Hoverable>)
@@ -28,19 +29,20 @@ export default function ActionLog(args: {p: number, height: number}){
   </div>
 }
 
-function renderContent(c: string | JSX.Element | Player | logElement, p: number) : JSX.Element | JSX.Element[]{ 
-  if(typeof c === "string") return <span>{c}</span>
+function renderContent(c: string | JSX.Element | Player | logElement, p: number, k: number) : JSX.Element | JSX.Element[]{ 
+  if(typeof c === "string") return <span key = {k}>{c}</span>
   if("content" in c && "visibleTo" in c){
-    const d = c as {content: string, visibleTo: number}
+    const d = c as {content: string, visibleTo: number | number[] | boolean}
     const vt = d.visibleTo
+    if(Settings.getBool("debug") || vt === false) return flatten(arrayify(d.content).map((e,i) => renderContent(e, p, k * 1e2 + i)))
     if(Array.isArray(vt)){
-      if(Settings.getBool("debug") || vt.includes(p)) return flatten(arrayify(d.content).map((e) => renderContent(e, p)))
+      if(vt.includes(p)) return flatten(arrayify(d.content).map((e,i) => renderContent(e, p, k * 1e2 + i)))
     }
-    if(Settings.getBool("debug") || p === d.visibleTo) return flatten(arrayify(d.content).map((e) => renderContent(e, p)))
+    if(p === d.visibleTo) return flatten(arrayify(d.content).map((e,i) => renderContent(e, p, k * 1e2 + i)))
     return <span></span>
   }
-  if("name" in c)  return <span style = {{fontWeight : "bold"}}>{c.name}</span>
-  return c as JSX.Element
+  if("name" in c)  return <span key = {k} style = {{fontWeight : "bold"}}>{c.name}</span>
+  return <react.Fragment key={k}>{c}</react.Fragment>
 }
 
 function arrayify(c: string | JSX.Element | Player | logElement | (string | JSX.Element | Player | logElement)[]) : (string | JSX.Element | Player | logElement)[]{

@@ -268,13 +268,13 @@ function endHand(){
     inPlayers[player].curHand.stack += inPlayers[player].curHand.net + inPlayers[player].curHand.equity
     leftOver = Math.max(leftOver, inPlayers[player].curHand.couldWin)
   }
-  Players.updateBanks(p => p.curHand.stack)
   inPlayers.forEach((p,i) => {
     Actions.log([p, ": ",...p.curHand.hand.map(getCardString), ` ${getScoreString(playerScores[i])} ` , renderNet(p.curHand.net)])
   })
   Players.players.filter(p => p.curHand.folded && p.bank > 0).forEach((p,i) => {
     Actions.log([p, ": ",{content: p.curHand.hand.map(getCardString), visibleTo: Players.players.indexOf(p)}, ` folded ` , renderNet(p.curHand.net)])
   })
+  Players.updateBanks(p => p.curHand.stack)
   if(Game.getPhase() !== Phase.endgame)
     Game.setPhase(Phase.nominate)
 }
@@ -319,6 +319,7 @@ function couldContinueBetting(p: Player): boolean{
 
 
 function bet(p : Player, amt : number, f = false) : boolean {
+  if(amt < 0) return false
   if(dm === false || Players.get(dm) !== p) return false
   //reject players spending more than they have
   if(amt > p.curHand.stack) return false

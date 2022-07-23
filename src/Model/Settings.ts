@@ -40,6 +40,13 @@ let settings = {
   },
   register(key : string, val: {value : number | boolean | string, name : string, values?: string[], max?: number, min?: number}){
     this.settings.set(key, val)
+  },
+  atLeast(key: string, value: string){
+    const s = this.settings.get(key)?.value
+    if(typeof s !== "string") throw Error('Setting ' + key + ' not found!')
+    let values = this.settings.get(key)?.values as string[]
+    if(!values.includes(value)) throw Error(value + ' is not a valid value for ' + key)
+    return values.indexOf(s) >= values.indexOf(value)
   }
 }
 
@@ -52,7 +59,9 @@ settings.register("lPolicyCount", {value: 6, name: "Fascist Policy Cards"})
 settings.register("investigationPower", {value: "Role", name: "Investigation Power", 
   values: ["Role", "Role + Bank", "Role + Bank + Cards"]})
 settings.register("debug", {value: true, name: "Debug Mode"})
-settings.register("showGov", {value: false, name: "Show True Government"}) //merge with seeBriber
-settings.register("seeBriber", {value: false, name: "See Briber Identity"}) //TODO: maybe make this an enum: never, after, before, everyone
+settings.register("bribeInfo", {value: "None", name: "Briber Information",
+  values: ["None", "On Acceptance", "Before Acceptance", "Public Bribes", "Show True Government"]}) 
+settings.register("showVoting", {value: "Direction", name: "Show Voting",
+  values: ["Anonymous", "Direction", "Value"]})
 
 export default settings

@@ -67,7 +67,7 @@ export default function SDP(){
       <div className = "center">
         <div>
           {app.status !== "browsing" && egSort().map(p => 
-            <Player p = {p} selected = {selected !== undefined && Players.get(selected) === p}
+            <Player key = {p.name} p = {p} selected = {selected !== undefined && Players.get(selected) === p}
             onSelected = {() => setSelected(Players.players.indexOf(p))} u = {Players.get(user)}
             setUser = {() => setUser(Players.players.indexOf(p))}/>
           )}
@@ -77,7 +77,7 @@ export default function SDP(){
         {app.status === "inGame" && Array.from(RenderPhase.keys()).map(rp => {
           let r = RenderPhase.get(rp)
           if(r && Game.getPhase() === rp){
-            return React.createElement(r, {p: user, t: selected})
+            return React.createElement(r, {p: user, t: selected, key: rp})
           }
         })}
       </div>

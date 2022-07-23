@@ -104,10 +104,12 @@ function ConsiderBribe(args: RenderPhaseArgs){
   if(!Players.get(args.p).canAct) return null
 
   let influence = SDState().activeBriber?.role.spent
+  let briberName = Settings.atLeast("bribeInfo", "Before Acceptance")
+    ? " from " + SDState().activeBriber?.name : ""
   if(!influence) throw "Error: bribe size is 0 or undefined and we are trying to render the bribe ui"
   return <div className = "center">
     <div>
-      {"Best Bribe: " + influence}
+      {"Best Bribe: " + influence + briberName}
     </div>
     <button className = "button" onClick = {decision(true)}>
       {"Accept Bribe"}
@@ -163,7 +165,7 @@ function Policies(args: PolicyArgs){
 
   return <div className = "center">
     <div className = "board-row">
-      {indicies.map(i => <PolicySquare team = {policies[i]} selectable = {args.selectable}
+      {indicies.map(i => <PolicySquare key = {i} team = {policies[i]} selectable = {args.selectable}
         selected = {selections[i]} setSelected = {(s: boolean) => {
           selections[i] = s
           //sets selections to copy of itself

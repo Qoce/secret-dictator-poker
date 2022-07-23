@@ -11,7 +11,7 @@ let actionLog : (string | JSX.Element | Player | logElement)[][][] = [[]]
 let actionIndex = 0
 
 export interface logElement{
-  visibleTo: number[] | number
+  visibleTo: number[] | number | false
   content: string | JSX.Element | Player | logElement | (string | JSX.Element | Player | logElement)[]
   delayed?: boolean
 }
