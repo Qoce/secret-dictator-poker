@@ -1,12 +1,11 @@
 import Players from "./Players"
 import Player from '../Interface/Player'
 import RNG from "./Rng"
-import {Team, Role} from "../Interface/Role"
+import {Team} from "../Interface/Role"
 import Actions from "./Actions"
 import Phase from "../Interface/Phase"
 import Game from "./Game"
 import Settings from "./Settings"
-import { BADHINTS } from "dns"
 import ActionArgs from "../Interface/Action"
 import {colorPolicy} from '../Render/SDUtils'
 import settings from "./Settings"
@@ -46,10 +45,10 @@ export function initSD(){
   chancellor = undefined
 
   let players = Players.players
-  if(players.length < 5) throw 'not enough players to start secret dictator'
+  if(players.length < 5) throw Error('not enough players to start secret dictator')
   let nFascist = Math.floor((players.length - 3) / 2)
   let teams : number[] = []
-  for(let _ in players) teams.push(Team.liberal)
+  players.forEach((_) => teams.push(Team.liberal))
 
   teams[RNG.nextInt(teams.length)] = Team.dictator
   for(let i = 0; i < nFascist; i++){
@@ -124,7 +123,7 @@ Game.setPhaseListener(Phase.nominate, () => {
 
   Players.apply(p => p.canAct = p === pCandidate)
   Players.apply(p => p.targetable = (p !== pCandidate && p !== president && p !== chancellor && p.bank > 0))
-  if(!wasUninitialized && Players.filter(p => p.targetable).length == 0) {
+  if(!wasUninitialized && Players.filter(p => p.targetable).length === 0) {
     Actions.log([pCandidate, " has no legal chancellor choices. Their government fails."])
     failGovernment()
   }
@@ -169,13 +168,13 @@ function checkVotes(){
   let votes = alivePlayers.map(p => p.role.vote)
   let yesSum = 0
   let noSum = 0
-  if(settings.getString("showVoting") != "Anonymous")
+  if(settings.getString("showVoting") !== "Anonymous")
   Players.applyLiving(p => {
     let showVoting = Settings.getString("showVoting") 
     Actions.log([p, ': ' + ["✔️", "❌"][p.role.vote ? 0 : 1], 
       {
         content: ' ' + p.role.spent,
-        visibleTo: showVoting != "Value" && Players.players.indexOf(p)
+        visibleTo: showVoting !== "Value" && Players.players.indexOf(p)
       }
     ])
   })
@@ -259,7 +258,7 @@ Actions.register(Phase.bribe, (ActionArgs) => {
 })
 
 function logBribe(gName: string, g: Player, b: Player, a: boolean){
-  let stg = Settings.getString("bribeInfo") == "Show True Government"
+  let stg = Settings.getString("bribeInfo") === "Show True Government"
   if(a){
     Actions.log(
       {
@@ -316,7 +315,7 @@ Actions.register(Phase.presBribe, (ActionArgs) => {
 function peakPolicies(n: number){
   if(policyDeck.length < n){
     discard = discard.concat(policyDeck)
-    if(discard.length < n) throw "not enough policy choices left to reshuffle: " + discard
+    if(discard.length < n) throw Error("not enough policy choices left to reshuffle: " + discard)
     RNG.randomize(discard)
     policyDeck = discard
     discard = []
@@ -398,11 +397,11 @@ Actions.register(Phase.chancellor, (args: ActionArgs) => {
   return true
 })
 
-function printGov(){
-  if(settings.getString("bribeInfo") === "Show True Government"){
+// function printGov(){
+//   if(settings.getString("bribeInfo") === "Show True Government"){
     
-  }
-}
+//   }
+// }
 
 function passPolicy(a: number, topCard = false, exit = true){
   if(a < 0 || a >= activePolicies.length) return false
@@ -476,7 +475,7 @@ Actions.register(Phase.investigate, (args: ActionArgs) => {
 
 function printPolicies(label: string | (string | Player)[], policies: ("l" | "f")[], p: Player | Player[] | undefined){
   if(!(p instanceof Array)) {
-    if(p === undefined) throw "error: printPolicies called with undefined player"
+    if(p === undefined) throw Error("printPolicies called with undefined player")
     p = [p]
   }
   let pels = policies.map(colorPolicy).map(x => {return {content: x, visibleTo: 
@@ -515,7 +514,7 @@ Game.setPhaseListener(Phase.veto, () => {
 })
 
 Actions.register(Phase.veto, (args: ActionArgs) => {
-  if(chancellor === undefined || cCandidate === undefined) throw "Error: no chancellor exists during veto phase"
+  if(chancellor === undefined || cCandidate === undefined) throw Error("no chancellor exists during veto phase")
   if(args.v === 1){
     Actions.log(["\"", pCandidate, "\"", " and ", "\"", cCandidate, "\"", " have vetoed their policy choices"])
     failGovernment()

@@ -1,3 +1,5 @@
+import SocketIO from 'socket.io'
+
 let settings = {
   settings: new Map<string, {value: number | boolean | string, name: string, values?: string[], max?: number, min?: number}>(),
   getNumber(key : string){
@@ -23,7 +25,7 @@ let settings = {
     if(typeof value === 'undefined') throw Error('Setting ' + key + ' not found!')
     return this.settings.get(key)?.name as string
   },
-  set(key : string, value : number | boolean | string){
+  set(key : string, value : number | boolean | string, socket : SocketIO.Socket | undefined = undefined, lobby : string | undefined = undefined){
     let s = this.settings.get(key) 
     if(s !== undefined){
       if(typeof s.value === "number"){
@@ -35,7 +37,12 @@ let settings = {
           throw Error("Invalid setting value for " + key + ": " + value)
         }
       }
-      s.value = value
+      if(socket !== undefined){
+        socket.emit('changeSetting', lobby, key, value)
+      }
+      else{
+        s.value = value
+      }
     }
   },
   register(key : string, val: {value : number | boolean | string, name : string, values?: string[], max?: number, min?: number}){
@@ -47,6 +54,11 @@ let settings = {
     let values = this.settings.get(key)?.values as string[]
     if(!values.includes(value)) throw Error(value + ' is not a valid value for ' + key)
     return values.indexOf(s) >= values.indexOf(value)
+  },
+  loadPreset(s:  Map<string, number | boolean | string>){
+    for(let key in s){
+      this.set(key, s.get(key)!)
+    }
   }
 }
 

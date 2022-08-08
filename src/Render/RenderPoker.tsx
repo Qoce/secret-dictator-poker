@@ -1,6 +1,5 @@
 import Actions from "../Model/Actions"
 import Phase from "../Interface/Phase"
-import Player from "../Interface/Player"
 import Players from "../Model/Players"
 import PokerState from "../Model/Poker"
 import RenderPhase, { RenderPhaseArgs } from "./RenderPhase"
@@ -33,7 +32,7 @@ function Center(){
 function PokerAction(args: RenderPhaseArgs){
   const [betAmt, setBetAmt] = useState(0)
   let user = Players.get(args.p)
-  if(user === undefined) throw "undefined user"
+  if(user === undefined) throw Error("undefined user")
   let cost = PokerState().maxAmtIn - user.curHand.amtIn
   let stack = user.curHand.stack
   let minRaise = Math.min(cost + PokerState().minRaise, stack)
@@ -67,7 +66,7 @@ function PokerAction(args: RenderPhaseArgs){
     if (key === "b" || key === "r" || keyCode === 66 || keyCode === 82) {
       betFunc()
     }
-  }, [user]);
+  }, [user, betFunc, callFunc, foldFunc]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleUserKeyPress);

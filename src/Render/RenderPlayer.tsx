@@ -1,8 +1,6 @@
-import { cp } from 'fs'
 import {getCardString} from './PokerUtils'
-import {Team, Role} from '../Interface/Role'
+import {Team} from '../Interface/Role'
 import {useState} from 'react'
-import Actions from '../Model/Actions'
 import dealer from '../Model/Poker'
 import Game from '../Model/Game'
 import Phase from '../Interface/Phase'
@@ -10,7 +8,6 @@ import Player from '../Interface/Player'
 import Players from '../Model/Players'
 import SDData from '../Model/SecretDictator'
 import Settings from '../Model/Settings'
-import app from '../Model/Application'
 
 function getTeamString(args: {u: Player, p: Player}){
   let showHitler = args.u.role.team !== Team.liberal || inEndgame()
@@ -62,7 +59,7 @@ function Name(args: {p: Player}){
 }
 
 function TeamSquare(args: {p: Player, u: Player}){
-  if(app.status !== "inGame") return null
+  if(appState !== "inGame") return null
   return <div className = "square">
     {getTeamString(args)}
   </div>
@@ -84,7 +81,7 @@ function getBlindString(p: Player){
 }
 
 function inPoker(){
-  return app.status === "inGame" && Game.getPhase() === Phase.poker
+  return appState === "inGame" && Game.getPhase() === Phase.poker
 }
 
 function inEndgame(){
@@ -99,7 +96,7 @@ function PokerPosition(args: {p: Player}){
 }
 
 function Stack(args: {p: Player, u: Player}){
-  if(app.status !== "inGame") return null
+  if(appState !== "inGame") return null
   let n = args.p.role.influence
   if(inPoker()) n = args.p.curHand.stack
   else if(inEndgame()) n = args.p.bank
@@ -130,7 +127,7 @@ function AmtIn(args: {p: Player}){
 }
 
 function Government(args: {p: Player, chan?: Player, pres: Player}){
-  if(app.status !== "inGame") return null
+  if(appState !== "inGame") return null
   if(inPoker() || inEndgame()) return null
   let str = ""
   if(args.p === args.chan) str = "C"
@@ -167,9 +164,13 @@ interface PlayerRenderArgs{
   selected: boolean
   setUser: () => void
   onSelected: () => void
+  appState: "browsing" | "joining" | "inLobby" | "inGame" 
 }
 
+let appState = ""
+
 export default function RenderPlayer(args : PlayerRenderArgs){
+  appState = args.appState
   let p = args.p
   let selected = args.selected
   const [hovered, setHovered] = useState(false)

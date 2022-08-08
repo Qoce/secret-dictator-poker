@@ -13,6 +13,10 @@ class Players{
   makeFakePlayer(i : number){
     this.initPlayer("debug " + i)
   }
+  initFromNames(n: string[]){
+    this.players = []
+    n.forEach(this.initPlayer.bind(this))
+  }
   initPlayer(n : string){
     this.players.push({
       bank: Settings.getNumber("startingBank"),

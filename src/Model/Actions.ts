@@ -4,6 +4,7 @@ import Players from "./Players"
 import Phase from "../Interface/Phase"
 import Game from "./Game"
 import Rng from "./Rng"
+import SocketIO from "socket.io"
 
 let actions = new Map<Phase, (args: ActionArgs) => boolean>() //{[key in Phase]: (args: ActionArgs) => boolean}
 let actionHistory : ActionArgs[] = []
@@ -16,12 +17,14 @@ export interface logElement{
   delayed?: boolean
 }
 
-export default {
-  startingSeed: Rng.nextInt(1e9),
+let a = {
+  startingSeed: 0,
+  socket: undefined as any,
+  lobby: undefined as any,
   onAction(){},
   onReset: [] as (() => void)[],
   register(phase: Phase, action: (args: ActionArgs) => boolean){
-    if(phase in actions) throw 'Error: Action for ' + phase + ' already registered!'
+    if(phase in actions) throw Error('Error: Action for ' + phase + ' already registered!')
     actions.set(phase, action)
   },
   fire(args: ActionArgs){
@@ -37,10 +40,11 @@ export default {
     if(player.canAct && (!target || target.targetable)) {
       actionLog.push([])
       actionHistory.push(args)
-      let am = actions.get(Game.getPhase())
-      if(am) am(args)
-      actionIndex++
+      // let am = actions.get(Game.getPhase())
+      // if(am) am(args)
+      actionIndex++  
     }
+    this.socket.emit("action", this.lobby, args)
     this.onAction()
   },
   clearHistory(){
@@ -82,4 +86,10 @@ export default {
   getActionLog(){
     return actionLog
   },
+  loadActions(actions : ActionArgs[]){
+    actionHistory = actions
+    this.resimulate()
+  }
 }
+
+export default a

@@ -1,13 +1,13 @@
 import SDState from "../Model/SecretDictator"
 import {useState} from 'react'
 
-interface VoteSquare{
+interface VoteSquareArgs{
   shift?: number,
   onClick: () => void,
   str: string
 }
 
-export function VoteSquare(props : VoteSquare){
+export function VoteSquare(props : VoteSquareArgs){
   const [hovered, setHovered] = useState(0)
   let bgColor = ["hsl(" + SDState().bg + ",90%,72%)", "hsl(" + SDState().bg + ",100%,80%)"][hovered]
   return <div className = "square" style = {{backgroundColor: bgColor, 
@@ -19,14 +19,14 @@ export function VoteSquare(props : VoteSquare){
   </div>  
 }
 
-interface PolicySquare{
+interface PolicySquareArgs{
   team: "l" | "f",
   selected: boolean,
   selectable: boolean,
   setSelected: (selected : boolean) => void
 }
 
-export function PolicySquare(props: PolicySquare){
+export function PolicySquare(props: PolicySquareArgs){
   const [hovered, setHovered] = useState(false)
   let bgColor = [["lightBlue","blue"],["pink","red"]][props.team === 'l' ? 0 : 1][props.selected ? 1 : 0]
   return <div className = "square" style = {{backgroundColor: bgColor, marginLeft: 5 ,

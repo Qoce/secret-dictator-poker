@@ -1,13 +1,12 @@
-import Actions from "./Actions"
-import Players from './Players'
-import Player from './../Interface/Player'
-import PokerHand from '../Interface/PokerHand'
 import {getCardString, renderNet} from '../Render/PokerUtils'
-import Phase from "../Interface/Phase"
 import ActionArgs from "../Interface/Action"
+import Actions from "./Actions"
 import Game from "./Game"
-import Settings from "./Settings"
+import Phase from "../Interface/Phase"
+import Player from './../Interface/Player'
+import Players from './Players'
 import Rng from "./Rng"
+import Settings from "./Settings"
 
 //Hand types:
 //Card represented as 0 to 51
@@ -164,7 +163,7 @@ function startHand() : void{
     bet(Players.get(dm), Math.floor(BB/2), true)
     bet(Players.get(dm), BB, true)
   }
-  else throw 'Not enough living players in poker' //ERROR
+  else throw Error('Not enough living players in poker')
   
 }
 
@@ -263,7 +262,7 @@ function endHand(){
 
   //Give players their net payouts
   //Put any leftover unsplittable chips in the next hand's pot
-  let winners 
+  //let winners 
   for(let player in inPlayers){
     inPlayers[player].curHand.stack += inPlayers[player].curHand.net + inPlayers[player].curHand.equity
     leftOver = Math.max(leftOver, inPlayers[player].curHand.couldWin)
@@ -301,7 +300,7 @@ function preparePlayer(p : Player) : void{
 function updateDealer() : void{
   let nl = Players.nextLiving(dealer)
   if(nl !== false) dealer = nl
-  else throw 'Not enough living players in poker' //ERROR
+  else throw Error('Not enough living players in poker')
 }
 
 function guaranteedDecision(p : Player) : boolean{

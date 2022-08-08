@@ -1,6 +1,6 @@
 let MersenneTwister = require('mersenne-twister');
 
-export default {
+let rng = {
   generator: new MersenneTwister(),
 
   setSeed(n: number){
@@ -21,3 +21,5 @@ export default {
     }
   }
 }
+
+export default rng

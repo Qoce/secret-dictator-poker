@@ -4,7 +4,7 @@ import SDData, {getSpecialPhase, setFPassed, setLPassed} from "../Model/SecretDi
 import Settings from "../Model/Settings"
 
 
-interface SHSquare{
+interface SHSquareArgs{
   passed: boolean,
   liberal: boolean,
   typeStr: string,
@@ -12,7 +12,7 @@ interface SHSquare{
   index: number
 }
 
-function SHSquare(props: SHSquare){
+function SHSquare(props: SHSquareArgs){
   let bcColor = (props.passed && (props.liberal ? "blue" : "red")) || 
     (props.liberal ? "lightBlue" : "pink") 
   return <div className = "square" style = {{backgroundColor: bcColor, 
@@ -23,13 +23,13 @@ function SHSquare(props: SHSquare){
   </div>  
 }
 
-interface ProgSquare{
+interface ProgSquareArgs{
   current: boolean,
   shift?: number,
 }
   
 //Indicates progress towards top carding
-function ProgSquare(props : ProgSquare){
+function ProgSquare(props : ProgSquareArgs){
   let bcColor = props.current ? "green" : "lightGreen"
   return <div className = "square" style = {{backgroundColor: bcColor, 
     marginLeft: props.shift, marginTop: "2px"}}>

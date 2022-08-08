@@ -1,10 +1,8 @@
-import Actions, {logElement} from '../Model/Actions'
-import Players from '../Model/Players'
 import {useState, useRef, useEffect} from 'react'
+import Actions, {logElement} from '../Model/Actions'
 import Player from '../Interface/Player'
-import Settings from '../Model/Settings'
-import { debug } from 'console'
 import react from 'react'
+import Settings from '../Model/Settings'
 
 export default function ActionLog(args: {p: number, height: number}){
   let a : any
@@ -59,12 +57,12 @@ function flatten(a: JSX.Element | any[]) : JSX.Element[]{
 }
 
 
-function checkContent(p : string | JSX.Element | Player | ( string | JSX.Element | Player)[]) : any{
-  if(Array.isArray(p))return p.map(checkContent)
-  if(typeof p === "string") return p
-  if("name" in p)  return <span style = {{fontWeight : "bold"}}>{p.name}</span>
-  return p
-}
+// function checkContent(p : string | JSX.Element | Player | ( string | JSX.Element | Player)[]) : any{
+//   if(Array.isArray(p))return p.map(checkContent)
+//   if(typeof p === "string") return p
+//   if("name" in p)  return <span style = {{fontWeight : "bold"}}>{p.name}</span>
+//   return p
+// }
 
 function Hoverable(props: {actionIndex: number, children: any}){
   const [hover,setHover] = useState(false)

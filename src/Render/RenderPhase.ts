@@ -1,4 +1,3 @@
-import Player from "../Interface/Player"
 import Phase from "../Interface/Phase"
 import React from "react"
 

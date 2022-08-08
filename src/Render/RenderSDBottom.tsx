@@ -1,12 +1,11 @@
 import Actions from "../Model/Actions"
 import Phase from "../Interface/Phase"
-import Player from "../Interface/Player"
 import Players from "../Model/Players"
 import RenderPhase from "./RenderPhase"
 import {RenderPhaseArgs} from "./RenderPhase"
 import Settings from "../Model/Settings"
 import SDState from "../Model/SecretDictator"
-import {useState, createRef} from 'react'
+import {useState} from 'react'
 import {VoteSquare, PolicySquare} from "./SDUtils"
 
 
@@ -106,7 +105,7 @@ function ConsiderBribe(args: RenderPhaseArgs){
   let influence = SDState().activeBriber?.role.spent
   let briberName = Settings.atLeast("bribeInfo", "Before Acceptance")
     ? " from " + SDState().activeBriber?.name : ""
-  if(!influence) throw "Error: bribe size is 0 or undefined and we are trying to render the bribe ui"
+  if(!influence) throw Error("bribe size is 0 or undefined and we are trying to render the bribe ui")
   return <div className = "center">
     <div>
       {"Best Bribe: " + influence + briberName}
