@@ -33,6 +33,7 @@ function Confirm(args: CRArgs){
 
 function confirmRenderer(title: string){
   return (args: RenderPhaseArgs) => {
+    if(!Players.get(args.p).canAct) return null
     return <Confirm title = {title} p = {args.p} t = {args.t}/>
   }
 }
@@ -55,17 +56,20 @@ function Votes(args: RenderPhaseArgs){
   }
 
   let p = Players.get(args.p)
-  return <div className = "center">
-    <div className = "board-row">
-      <div> {Settings.getNumber('freeInfluence') + " + "}</div>
-      <input className = "textInput" type = 'number' min = {0} max = {p.role.influence}
-        onChange = {(event) => setInfluence(+event.target.value)}/>
+  if(p.canAct){
+    return <div className = "center">
+      <div className = "board-row">
+        <div> {Settings.getNumber('freeInfluence') + " + "}</div>
+        <input className = "textInput" type = 'number' min = {0} max = {p.role.influence}
+          onChange = {(event) => setInfluence(+event.target.value)}/>
+      </div>
+      <div className = "board-row">
+        <VoteSquare onClick = {vote(true)} str = {"✔️"}/>
+        <VoteSquare onClick = {vote(false)} str = {"❌"}/>
+      </div>
     </div>
-    <div className = "board-row">
-      <VoteSquare onClick = {vote(true)} str = {"✔️"}/>
-      <VoteSquare onClick = {vote(false)} str = {"❌"}/>
-    </div>
-  </div>
+  }
+  return null
 }
 RenderPhase.set(Phase.vote, (args: RenderPhaseArgs) => {return <Votes p = {args.p} t = {args.t}/>})
 

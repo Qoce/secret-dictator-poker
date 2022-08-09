@@ -7,5 +7,5 @@ export default interface Lobby{
   inGame: boolean,
   seed: number,
   actions: ActionArgs[],
-  settings: Map<string, number | boolean | string>
+  settings: any[][]
 }

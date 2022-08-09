@@ -82,6 +82,7 @@ export default function SDP(){
 
   updateLobbyCallback = (l: Lobby) => {
     settings.loadPreset(l.settings)
+    Players.initFromNames(l.players)
     forceUpdate(turn + 1)
   }
 
@@ -111,6 +112,8 @@ export default function SDP(){
             if(lobbyName === undefined){
               socket.emit("createLobby", {name: n, username: u, password: p}, (l: Lobby) => {
                 setLobbyName(l.name)
+                setUser(0)
+                Players.initFromNames(l.players)
                 Actions.lobby = l.name
                 setAppState("inLobby")
               })
@@ -122,6 +125,8 @@ export default function SDP(){
                 }
                 else{
                   setLobbyName(l.name)
+                  Players.initFromNames(l.players)
+                  setUser(l.players.indexOf(u))
                   Actions.lobby = l.name
                   setAppState("inLobby")
                 }

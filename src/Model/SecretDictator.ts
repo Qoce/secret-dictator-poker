@@ -123,6 +123,8 @@ Game.setPhaseListener(Phase.nominate, () => {
 
   Players.apply(p => p.canAct = p === pCandidate)
   Players.apply(p => p.targetable = (p !== pCandidate && p !== president && p !== chancellor && p.bank > 0))
+  Players.apply(p => p.role.influence = p.bank)
+  
   if(!wasUninitialized && Players.filter(p => p.targetable).length === 0) {
     Actions.log([pCandidate, " has no legal chancellor choices. Their government fails."])
     failGovernment()
@@ -339,7 +341,7 @@ Game.setPhaseListener(Phase.president, () => {
 Actions.register(Phase.president, (args: ActionArgs) => {
   let v = args.v
   if(v === undefined || v < 0 || v >= activePolicies.length) return false
-  activePolicies.splice(v,1)
+  discard = discard.concat(activePolicies.splice(v,1))
   if(president === undefined) throw Error("President is undefined during president phase")
   if(chancellor === undefined) throw Error("Chancellor is undefined during president phase")
   Actions.log([president, " sends ", ...activePolicies.map(colorPolicy)])

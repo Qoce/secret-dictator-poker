@@ -55,9 +55,9 @@ let settings = {
     if(!values.includes(value)) throw Error(value + ' is not a valid value for ' + key)
     return values.indexOf(s) >= values.indexOf(value)
   },
-  loadPreset(s:  Map<string, number | boolean | string>){
-    for(let key in s){
-      this.set(key, s.get(key)!)
+  loadPreset(s:  any[][]){
+    for(let setting of s){
+      this.set(setting[0], setting[1])
     }
   }
 }

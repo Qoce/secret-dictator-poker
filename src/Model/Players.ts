@@ -8,7 +8,7 @@ class Players{
 
   constructor(){
     this.players = []
-    for(let i = 0; i < 10; i++) this.makeFakePlayer(i)
+    //for(let i = 0; i < 10; i++) this.makeFakePlayer(i)
   }
   makeFakePlayer(i : number){
     this.initPlayer("debug " + i)

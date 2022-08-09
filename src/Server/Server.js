@@ -34,7 +34,7 @@ io.on('connection', (socket) => {
       inGame: false,
       seed: Math.floor(Math.random() * 1000000),
       actions: [],
-      settings: new Map()
+      settings: []
     }
     socket.join(l.name)
     lobbies.push(l)
@@ -42,12 +42,11 @@ io.on('connection', (socket) => {
   })
   socket.on('joinLobby', (lobby, callback) => {
     const l = lobbies.find(l => l.name === lobby.name)
-    console.log(l)
     if(l && l.password === lobby.password){
       if(l.players.indexOf(lobby.username) === -1){
+        l.players.push(lobby.username)
         socket.join(l.name)
         socket.to(l.name).emit('updateLobby', l)
-        l.players.push(lobby.username)
         callback(l)
       }
       else{
@@ -61,7 +60,9 @@ io.on('connection', (socket) => {
   socket.on('changeSetting', (lobby, setting, value) => {
     const l = lobbies.find(l => l.name === lobby)
     if(l){
-      l.settings.set(setting, value)
+      let s = l.settings.find(s => s[0] === setting)
+      if(s) s[1] = value
+      else l.settings.push([setting, value])
       io.sockets.in(l.name).emit('updateLobby', l)
     } 
   })
