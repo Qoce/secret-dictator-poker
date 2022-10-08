@@ -9,4 +9,5 @@ export default interface Player {
   canAct: boolean
   targetable: boolean
   bankVision: Player[]
+  connected: boolean
 }

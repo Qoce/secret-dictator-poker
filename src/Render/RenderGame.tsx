@@ -33,11 +33,15 @@ function egSort(){
 
 let startGameCallback : (l: Lobby) => void
 let updateLobbyCallback : (l: Lobby) => void
+let updateLobbiesCallback : (l: string[]) => void
 let updateGameCallback : (l: Lobby) => void
+let updateConnectedCallback : (l : boolean[]) => void
 
 socket.on('startGame', (l : Lobby) => startGameCallback(l))
 socket.on('updateLobby', (l: Lobby) => updateLobbyCallback(l))
+socket.on('updateLobbies', (l: string[]) => updateLobbiesCallback(l))
 socket.on('updateGame', (l: Lobby) => updateGameCallback(l))
+socket.on('updateConnected', (l: boolean[]) => updateConnectedCallback(l))
 
 Actions.socket = socket
 
@@ -90,6 +94,8 @@ export default function SDP(){
     Actions.loadActions(l.actions)
     forceUpdate(turn + 1)
   }
+
+  updateLobbiesCallback = setLobbies
 
   return (
   <div className = "center">

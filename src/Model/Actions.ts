@@ -8,7 +8,6 @@ import Rng from "./Rng"
 let actions = new Map<Phase, (args: ActionArgs) => boolean>() //{[key in Phase]: (args: ActionArgs) => boolean}
 let actionHistory : ActionArgs[] = []
 let actionLog : (string | JSX.Element | Player | logElement)[][][] = [[]]
-let actionIndex = 0
 
 export interface logElement{
   visibleTo: number[] | number | false
@@ -27,29 +26,11 @@ let a = {
     actions.set(phase, action)
   },
   fire(args: ActionArgs){
-    //let player = Players.get(args.p)
-    //let target = args.t && Players.get(args.t)
-//
-    ////Rollback to where this action differs from the log and remove all actions after it
-    //if(actionIndex < actionHistory.length){
-    //  actionHistory.splice(actionIndex)
-    //  actionLog.splice(actionIndex + 1)
-    //  this.resimulate()
-    //}
-    //if(player.canAct && (!target || target.targetable)) {
-    //  //actionLog.push([])
-    //  //actionHistory.push(args)
-    //  // let am = actions.get(Game.getPhase())
-    //  // if(am) am(args)
-    //  actionIndex++  
-    //}
     this.socket.emit("action", this.lobby, args)
-    //this.onAction()
   },
   clearHistory(){
     actionHistory = []
     actionLog = [[]]
-    actionIndex = 0
   },
   resimulate(upTo : number = actionHistory.length){
     Rng.setSeed(this.startingSeed)
@@ -62,7 +43,6 @@ let a = {
 
     for(let i in actionHistory){
       if(+i >= upTo) {
-        actionIndex = upTo
         actionLog.splice(upTo + 1)
         break
       }

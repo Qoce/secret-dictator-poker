@@ -14,40 +14,98 @@ app.get('/', (_ , res ) => {
 
 
 
-const lobbies = []
+let lobbies = []
 let nConnected = 0
 
+function openLobbies(){
+  return lobbies.filter(l => !l.inGame && l.players.length < 10).map(l => l.name)
+}
+
 io.on('connection', (socket) => {
+  function updateLobbies(){
+    io.to("SelectingLobbies").emit("updateLobbies", openLobbies())
+  }
+  function exitLobby(){
+    if(lName){
+      const l = lobbies.find(l => l.name === lName)
+      if(l){
+        //Show disconnect if in game
+        if(l.inGame){
+          l.connected[l.players.indexOf(uName)] = false
+          io.to(lName).emit('updateConnected', l.connected)
+        }
+        //Remove player if not in game
+        else{
+          l.players = l.players.filter(u => u !== uName)
+          l.connected.pop()
+        }
+        //Delete lobby if everyone is disconnected, even if in game
+        if(l.connected.every(c => !c)){
+          lobbies = lobbies.filter(l => l.name !== lName)
+          updateLobbies()
+        }
+        else{
+          console.log(l)
+          io.to(lName).emit('updateLobby', l)
+        }
+      }
+    }
+    socket.join('SelectingLobbies')
+  }
+
+  socket.join('SelectingLobbies') //Room to view updates to lobby list
+  let lName = null
+  let uName = null
+
   console.log('client connected ' + ++nConnected)
   socket.on('disconnect', () => {
     console.log('client disconnected ' + --nConnected)
+    exitLobby()
   })
   
   socket.on('getLobbies', (callback) => {
-    callback(lobbies.filter(l => !l.inGame).map(l => l.name))
+    callback(openLobbies())
   })
   socket.on('createLobby', (lobby, callback) => {
+    while (lobbies.find(l => l.name === lobby.name)) lobby.name += "."
     const l = {
       name: lobby.name,
       password: lobby.password,
       players: [lobby.username],
+      connected: [true],
       inGame: false,
       seed: Math.floor(Math.random() * 1000000),
       actions: [],
       settings: []
     }
+    lName = lobby.name
+    uName = lobby.username
+    socket.leave('SelectingLobbies')
     socket.join(l.name)
     lobbies.push(l)
+    updateLobbies()
     callback(l)
   })
   socket.on('joinLobby', (lobby, callback) => {
     const l = lobbies.find(l => l.name === lobby.name)
     if(l && l.password === lobby.password){
       if(l.players.indexOf(lobby.username) === -1){
-        l.players.push(lobby.username)
-        socket.join(l.name)
-        socket.to(l.name).emit('updateLobby', l)
-        callback(l)
+        if(l.players.length < 10){
+          lName = lobby.name
+          uName = lobby.username
+          l.players.push(lobby.username)
+          l.connected.push(true)
+          socket.leave('SelectingLobbies')
+          socket.join(l.name)
+          socket.to(l.name).emit('updateLobby', l)
+          if(l.players.length == 10){
+            updateLobbies()
+          }
+          callback(l)
+        }
+        else{
+          callback("Lobby is full")
+        }
       }
       else{
         callback("Username already taken")
