@@ -121,7 +121,7 @@ Game.setPhaseListener(Phase.nominate, () => {
   }
   nextPCandidate()
 
-  Players.apply(p => p.canAct = p === pCandidate)
+  Players.setActors(p => p === pCandidate)
   Players.apply(p => p.targetable = (p !== pCandidate && p !== president && p !== chancellor && p.bank > 0))
   Players.apply(p => p.role.influence = p.bank)
   
@@ -141,7 +141,7 @@ Actions.register(Phase.nominate, (args : ActionArgs) => {
 })
 
 Game.setPhaseListener(Phase.vote, () => {
-  Players.apply(p => p.canAct = p.bank > 0)
+  Players.setActors(p => p.bank > 0)
   Players.apply(p => p.targetable = false)
   Players.apply(p => p.role.vote = undefined)
   Players.apply(p => p.role.spent = 0)
@@ -215,7 +215,7 @@ function failGovernment(){
 
 Game.setPhaseListener(Phase.bribe, () => {
   Players.apply(p => p.role.spent = 0)
-  Players.apply(p => p.canAct = p !== president && p !== chancellor)
+  Players.setActors(p => p !== president && p !== chancellor)
   Players.apply(p => p.targetable = false)
   activeBriber = undefined
   //Skip phase if there is nobody outside of the government with influence
@@ -292,7 +292,7 @@ function logBribeView(g: Player, b: Player){
 
 Game.setPhaseListener(Phase.presBribe, () => {
   Players.apply(p => p.targetable = false)
-  Players.apply(p => p.canAct = p === president)
+  Players.setActors(p => p === president)
 })
 
 Actions.register(Phase.presBribe, (ActionArgs) => {
@@ -335,7 +335,7 @@ Game.setPhaseListener(Phase.president, () => {
   if(president === undefined) throw Error("President is undefined during president phase")
   printPolicies([president, " sees: "], activePolicies, president)
   Players.apply(p => p.targetable = false)
-  Players.apply(p => p.canAct = p === president)
+  Players.setActors(p => p === president)
 })
 
 Actions.register(Phase.president, (args: ActionArgs) => {
@@ -344,7 +344,7 @@ Actions.register(Phase.president, (args: ActionArgs) => {
   discard = discard.concat(activePolicies.splice(v,1))
   if(president === undefined) throw Error("President is undefined during president phase")
   if(chancellor === undefined) throw Error("Chancellor is undefined during president phase")
-  Actions.log([president, " sends ", ...activePolicies.map(colorPolicy)])
+  printPolicies([president, " sends "], activePolicies, [chancellor, president])
   if(bribers.length > 1){
     activeBriber = bribers[1]
     logBribeView(chancellor, activeBriber)
@@ -358,7 +358,7 @@ Actions.register(Phase.president, (args: ActionArgs) => {
 
 Game.setPhaseListener(Phase.chanBribe, () => {
   Players.apply(p => p.targetable = false)
-  Players.apply(p => p.canAct = p === chancellor)
+  Players.setActors(p => p === chancellor)
 })
 
 Actions.register(Phase.chanBribe, (ActionArgs) => {
@@ -380,7 +380,7 @@ Actions.register(Phase.chanBribe, (ActionArgs) => {
 })
 
 Game.setPhaseListener(Phase.chancellor, () => {
-  Players.apply(p => p.canAct = p === chancellor)
+  Players.setActors(p => p === chancellor)
   if(chancellor === undefined) throw Error("Chancellor is undefined during chancellor phase")
   printPolicies([chancellor, " sees: "], activePolicies, chancellor)
 })
@@ -445,7 +445,7 @@ function passPolicy(a: number, topCard = false, exit = true){
 }
 
 Game.setPhaseListener(Phase.assassinate, () => {
-  Players.apply(p => p.canAct = p === president)
+  Players.setActors(p => p === president)
   Players.apply(p => p.targetable = p !== president && p.bank > 0)
 })
 
@@ -461,7 +461,7 @@ Actions.register(Phase.assassinate, (args: ActionArgs) => {
 })
 
 Game.setPhaseListener(Phase.investigate, () => {
-  Players.apply(p => p.canAct = p === president)
+  Players.setActors(p => p === president)
   Players.apply(p => p.targetable = p !== president)
 })
 
@@ -488,7 +488,7 @@ function printPolicies(label: string | (string | Player)[], policies: ("l" | "f"
 }
 
 Game.setPhaseListener(Phase.peak, () => {
-  Players.apply(p => p.canAct = p === president)
+  Players.setActors(p => p === president)
   printPolicies("Next 3 Policies: ", peakPolicies(3), president)
 })
 
@@ -499,7 +499,7 @@ Actions.register(Phase.peak, (args: ActionArgs) => {
 })
 
 Game.setPhaseListener(Phase.pickPres, () => {
-  Players.apply(p => p.canAct = p === president)
+  Players.setActors(p => p === president)
   Players.apply(p => p.targetable = p !== president && p.bank > 0)
 })
 
@@ -512,7 +512,7 @@ Actions.register(Phase.pickPres, (args: ActionArgs) => {
 })
 
 Game.setPhaseListener(Phase.veto, () => {
-  Players.apply(p => p.canAct = p === president)
+  Players.setActors(p => p === president)
 })
 
 Actions.register(Phase.veto, (args: ActionArgs) => {
@@ -533,7 +533,7 @@ Actions.register(Phase.veto, (args: ActionArgs) => {
 
 Game.setPhaseListener(Phase.endgame, () => {
   Players.apply(p => p.targetable = false)
-  Players.apply(p => p.canAct = false)
+  Players.setActors(p => false)
 })
 
 function loot(w: Player[], l: Player[]){

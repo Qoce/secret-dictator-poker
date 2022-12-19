@@ -175,29 +175,29 @@ function setDM(newDM : number | false){
   return dm
 }
 
-function nextStreet() : void{
+function nextStreet(log = true) : void{
   maxAmtIn = 0
   minRaise = BB
   switch(street){
     case "Preflop":
       street = "Flop"
-      dealCenter(3)
+      dealCenter(3, log)
       break
     case "Flop":
       street = "Turn"
-      dealCenter(1)
+      dealCenter(1, log)
       break
     case "Turn":
       street = "River"
-      dealCenter(1)
+      dealCenter(1, log)
       break
     case "River":
-      endHand()
+      endHand(log)
       return
   }
 }
 
-function endHand(){
+function endHand(log = true) : void{
   let inPlayers = Players.filter(p => !p.curHand.folded && p.bank > 0)
   let playerScores = inPlayers.map((p) => {
     let s = getHandScore(p.curHand.hand.concat(center))
@@ -267,20 +267,25 @@ function endHand(){
     inPlayers[player].curHand.stack += inPlayers[player].curHand.net + inPlayers[player].curHand.equity
     leftOver = Math.max(leftOver, inPlayers[player].curHand.couldWin)
   }
-  inPlayers.forEach((p,i) => {
-    Actions.log([p, ": ",...p.curHand.hand.map(getCardString), ` ${getScoreString(playerScores[i])} ` , renderNet(p.curHand.net)])
-  })
-  Players.players.filter(p => p.curHand.folded && p.bank > 0).forEach((p,i) => {
-    Actions.log([p, ": ",{content: p.curHand.hand.map(getCardString), visibleTo: Players.players.indexOf(p)}, ` folded ` , renderNet(p.curHand.net)])
-  })
+  if(log){
+    inPlayers.forEach((p,i) => {
+      Actions.log([p, ": ",...p.curHand.hand.map(getCardString), ` ${getScoreString(playerScores[i])} ` , renderNet(p.curHand.net)])
+    })
+    Players.players.filter(p => p.curHand.folded && p.bank > 0).forEach((p,i) => {
+      Actions.log([p, ": ",{content: p.curHand.hand.map(getCardString), visibleTo: Players.players.indexOf(p)}, ` folded ` , renderNet(p.curHand.net)])
+    })
+  }
   Players.updateBanks(p => p.curHand.stack)
+  Players.apply(p => p.curHand.hand = [])
   if(Game.getPhase() !== Phase.endgame)
     Game.setPhase(Phase.nominate)
 }
 
-function dealCenter(n: number){
+function dealCenter(n: number, log: boolean){
   for(let i = 0; i < n; i++) center.push(deck.pop() as number)
-  Actions.log([`${street}: `, ...center.slice(center.length - n).map(getCardString)])
+  if(log){
+    Actions.log([`${street}: `, ...center.slice(center.length - n).map(getCardString)])
+  }
 }
 
 function preparePlayer(p : Player) : void{
@@ -306,7 +311,7 @@ function updateDealer() : void{
 function guaranteedDecision(p : Player) : boolean{
   let h = p.curHand
   if(forced){
-    if(forced === p) if(Players.next(forced,guaranteedDecision)) return true
+    if(forced === p && Players.next(forced,couldContinueBetting)) return true
   }
   return !h.folded && h.stack > 0 && (h.amtIn < maxAmtIn || (maxAmtIn === 0 && !h.checked))
 }
@@ -357,14 +362,16 @@ function bet(p : Player, amt : number, f = false) : boolean {
       pot += p.curHand.amtIn
       p.curHand.amtIn = 0
     })
+    let allFold = false
     if(Players.filter(couldContinueBetting).length <= 1){
+      allFold = true
       setDM(false)
-      while(street !== "River") nextStreet()
+      while(street !== "River") nextStreet(false)
     }
     else{
       setDM(Players.next(dealer, p => !p.curHand.folded))
     }
-    nextStreet()
+    nextStreet(!allFold)
   }
   return true
 }

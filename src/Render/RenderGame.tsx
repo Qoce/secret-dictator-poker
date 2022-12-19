@@ -54,7 +54,7 @@ export default function SDP(){
     "browsing" | "joining" | "inLobby" | "inGame")
   const [lobbyName, setLobbyName] = useState(undefined as string | undefined)
 
-  if(selected && !Players.get(selected).targetable) setSelected(undefined)
+  if(selected !== undefined && !Players.get(selected).targetable) setSelected(undefined)
   //forces the component to rerender when an action occurs
   const [turn,forceUpdate] = useState(0)
 

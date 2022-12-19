@@ -11,4 +11,5 @@ export default interface Player {
   bankVision: Player[]
   connected: boolean
   host: boolean
+  dead: boolean
 }

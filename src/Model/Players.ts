@@ -42,7 +42,8 @@ class Players{
       },
       bankVision: [],
       connected: true,
-      host: this.players.length === 0
+      host: this.players.length === 0,
+      dead: false
     })
   }
   resetPlayer(p : Player){
@@ -65,7 +66,8 @@ class Players{
       influence: 0,
       spent: 0,
       vote: undefined,
-    }
+    },
+    p.dead = false
   }
   reset(){
     this.apply(this.resetPlayer)
@@ -102,6 +104,9 @@ class Players{
     this.apply(p => p.canAct = true, f)
     this.apply(p => p.canAct = false, p => !f(p))
   }
+  setActors(condition: (p : Player) => boolean){
+    this.apply(p => p.canAct = condition(p) && p.bank > 0)
+  }
   filter(condition: (p: Player) => boolean){
     return this.players.filter(condition)
   }
@@ -125,8 +130,9 @@ class Players{
           Actions.log([p, " was the dictator"])
           liberalsWon = true
         }
+        p.dead = true
       }
-    })
+    }, p => !p.dead)
     if(liberalsWon) {
       this.onLiberalWin()
     }

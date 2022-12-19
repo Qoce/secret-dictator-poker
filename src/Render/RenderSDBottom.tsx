@@ -76,8 +76,10 @@ RenderPhase.set(Phase.vote, (args: RenderPhaseArgs) => {return <Votes p = {args.
 function Bribe(args: RenderPhaseArgs){
   const [influence, setInfluence] = useState(0)
   let p = Players.get(args.p)
-  if(p.canAct)
-  return <div>
+  if(p.canAct){
+    alert(p.bank)
+    console.log(p)
+    return <div>
     <div>
       <input className = "textInput" type = 'number' min = {0} max = {p.role.influence}
         onChange = {(event) => setInfluence(+event.target.value)}/>
@@ -91,6 +93,7 @@ function Bribe(args: RenderPhaseArgs){
         {influence > 0 ? "Send Bribe" : "No Bribe"}
       </button>
     </div>
+  }
   return null
 }
 
