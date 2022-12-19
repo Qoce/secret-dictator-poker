@@ -141,9 +141,15 @@ export default function SDP(){
           }}
         />
       }
-      {appState === "inLobby" && <RenderSettings onStart = {() => {
-        socket.emit("startGame", lobbyName)
-      }} socket = {socket} lobby = {lobbyName}/>}
+      {appState === "inLobby" && <RenderSettings 
+        onStart = {() => {
+          socket.emit("startGame", lobbyName)
+        }} 
+        socket = {socket} 
+        lobby = {lobbyName} 
+        isHost = {Players.get(user).host}
+        numPlayers = {Players.players.length}
+      />}
       {appState === "inGame" && <SDHeader/>}
       <div className = "center">
         <div>

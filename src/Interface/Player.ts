@@ -10,4 +10,5 @@ export default interface Player {
   targetable: boolean
   bankVision: Player[]
   connected: boolean
+  host: boolean
 }

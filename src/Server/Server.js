@@ -142,7 +142,7 @@ io.on('connection', (socket) => {
   })
 })
 
-console.log(process.env.PORT)
+console.log("process.env.PORT " + process.env.PORT)
 
 server.listen(process.env.PORT || 8080, () => {
   console.log('listening on *:8080');

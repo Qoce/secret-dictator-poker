@@ -40,7 +40,9 @@ class Players{
         spent: 0,
         vote: undefined,
       },
-      bankVision: []
+      bankVision: [],
+      connected: true,
+      host: this.players.length === 0
     })
   }
   resetPlayer(p : Player){
