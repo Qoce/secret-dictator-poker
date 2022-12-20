@@ -41,7 +41,7 @@ socket.on('startGame', (l : Lobby) => startGameCallback(l))
 socket.on('updateLobby', (l: Lobby) => updateLobbyCallback(l))
 socket.on('updateLobbies', (l: string[]) => updateLobbiesCallback(l))
 socket.on('updateGame', (l: Lobby) => updateGameCallback(l))
-socket.on('updateConnected', (l: boolean[]) => updateConnectedCallback(l))
+//socket.on('updateConnected', (l: boolean[]) => updateConnectedCallback(l))
 
 Actions.socket = socket
 
@@ -50,11 +50,68 @@ export default function SDP(){
   const [selected,setSelected] = useState(sel)
   const [user,setUser] = useState(1)
   const [lobbies, setLobbies] = useState(undefined as string[] | undefined)
-  const [appState, setAppState] = useState("browsing" as 
-    "browsing" | "joining" | "inLobby" | "inGame")
+  const [appState, setAppState] = useState("rejoining" as 
+    "rejoining" | "browsing" | "joining" | "inLobby" | "inGame")
   const [lobbyName, setLobbyName] = useState(undefined as string | undefined)
+  const [rejoining, setRejoining] = useState(false as false | Lobby)
 
+
+
+  function joinLobby(name: string, username: string, password: string, rejoin = false){
+    socket.emit("joinLobby", {name: name, username: username, password: password}, 
+    (l: Lobby | string) => {
+      if(typeof l === 'string'){
+        if(rejoin){
+          console.warn(l)
+          setAppState("browsing")
+        }
+        else{
+          alert(l)
+        }
+      }
+      else{
+        setLobbyName(l.name)
+        Players.initFromNames(l.players)
+        Actions.lobby = l.name
+        setAppState("inLobby")
+        setUser(l.players.indexOf(username))
+        if(rejoin){
+          setRejoining(l)
+        }
+      }
+    })
+  }
+
+  //Attempt to rejoin the lobby if we have stored data from a disconnect
+  try{
+    if(appState == "rejoining" && JSON.parse(window.sessionStorage.getItem("lobby") || "null")){
+      //NOTE: use windowStorage instead of sessionStorage to keep data across tabs
+      //(Need sessionStorage for any serious debugging)
+      
+      let u = JSON.parse(window.sessionStorage.getItem("name") || "null")
+      let p = JSON.parse(window.sessionStorage.getItem("password") || "null")
+      let n = JSON.parse(window.sessionStorage.getItem("lobby") || "null")
+      console.log(n, u, p)
+      if(u && (p || p === '') && n){
+        joinLobby(n, u, p, true)
+      }
+      else{
+        setAppState("browsing")
+      }
+    }
+    else if(appState == "rejoining"){
+      setAppState("browsing")
+    }
+  }
+  catch (e){
+    console.error(e)
+    window.sessionStorage.clear()
+    setAppState("browsing")
+  }
+
+  //Removes selections from previous phases if they are not valid in the current one
   if(selected !== undefined && !Players.get(selected).targetable) setSelected(undefined)
+
   //forces the component to rerender when an action occurs
   const [turn,forceUpdate] = useState(0)
 
@@ -65,7 +122,7 @@ export default function SDP(){
     }
   }, [turn, user])
 
-
+  //Bluer if liberals are winning, redder if fascists are winning
   document.body.style.backgroundColor = "hsl(" + getSDState().bg + ",100%,80%)"
   //if(!RenderPhase.get(Game.getPhase()]) throw "error: phase " + Game.getPhase() + " cannot be rendered."
   //let RP = RenderPhase.get(Game.getPhase()] as (args: RenderPhaseArgs) => JSX.Element | undefined
@@ -76,6 +133,9 @@ export default function SDP(){
   }
 
   startGameCallback = (l: Lobby) => {
+    window.sessionStorage.setItem("lobby", JSON.stringify(l.name))
+    window.sessionStorage.setItem("password", JSON.stringify(l.password))
+    window.sessionStorage.setItem("name", JSON.stringify(l.players[user]))
     Players.initFromNames(l.players)
     Actions.startingSeed = l.seed
     Players.reset()
@@ -96,6 +156,13 @@ export default function SDP(){
   }
 
   updateLobbiesCallback = setLobbies
+
+  //Once we have rejoined a lobby, we need to simulate to catch up
+  if(rejoining){
+    startGameCallback(rejoining)
+    updateGameCallback(rejoining)
+    setRejoining(false)
+  }
 
   return (
   <div className = "center">
@@ -125,18 +192,7 @@ export default function SDP(){
               })
             }
             else{
-              socket.emit("joinLobby", {name: n, username: u, password: p}, (l: string | Lobby) => {
-                if(typeof l === 'string'){
-                  alert(l)
-                }
-                else{
-                  setLobbyName(l.name)
-                  Players.initFromNames(l.players)
-                  setUser(l.players.indexOf(u))
-                  Actions.lobby = l.name
-                  setAppState("inLobby")
-                }
-              })
+              joinLobby(lobbyName, u, p)
             }
           }}
         />

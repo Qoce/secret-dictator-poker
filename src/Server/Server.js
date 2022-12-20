@@ -44,7 +44,7 @@ io.on('connection', (socket) => {
           lobbies = lobbies.filter(l => l.name !== lName)
           updateLobbies()
         }
-        else{
+        else if(!l.inGame){
           console.log(l)
           io.to(lName).emit('updateLobby', l)
         }
@@ -89,17 +89,25 @@ io.on('connection', (socket) => {
   socket.on('joinLobby', (lobby, callback) => {
     const l = lobbies.find(l => l.name === lobby.name)
     if(l && l.password === lobby.password){
-      if(l.players.indexOf(lobby.username) === -1){
+      let idx = l.players.indexOf(lobby.username)
+      if(idx === -1 || !l.connected[idx]){
         if(l.players.length < 10){
           lName = lobby.name
           uName = lobby.username
-          l.players.push(lobby.username)
-          l.connected.push(true)
+          //A new player joining. Skip these steps for reconnecting
           socket.leave('SelectingLobbies')
           socket.join(l.name)
-          socket.to(l.name).emit('updateLobby', l)
-          if(l.players.length == 10){
-            updateLobbies()
+          if(idx === -1){
+            l.players.push(lobby.username)
+            l.connected.push(true)
+            socket.to(l.name).emit('updateLobby', l)
+            if(l.players.length == 10){
+              updateLobbies()
+            }
+          }
+          else{
+            l.connected[idx] = true
+            io.to(l.name).emit('updateConnected', l.connected)
           }
           callback(l)
         }

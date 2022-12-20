@@ -66,7 +66,7 @@ class Players{
       influence: 0,
       spent: 0,
       vote: undefined,
-    },
+    }
     p.dead = false
   }
   reset(){

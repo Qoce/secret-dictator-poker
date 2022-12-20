@@ -77,8 +77,6 @@ function Bribe(args: RenderPhaseArgs){
   const [influence, setInfluence] = useState(0)
   let p = Players.get(args.p)
   if(p.canAct){
-    alert(p.bank)
-    console.log(p)
     return <div>
     <div>
       <input className = "textInput" type = 'number' min = {0} max = {p.role.influence}
