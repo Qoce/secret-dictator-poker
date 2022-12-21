@@ -13,9 +13,12 @@ class Players{
   makeFakePlayer(i : number){
     this.initPlayer("debug " + i)
   }
-  initFromNames(n: string[]){
+  initFromNames(n: string[], c: boolean[] = []){
     this.players = []
     n.forEach(this.initPlayer.bind(this))
+    for(let i in c){
+      this.players[i].connected = c[i]
+    }
   }
   initPlayer(n : string){
     this.players.push({

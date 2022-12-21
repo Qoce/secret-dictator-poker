@@ -41,7 +41,7 @@ socket.on('startGame', (l : Lobby) => startGameCallback(l))
 socket.on('updateLobby', (l: Lobby) => updateLobbyCallback(l))
 socket.on('updateLobbies', (l: string[]) => updateLobbiesCallback(l))
 socket.on('updateGame', (l: Lobby) => updateGameCallback(l))
-//socket.on('updateConnected', (l: boolean[]) => updateConnectedCallback(l))
+socket.on('updateConnected', (l: boolean[]) => updateConnectedCallback(l))
 
 Actions.socket = socket
 
@@ -136,7 +136,7 @@ export default function SDP(){
     window.sessionStorage.setItem("lobby", JSON.stringify(l.name))
     window.sessionStorage.setItem("password", JSON.stringify(l.password))
     window.sessionStorage.setItem("name", JSON.stringify(l.players[user]))
-    Players.initFromNames(l.players)
+    Players.initFromNames(l.players, l.connected)
     Actions.startingSeed = l.seed
     Players.reset()
     Actions.reset()
@@ -156,6 +156,14 @@ export default function SDP(){
   }
 
   updateLobbiesCallback = setLobbies
+
+  updateConnectedCallback = (c: boolean[]) => {
+    if(c.length !== Players.players.length) return
+    for(let i in c){
+      Players.players[i].connected = c[i]
+    }
+    forceUpdate(turn + 1)
+  }
 
   //Once we have rejoined a lobby, we need to simulate to catch up
   if(rejoining){
