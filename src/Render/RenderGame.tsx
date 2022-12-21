@@ -55,7 +55,13 @@ export default function SDP(){
   const [lobbyName, setLobbyName] = useState(undefined as string | undefined)
   const [rejoining, setRejoining] = useState(false as false | Lobby)
 
-
+  function initFromLobby(l: Lobby, username: string){
+    setLobbyName(l.name)
+    Players.initFromNames(l.players)
+    Actions.lobby = l.name
+    setAppState("inLobby")
+    setUser(l.players.indexOf(username))
+  }
 
   function joinLobby(name: string, username: string, password: string, rejoin = false){
     socket.emit("joinLobby", {name: name, username: username, password: password}, 
@@ -70,16 +76,23 @@ export default function SDP(){
         }
       }
       else{
-        setLobbyName(l.name)
-        Players.initFromNames(l.players)
-        Actions.lobby = l.name
-        setAppState("inLobby")
-        setUser(l.players.indexOf(username))
+        initFromLobby(l, username)
         if(rejoin && l.inGame){
           setRejoining(l)
         }
       }
     })
+  }
+
+  function createOrJoinLobby(n: string, u: string, p: string) {
+    if(lobbyName === undefined){
+      socket.emit("createLobby", {name: n, username: u, password: p}, (l: Lobby) => {
+        initFromLobby(l, u)
+      })
+    }
+    else{
+      joinLobby(lobbyName, u, p)
+    }
   }
 
   //Attempt to rejoin the lobby if we have stored data from a disconnect
@@ -172,6 +185,9 @@ export default function SDP(){
     setRejoining(false)
   }
 
+  const DEBUG_LOBBY = 'DEBUG'
+  
+
   return (
   <div className = "center">
   <div className = "wrapper">
@@ -185,24 +201,26 @@ export default function SDP(){
           setLobbyName(n)
           setAppState("joining")
         }}
+        qj = {() => 
+          socket.emit('getPlayersInLobby', DEBUG_LOBBY, (players: string[]) => {
+            console.log(players)
+            if(players.length > 0){
+              for(let i = 1; i < 10; i++){
+                if(!players.includes("" + i)){
+                  joinLobby(DEBUG_LOBBY, "" + i, "")
+                  break
+                }
+              }
+            }
+            else{
+              createOrJoinLobby(DEBUG_LOBBY, "1", "")
+            }
+          })
+        }
       />}
       {
         appState === "joining" && <RenderJoinLobby 
-          s = {lobbyName}
-          oj = {(n: string, u: string, p: string) => {
-            if(lobbyName === undefined){
-              socket.emit("createLobby", {name: n, username: u, password: p}, (l: Lobby) => {
-                setLobbyName(l.name)
-                setUser(0)
-                Players.initFromNames(l.players)
-                Actions.lobby = l.name
-                setAppState("inLobby")
-              })
-            }
-            else{
-              joinLobby(lobbyName, u, p)
-            }
-          }}
+          oj = {createOrJoinLobby}
         />
       }
       {appState === "inLobby" && <RenderSettings 

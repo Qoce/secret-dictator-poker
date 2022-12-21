@@ -62,7 +62,12 @@ io.on('connection', (socket) => {
     console.log('client disconnected ' + --nConnected)
     exitLobby()
   })
-  
+  socket.on('getPlayersInLobby', (lobby, callback) => {
+    const l = lobbies.find(l => l.name === lobby)
+    console.log(l)
+    if(l !== undefined) callback(l.players)
+    else callback([]) 
+  })
   socket.on('getLobbies', (callback) => {
     callback(openLobbies())
   })
