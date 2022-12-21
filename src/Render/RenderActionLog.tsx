@@ -4,7 +4,7 @@ import Player from '../Interface/Player'
 import react from 'react'
 import Settings from '../Model/Settings'
 
-export default function ActionLog(args: {p: number, height: number}){
+export default function ActionLog(args: {p: number, height: number, socket: any, lobby: string}){
   let a : any
   const scrollRef = useRef(a)
 
@@ -15,7 +15,8 @@ export default function ActionLog(args: {p: number, height: number}){
   return <div className = 'scroller' style={{height: args.height}}>
     <div style={{height: args.height}}>
       {
-      Actions.getActionLog().map((a, i) => <Hoverable actionIndex = {i} key = {i}>{
+      Actions.getActionLog().map((a, i) => <Hoverable actionIndex = {i} key = {i} 
+        socket = {args.socket} lobby = {args.lobby}>{
         a.map((b, j) => <div style = {{marginLeft: j > 0 ? "30px" : undefined}} key = {i * 100 + j}>
         {flatten(b.map((c,k) => renderContent(c,args.p, i * 1e4 + j * 1e2 + k)))} 
         <div ref = {scrollRef}/>
@@ -64,11 +65,10 @@ function flatten(a: JSX.Element | any[]) : JSX.Element[]{
 //   return p
 // }
 
-function Hoverable(props: {actionIndex: number, children: any}){
+function Hoverable(props: {actionIndex: number, children: any, socket: any, lobby: string}){
   const [hover,setHover] = useState(false)
   return <div onMouseEnter = {() => setHover(true)} onMouseLeave = {() => setHover(false)} style = {{textDecoration: hover ? "underline" : "", marginBottom: "5px"}}
-  onClick = {() => Actions.resimulate(props.actionIndex)}>
-    
+  onClick = {() => props.socket.emit('rollback', props.lobby, props.actionIndex)}>
     {props.children}
   </div>
 }

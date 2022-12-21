@@ -75,7 +75,7 @@ export default function SDP(){
         Actions.lobby = l.name
         setAppState("inLobby")
         setUser(l.players.indexOf(username))
-        if(rejoin){
+        if(rejoin && l.inGame){
           setRejoining(l)
         }
       }
@@ -227,7 +227,11 @@ export default function SDP(){
         })}
       </div>
     </div>
-    {appState === "inGame" && <ActionLog p = {user} height = {Players.players.length * 40 + 271}/>}
+    {appState === "inGame" && <ActionLog p = {user}
+    lobby = {lobbyName || ""}
+    height = {Players.players.length * 40 + 271}
+    socket = {socket}
+    />}
   </div>
   </div>)
 }

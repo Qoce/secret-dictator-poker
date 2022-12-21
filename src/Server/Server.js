@@ -148,6 +148,13 @@ io.on('connection', (socket) => {
       io.sockets.in(l.name).emit('updateGame', l)
     } 
   })
+  socket.on('rollback', (lobby, n) => {
+    const l = lobbies.find(l => l.name === lobby)
+    if(l){
+      l.actions.splice(n, l.actions.length - n)
+      io.sockets.in(l.name).emit('updateGame', l)
+    }
+  })
 })
 
 console.log("process.env.PORT " + process.env.PORT)
