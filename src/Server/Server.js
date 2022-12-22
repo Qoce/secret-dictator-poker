@@ -160,6 +160,27 @@ io.on('connection', (socket) => {
       io.sockets.in(l.name).emit('updateGame', l)
     }
   })
+  socket.on('restartGame', (lobby) => {
+    const l = lobbies.find(l => l.name === lobby)
+    if(l){
+      l.inGame = false
+      l.actions = []
+      l.seed = Math.floor(Math.random() * 1000000)
+      //Kick disconnected players
+      let newPlayers = []
+      for(let i = 0; i < l.players.length; i++){
+        if(l.connected[i]){
+          newPlayers.push(l.players[i])
+        }
+      }
+      l.players = newPlayers
+      for(_ in l.players){
+        l.connected.push(true)
+      }
+      io.sockets.in(l.name).emit('updateLobby', l)
+      updateLobbies()
+    }
+  })
 })
 
 console.log("process.env.PORT " + process.env.PORT)

@@ -544,8 +544,10 @@ Game.setPhaseListener(Phase.endgame, () => {
 
 function loot(w: Player[], l: Player[]){
   const lSum = l.map(p => p.bank).reduce((a,b) => a+b)
-  l.forEach(p => p.bank = Math.floor(p.bank / 2))
-  w.forEach(p => p.bank += Math.floor(lSum / w.length))
+  if(w.length > 0){
+    l.forEach(p => p.bank = Math.floor(p.bank / 2))
+  }
+  w.forEach(p => p.bank += Math.floor(lSum / w.length / 2))
 }
 
 function liberalWin(){

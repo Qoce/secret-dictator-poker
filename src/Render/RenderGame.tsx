@@ -54,13 +54,17 @@ export default function SDP(){
     "rejoining" | "browsing" | "joining" | "inLobby" | "inGame")
   const [lobbyName, setLobbyName] = useState(undefined as string | undefined)
   const [rejoining, setRejoining] = useState(false as false | Lobby)
+  const [username, setUsername] = useState("")
 
   function initFromLobby(l: Lobby, username: string){
     setLobbyName(l.name)
+    settings.loadPreset(l.settings)
     Players.initFromNames(l.players)
     Actions.lobby = l.name
     setAppState("inLobby")
+    setUsername(username)
     setUser(l.players.indexOf(username))
+    forceUpdate(turn + 1)
   }
 
   function joinLobby(name: string, username: string, password: string, rejoin = false){
@@ -158,11 +162,7 @@ export default function SDP(){
     forceUpdate(turn + 1)
   }
 
-  updateLobbyCallback = (l: Lobby) => {
-    settings.loadPreset(l.settings)
-    Players.initFromNames(l.players)
-    forceUpdate(turn + 1)
-  }
+  updateLobbyCallback = (l: Lobby) => {initFromLobby(l, username)}
 
   updateGameCallback = (l: Lobby) => {
     Actions.loadActions(l.actions)
@@ -188,6 +188,11 @@ export default function SDP(){
 
   const DEBUG_LOBBY = 'DEBUG'
   
+  const restart_button = Game.getPhase() === Phase.endgame && appState === "inGame" &&
+  <button style = {{marginTop: "15px"}}
+  onClick = {() => {
+    socket.emit('restartGame', lobbyName)
+  }}>New Round</button>
 
   return (
   <div className = "center">
@@ -243,6 +248,7 @@ export default function SDP(){
             appState = {appState}/>
           )}
         </div>
+        {restart_button}
       </div>
       <div className = "center">
         {appState === "inGame" && Array.from(RenderPhase.keys()).map(rp => {
