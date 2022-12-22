@@ -1,4 +1,5 @@
 import {getCardString} from './PokerUtils'
+import {getTeamString} from './SDUtils'
 import {Team} from '../Interface/Role'
 import {useState} from 'react'
 import dealer from '../Model/Poker'
@@ -8,17 +9,6 @@ import Player from '../Interface/Player'
 import Players from '../Model/Players'
 import SDData from '../Model/SecretDictator'
 import Settings from '../Model/Settings'
-
-function getTeamString(args: {u: Player, p: Player}){
-  let showHitler = args.u.role.team !== Team.liberal || inEndgame()
-  if(!args.u.role.vision.includes(args.p) && !inEndgame()) return ""
-  let t = args.p.role.team 
-  if(!showHitler && t === Team.dictator) t = Team.fascist 
-  let color = t === Team.liberal ? "Blue" : "Red"
-  return <span style = {{color: color}}>
-    {["L","F","D"][t]} 
-  </span>
-}
 
 //function getBonus(){
 //  let ecoSize = this.props.ecoSize
@@ -61,7 +51,11 @@ function Name(args: {p: Player}){
 function TeamSquare(args: {p: Player, u: Player}){
   if(appState !== "inGame") return null
   return <div className = "square">
-    {getTeamString(args)}
+    {getTeamString({
+      p: args.p,
+      u: args.u,
+      inEndgame: inEndgame()
+    })}
   </div>
 }
   

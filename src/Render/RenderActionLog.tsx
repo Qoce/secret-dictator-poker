@@ -17,7 +17,7 @@ export default function ActionLog(args: {p: number, height: number, socket: any,
       {
       Actions.getActionLog().map((a, i) => <Hoverable actionIndex = {i} key = {i} 
         socket = {args.socket} lobby = {args.lobby}>{
-        a.map((b, j) => <div style = {{marginLeft: j > 0 ? "30px" : undefined}} key = {i * 100 + j}>
+        a.map((b, j) => <div style = {{marginLeft: j === 0 ? "30px" : undefined}} key = {i * 100 + j}>
         {flatten(b.map((c,k) => renderContent(c,args.p, i * 1e4 + j * 1e2 + k)))} 
         <div ref = {scrollRef}/>
         </div>)

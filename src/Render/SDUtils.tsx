@@ -1,5 +1,7 @@
 import SDState from "../Model/SecretDictator"
 import {useState} from 'react'
+import Player from "../Interface/Player"
+import {Team} from "../Interface/Role"
 
 interface VoteSquareArgs{
   shift?: number,
@@ -41,4 +43,15 @@ export function PolicySquare(props: PolicySquareArgs){
 export function colorPolicy(p: "l" | "f"){
   if(p === "l") return <span style = {{color: "blue", fontWeight: "bold"}}> L </span>
   else return <span style = {{color: "red", fontWeight: "bold"}}> F </span>
+}
+
+export function getTeamString(args: {u: Player, p: Player, inEndgame: boolean}){
+  let showHitler = args.u.role.team !== Team.liberal || args.inEndgame
+  if(!args.u.role.vision.includes(args.p) && !args.inEndgame) return ""
+  let t = args.p.role.team 
+  if(!showHitler && t === Team.dictator) t = Team.fascist 
+  let color = t === Team.liberal ? "Blue" : "Red"
+  return <span style = {{color: color}}>
+    {["L","F","D"][t]} 
+  </span>
 }

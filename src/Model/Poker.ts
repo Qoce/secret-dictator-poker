@@ -268,18 +268,16 @@ function endHand(log = true) : void{
     leftOver = Math.max(leftOver, inPlayers[player].curHand.couldWin)
   }
   if(log){
+    Actions.log(["Center: ", ...center.map(getCardString)])
     inPlayers.forEach((p,i) => {
-      Actions.log([p, ": ",...p.curHand.hand.map(getCardString), ` ${getScoreString(playerScores[i])} ` , renderNet(p.curHand.net)])
-    })
-    Players.players.filter(p => p.curHand.folded && p.bank > 0).forEach((p,i) => {
-      Actions.log([p, ": ",{content: p.curHand.hand.map(getCardString), visibleTo: Players.players.indexOf(p)}, ` folded ` , renderNet(p.curHand.net)])
+      Actions.log([p, " shows ",...p.curHand.hand.map(getCardString), ` ${getScoreString(playerScores[i])} `])
     })
   }
-  else{
-    Players.applyLiving((p) => {
-      Actions.log([p, ": ", renderNet(p.curHand.net)])
-    })
-  }
+  Actions.log("Hand scores:")
+  Players.applyLiving(p => {
+    Actions.log([p, ": ", renderNet(p.curHand.net)])
+  })
+  
   Players.updateBanks(p => p.curHand.stack)
   Players.apply(p => p.curHand.hand = [])
   if(Game.getPhase() !== Phase.endgame)
@@ -370,7 +368,9 @@ function bet(p : Player, amt : number, f = false) : boolean {
     })
     let allFold = false
     if(Players.filter(couldContinueBetting).length <= 1){
-      allFold = true
+      if(Players.filter(p => !p.curHand.folded).length === 1){
+        allFold = true
+      }
       setDM(false)
       while(street !== "River") nextStreet(false)
     }

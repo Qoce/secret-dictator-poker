@@ -149,6 +149,7 @@ export default function SDP(){
     window.sessionStorage.setItem("lobby", JSON.stringify(l.name))
     window.sessionStorage.setItem("password", JSON.stringify(l.password))
     window.sessionStorage.setItem("name", JSON.stringify(l.players[user]))
+    settings.loadPreset(l.settings)
     Players.initFromNames(l.players, l.connected)
     Actions.startingSeed = l.seed
     Players.reset()

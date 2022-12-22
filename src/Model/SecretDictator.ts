@@ -2,6 +2,7 @@ import Players from "./Players"
 import Player from '../Interface/Player'
 import RNG from "./Rng"
 import {Team} from "../Interface/Role"
+import {getTeamString} from "../Render/SDUtils" 
 import Actions from "./Actions"
 import Phase from "../Interface/Phase"
 import Game from "./Game"
@@ -470,10 +471,12 @@ Game.setPhaseListener(Phase.investigate, () => {
 
 Actions.register(Phase.investigate, (args: ActionArgs) => {
   if(args.t === undefined) return false
-  Actions.log(["\"", pCandidate, "\"", " investigates ", Players.get(args.t)])
-  Actions.log({content: [Players.get(args.t), " is " + Players.get(args.t).role.team], visibleTo: args.p})
   Players.get(args.p).role.vision.push(Players.get(args.t))
   Players.get(args.p).bankVision.push(Players.get(args.t))
+  Actions.log(["\"", pCandidate, "\"", " investigates ", Players.get(args.t)])
+  Actions.log({content: [Players.get(args.t), " is ", 
+    getTeamString({u: Players.get(args.p), p: Players.get(args.t), inEndgame: false})],
+    visibleTo: args.p})
   exitSD()
   return true
 })
