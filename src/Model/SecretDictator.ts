@@ -345,8 +345,11 @@ Actions.register(Phase.president, (args: ActionArgs) => {
   if(president === undefined) throw Error("President is undefined during president phase")
   if(chancellor === undefined) throw Error("Chancellor is undefined during president phase")
   printPolicies([president, " sends "], activePolicies, [chancellor, president])
-  if(bribers.length > 1){
-    activeBriber = bribers[1]
+  if(bribers.length > 0 && activeBriber === president){
+    bribers.splice(0,1)
+  }
+  if(bribers.length > 0){
+    activeBriber = bribers[0]
     logBribeView(chancellor, activeBriber)
     Game.setPhase(Phase.chanBribe)
   }

@@ -275,6 +275,11 @@ function endHand(log = true) : void{
       Actions.log([p, ": ",{content: p.curHand.hand.map(getCardString), visibleTo: Players.players.indexOf(p)}, ` folded ` , renderNet(p.curHand.net)])
     })
   }
+  else{
+    Players.applyLiving((p) => {
+      Actions.log([p, ": ", renderNet(p.curHand.net)])
+    })
+  }
   Players.updateBanks(p => p.curHand.stack)
   Players.apply(p => p.curHand.hand = [])
   if(Game.getPhase() !== Phase.endgame)
@@ -329,8 +334,9 @@ function bet(p : Player, amt : number, f = false) : boolean {
   if(amt > p.curHand.stack) return false
   //reject players undercalling if they aren't all in
   if(amt > 0 && amt < p.curHand.stack && p.curHand.amtIn + amt < maxAmtIn) return false
-  //reject players raising by less than the previous raise
-  if(!f && p.curHand.amtIn + amt - maxAmtIn > 0 && p.curHand.amtIn + amt - maxAmtIn < minRaise) return false
+  //reject players raising by less than the previous raise if they aren't all in
+  if(!f && p.curHand.amtIn + amt - maxAmtIn > 0 && p.curHand.amtIn + amt - maxAmtIn < minRaise
+      && amt < p.curHand.stack) return false
   p.curHand.amtIn += amt
   p.curHand.stack -= amt
   if(p.curHand.amtIn > maxAmtIn){
