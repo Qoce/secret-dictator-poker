@@ -34,12 +34,15 @@ function egSort(){
 let startGameCallback : (l: Lobby) => void
 let updateLobbyCallback : (l: Lobby) => void
 let updateLobbiesCallback : (l: string[]) => void
+let updateRejoinLobbiesCallback : (l: [string, number, number][]) => void
 let updateGameCallback : (l: Lobby) => void
 let updateConnectedCallback : (l : boolean[]) => void
 
 socket.on('startGame', (l : Lobby) => startGameCallback(l))
 socket.on('updateLobby', (l: Lobby) => updateLobbyCallback(l))
 socket.on('updateLobbies', (l: string[]) => updateLobbiesCallback(l))
+socket.on('updateRejoinLobbies', (l: [string, number, number][]) => 
+  updateRejoinLobbiesCallback(l))
 socket.on('updateGame', (l: Lobby) => updateGameCallback(l))
 socket.on('updateConnected', (l: boolean[]) => updateConnectedCallback(l))
 
@@ -50,11 +53,14 @@ export default function SDP(){
   const [selected,setSelected] = useState(sel)
   const [user,setUser] = useState(1)
   const [lobbies, setLobbies] = useState(undefined as string[] | undefined)
+  const [rejoinLobbies, setRejoinLobbies] = useState([] as [string, number, number][])
   const [appState, setAppState] = useState("rejoining" as 
     "rejoining" | "browsing" | "joining" | "inLobby" | "inGame")
   const [lobbyName, setLobbyName] = useState(undefined as string | undefined)
   const [rejoining, setRejoining] = useState(false as false | Lobby)
   const [username, setUsername] = useState("")
+
+  console.log(rejoinLobbies)
 
   function initFromLobby(l: Lobby, username: string){
     setLobbyName(l.name)
@@ -95,7 +101,7 @@ export default function SDP(){
       })
     }
     else{
-      joinLobby(lobbyName, u, p)
+      joinLobby(lobbyName, u, p, rejoinLobbies.map(a => a[0]).includes(lobbyName))
     }
   }
 
@@ -147,6 +153,7 @@ export default function SDP(){
   //Gets the lobby name array from the server if we are browing
   if(appState === "browsing" && !lobbies){
     socket.emit('getLobbies', setLobbies)
+    socket.emit('getLobbiesWithSpace', setRejoinLobbies)
   }
 
   startGameCallback = (l: Lobby) => {
@@ -170,6 +177,7 @@ export default function SDP(){
   }
 
   updateLobbiesCallback = setLobbies
+  updateRejoinLobbiesCallback = setRejoinLobbies
 
   updateConnectedCallback = (c: boolean[]) => {
     if(c.length !== Players.players.length) return
@@ -200,6 +208,7 @@ export default function SDP(){
     <div className = 'inLineRow'>
       {appState === "browsing" && <RenderLobbyList
         ls = {lobbies || []}
+        rj = {rejoinLobbies}
         cr = {() => {
           setAppState("joining")
         }}
@@ -211,7 +220,7 @@ export default function SDP(){
           socket.emit('getPlayersInLobby', DEBUG_LOBBY, (players: string[]) => {
             console.log(players)
             if(players.length > 0){
-              for(let i = 1; i < 10; i++){
+              for(let i = 1; i <= 10; i++){
                 if(!players.includes("" + i)){
                   joinLobby(DEBUG_LOBBY, "" + i, "")
                   break
@@ -227,6 +236,7 @@ export default function SDP(){
       {
         appState === "joining" && <RenderJoinLobby 
           oj = {createOrJoinLobby}
+          s = {lobbyName}
         />
       }
       {appState === "inLobby" && <RenderSettings 

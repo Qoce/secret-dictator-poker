@@ -21,9 +21,17 @@ function openLobbies(){
   return lobbies.filter(l => !l.inGame && l.players.length < 10).map(l => l.name)
 }
 
+function lobbiesWithSpace(){
+  return lobbies.map(l => {
+    let numConnected = l.connected.filter(c => c).length
+    return l.inGame && numConnected < l.players.length && [l.name, numConnected, l.players.length]
+  }).filter(a => a)
+}
+
 io.on('connection', (socket) => {
   function updateLobbies(){
     io.to("SelectingLobbies").emit("updateLobbies", openLobbies())
+    io.to("SelectingLobbies").emit("updateRejoinLobbies", lobbiesWithSpace())
   }
   function exitLobby(){
     if(lName){
@@ -64,12 +72,14 @@ io.on('connection', (socket) => {
   })
   socket.on('getPlayersInLobby', (lobby, callback) => {
     const l = lobbies.find(l => l.name === lobby)
-    console.log(l)
     if(l !== undefined) callback(l.players)
     else callback([]) 
   })
   socket.on('getLobbies', (callback) => {
     callback(openLobbies())
+  })
+  socket.on('getLobbiesWithSpace', (callback) => {
+    callback(lobbiesWithSpace())
   })
   socket.on('createLobby', (lobby, callback) => {
     while (lobbies.find(l => l.name === lobby.name)) lobby.name += "."
@@ -95,7 +105,7 @@ io.on('connection', (socket) => {
     const l = lobbies.find(l => l.name === lobby.name)
     if(l && l.password === lobby.password){
       let idx = l.players.indexOf(lobby.username)
-      if(idx === -1 || !l.connected[idx]){
+      if((idx === -1 && !l.inGame) || (idx >= 0 && !l.connected[idx])){
         if(l.players.length < 10){
           lName = lobby.name
           uName = lobby.username
@@ -120,8 +130,11 @@ io.on('connection', (socket) => {
           callback("Lobby is full")
         }
       }
-      else{
+      else if(idx !== -1){
         callback("Username already taken")
+      }
+      else{
+        callback("Lobby has already started")
       }
     }
     else{

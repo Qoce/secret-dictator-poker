@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-export default function LobbyList(args: {ls: string[], cr: () => void, 
+export default function LobbyList(args: {ls: string[], rj:[string, number, number][], cr: () => void, 
   join: (n : string) => void, qj : () => void}){
 
   const handleUserKeyPress = (event : any) => {
@@ -21,6 +21,11 @@ export default function LobbyList(args: {ls: string[], cr: () => void,
     {args.ls.map((l, i) => <div className = "name" key = {i} onClick = {
       () => args.join(l)
     }>{l}</div>)}
+    {args.rj.map((l, i) => <div className = "name" key = {i} onClick = {
+      () => {
+        args.join(l[0])
+      }
+    }>{l[0] + "(" + l[1] + "/" + l[2] + ")"}</div>)}
     <button onClick = {args.cr}>
       Create Room
     </button>
