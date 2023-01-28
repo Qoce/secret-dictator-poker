@@ -48,6 +48,8 @@ export function initSD(){
   fPassed = 0
   president = undefined
   chancellor = undefined
+  lastElectedPresident = undefined
+  lastElectedChancellor = undefined
 
   let players = Players.players
   if(players.length < 5) throw Error('not enough players to start secret dictator')
