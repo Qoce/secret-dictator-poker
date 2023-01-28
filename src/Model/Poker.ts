@@ -140,6 +140,7 @@ Actions.onReset.push(() => {
   center = []
   deck = getRandomDeck()
   leftOver = 0
+  initialized = false
 })
 
 
@@ -384,9 +385,10 @@ function bet(p : Player, amt : number, f = false) : boolean {
 
 let initialized = false
 
-export function initPoker(){
+function initPoker(){
   BB = Settings.getNumber("BB")
   dealer = Rng.nextInt(Players.players.length)
+  initialized = true
 }
 
 Actions.register(Phase.poker, (args: ActionArgs) => {
