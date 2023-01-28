@@ -25,6 +25,10 @@ let cCandidate: Player | undefined
 let president : Player | undefined
 let chancellor: Player | undefined
 let forcedPCandidate: Player | undefined
+
+let lastElectedPresident: Player | undefined
+let lastElectedChancellor: Player | undefined
+
 let failCount = 0
 let bribers : Player[]
 let activeBriber : Player | undefined
@@ -123,8 +127,12 @@ Game.setPhaseListener(Phase.nominate, () => {
   nextPCandidate()
 
   Players.setActors(p => p === pCandidate)
-  Players.apply(p => p.targetable = (p !== pCandidate && p !== president && p !== chancellor && p.bank > 0))
-  Players.apply(p => p.role.influence = p.bank)
+  Players.apply(p => p.targetable = 
+    (p !== pCandidate && p !== lastElectedPresident && 
+     p !== lastElectedChancellor && p.bank > 0))
+  if(failCount == 0){
+    Players.apply(p => p.role.influence = p.bank)
+  }
   
   if(!wasUninitialized && Players.filter(p => p.targetable).length === 0) {
     Actions.log([pCandidate, " has no legal chancellor choices. Their government fails."])
@@ -191,6 +199,8 @@ function checkVotes(){
     Actions.log("The vote passes")
     president = pCandidate
     chancellor = cCandidate
+    lastElectedPresident = pCandidate
+    lastElectedChancellor = cCandidate
     if(fPassed >= 3 && chancellor?.role.team === Team.dictator) {
       Actions.log([chancellor, " is the dictator"])
       fascistWin()
@@ -209,6 +219,8 @@ function failGovernment(){
     Game.setPhase(Phase.nominate)
   }
   else{
+    lastElectedPresident = undefined
+    lastElectedChancellor = undefined
     drawPolicies(1)
     passPolicy(0, true)
   }
@@ -334,6 +346,7 @@ function drawPolicies(n: number){
 Game.setPhaseListener(Phase.president, () => {
   drawPolicies(3)
   if(president === undefined) throw Error("President is undefined during president phase")
+  Actions.log("The president draws 3 policies")
   printPolicies([president, " sees: "], activePolicies, president)
   Players.apply(p => p.targetable = false)
   Players.setActors(p => p === president)
@@ -345,7 +358,8 @@ Actions.register(Phase.president, (args: ActionArgs) => {
   discard = discard.concat(activePolicies.splice(v,1))
   if(president === undefined) throw Error("President is undefined during president phase")
   if(chancellor === undefined) throw Error("Chancellor is undefined during president phase")
-  printPolicies([president, " sends "], activePolicies, [chancellor, president])
+  Actions.log("The president discards a policy")
+  printPolicies([president, " sends "], activePolicies, [president])
   if(bribers.length > 0 && activeBriber === president){
     bribers.splice(0,1)
   }
@@ -386,6 +400,7 @@ Actions.register(Phase.chanBribe, (ActionArgs) => {
 Game.setPhaseListener(Phase.chancellor, () => {
   Players.setActors(p => p === chancellor)
   if(chancellor === undefined) throw Error("Chancellor is undefined during chancellor phase")
+  Actions.log("The chancellor recieves 2 policies")
   printPolicies([chancellor, " sees: "], activePolicies, chancellor)
 })
 
@@ -394,10 +409,10 @@ Actions.register(Phase.chancellor, (args: ActionArgs) => {
   if(chancellor === undefined) throw Error("Chancellor is undefined during chancellor phase")
   if(args.v === -1) {
     Game.setPhase(Phase.veto)
-    Actions.log([chancellor, " vetoes the policies"])
+    Actions.log(["The chancellor vetoes the policies"])
   }
   else {
-    Actions.log([chancellor, " passes ", colorPolicy(activePolicies[args.v])])
+    Actions.log(["The chancellor passes ", colorPolicy(activePolicies[args.v])])
     passPolicy(args.v)
   }
   return true
@@ -486,15 +501,17 @@ function printPolicies(label: string | (string | Player)[], policies: ("l" | "f"
     if(p === undefined) throw Error("printPolicies called with undefined player")
     p = [p]
   }
+  let pIndicies = (p as Player[]).map(pl => Players.players.indexOf(pl))
   let pels = policies.map(colorPolicy).map(x => {return {content: x, visibleTo: 
-    (p as Player[]).map(pl => Players.players.indexOf(pl))
+    pIndicies
   }})
   if(Array.isArray(label)) Actions.log([...label, ...pels])
-  else Actions.log([label, ...pels])
+  else Actions.log({content: [label, ...pels], visibleTo: pIndicies})
 }
 
 Game.setPhaseListener(Phase.peak, () => {
   Players.setActors(p => p === president)
+  Actions.log("The president peaks at the next 3 policies")
   printPolicies("Next 3 Policies: ", peakPolicies(3), president)
 })
 
