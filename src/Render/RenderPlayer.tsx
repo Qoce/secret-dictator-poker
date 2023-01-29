@@ -1,6 +1,5 @@
 import {getCardString} from './PokerUtils'
 import {getTeamString} from './SDUtils'
-import {Team} from '../Interface/Role'
 import {useState} from 'react'
 import dealer from '../Model/Poker'
 import Game from '../Model/Game'

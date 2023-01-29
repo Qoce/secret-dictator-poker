@@ -142,7 +142,7 @@ Game.setPhaseListener(Phase.nominate, () => {
   Players.apply(p => p.targetable = 
     (p !== pCandidate && p !== lastElectedPresident && 
      p !== lastElectedChancellor && p.bank > 0))
-  if(failCount == 0){
+  if(failCount === 0){
     Players.apply(p => p.role.influence = p.bank)
   }
   
@@ -630,10 +630,11 @@ Players.onBankUpdate = () => {
   let libWin = aliveFascistCount === 0 || (!dictatorAlive && doesDictatorDeathEndGame())
   let fasWin = aliveLiberalCount === 0
   if(libWin || fasWin){
-    if(libWin) liberalWin()
-    else fascistWin()
+    if(!fasWin) liberalWin()
+    else if(!libWin) fascistWin()
+    else Actions.log("A Draw has Occured.")
+    exitSD(Phase.endgame, false)
   }
-  exitSD(Phase.endgame, false)
 }
 
 function exitSD(phase = Phase.poker, ub: boolean = true){

@@ -107,7 +107,7 @@ export default function SDP(){
 
   //Attempt to rejoin the lobby if we have stored data from a disconnect
   try{
-    if(appState == "rejoining" && JSON.parse(window.sessionStorage.getItem("lobby") || "null")){
+    if(appState === "rejoining" && JSON.parse(window.sessionStorage.getItem("lobby") || "null")){
       //NOTE: use windowStorage instead of sessionStorage to keep data across tabs
       //(Need sessionStorage for any serious debugging)
       
@@ -122,7 +122,7 @@ export default function SDP(){
         setAppState("browsing")
       }
     }
-    else if(appState == "rejoining"){
+    else if(appState === "rejoining"){
       setAppState("browsing")
     }
   }
@@ -218,7 +218,6 @@ export default function SDP(){
         }}
         qj = {() => 
           socket.emit('getPlayersInLobby', DEBUG_LOBBY, (players: string[]) => {
-            console.log(players)
             if(players.length > 0){
               for(let i = 1; i <= 10; i++){
                 if(!players.includes("" + i)){

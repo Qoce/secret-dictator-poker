@@ -1,5 +1,4 @@
 import SocketIO from 'socket.io'
-import a from './Actions'
 
 let settings = {
   settings: new Map<string, {value: number | boolean | string, name: string, values?: string[], max?: number, min?: number}>(),
