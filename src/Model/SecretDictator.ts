@@ -507,7 +507,8 @@ function printPolicies(label: string | (string | Player)[], policies: ("l" | "f"
   let pels = policies.map(colorPolicy).map(x => {return {content: x, visibleTo: 
     pIndicies
   }})
-  if(Array.isArray(label)) Actions.log([...label, ...pels])
+
+  if(Array.isArray(label)) Actions.log({content: [...label, ...pels], visibleTo: pIndicies})
   else Actions.log({content: [label, ...pels], visibleTo: pIndicies})
 }
 
