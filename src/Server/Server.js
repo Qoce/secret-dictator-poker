@@ -187,6 +187,7 @@ io.on('connection', (socket) => {
         }
       }
       l.players = newPlayers
+      l.connected = []
       for(_ in l.players){
         l.connected.push(true)
       }

@@ -16,6 +16,8 @@ class Players{
   initFromNames(n: string[], c: boolean[] = []){
     this.players = []
     n.forEach(this.initPlayer.bind(this))
+    console.log(n)
+    console.log(c)
     for(let i in c){
       this.players[i].connected = c[i]
     }
