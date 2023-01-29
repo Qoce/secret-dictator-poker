@@ -124,8 +124,8 @@ function Government(args: {p: Player, chan?: Player, pres: Player}){
   if(appState !== "inGame") return null
   if(inPoker() || inEndgame()) return null
   let str = ""
-  if(args.p === args.chan) str = "C"
-  else if(args.p === args.pres) str = "P"
+  if(args.p === args.pres) str = "P"
+  else if(args.p === args.chan) str = "C"
   return <div className = "square">
     {str}
   </div>
