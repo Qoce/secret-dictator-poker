@@ -11,7 +11,7 @@ import RenderJoinLobby from "./RenderJoinLobby"
 import RenderLobbyList from "./RenderLobbyList"
 import RenderPhase from "./RenderPhase"
 import RenderSettings from "./RenderSettings"
-import SDHeader from "./SDHeader"
+import SDHeader from "./RenderSDHeader"
 import Settings from "../Model/Settings"
 import settings from '../Model/Settings'
 
@@ -248,7 +248,7 @@ export default function SDP(){
         isHost = {Players.get(user).host}
         numPlayers = {Players.players.length}
       />}
-      {appState === "inGame" && <SDHeader/>}
+      {appState === "inGame" && <SDHeader user = {user}/>}
       <div className = "center">
         <div>
           {(appState === "inLobby" || appState === "inGame") && egSort().map(p => 

@@ -38,6 +38,7 @@ let activePolicies : ("l" | "f")[] = []
 let lPassed = 0
 let fPassed = 0
 let initalized = false
+let dictatorElected = false
 
 export function initSD(){
   bribers = []
@@ -50,6 +51,7 @@ export function initSD(){
   chancellor = undefined
   lastElectedPresident = undefined
   lastElectedChancellor = undefined
+  dictatorElected = false
 
   let players = Players.players
   if(players.length < 5) throw Error('not enough players to start secret dictator')
@@ -100,6 +102,14 @@ export function initSD(){
   activePolicies = []
   //shuffles policyDeck
   RNG.randomize(policyDeck)
+}
+
+function getFascistPlayers(){
+  return Players.getIndices(p => p.role.team !== Team.liberal)
+}
+
+function getDictator() : Player{
+  return Players.filter(p => p.role.team !== Team.liberal)[0]
 }
 
 function nextPCandidate(){
@@ -204,8 +214,17 @@ function checkVotes(){
     lastElectedPresident = pCandidate
     lastElectedChancellor = cCandidate
     if(fPassed >= 3 && chancellor?.role.team === Team.dictator) {
-      Actions.log([chancellor, " is the dictator"])
-      fascistWin()
+      let dictatorWin = Settings.getString('dictatorWin')
+      if(dictatorWin === "Classic"){
+        Actions.log([chancellor, " is the dictator"])
+        fascistWin()
+      }
+      else if(dictatorWin === "Dictator Election Required"){
+        dictatorElected = true
+        Actions.log({content: [chancellor, " is the dictator"], 
+          visibleTo: getFascistPlayers()})
+        Game.setPhase(Phase.bribe)
+      }
     }
     else Game.setPhase(Phase.bribe)
   }
@@ -451,13 +470,23 @@ function passPolicy(a: number, topCard = false, exit = true){
     }
   }
   else if(policy === "f"){
-    if(topCard)Actions.log(["Top card is fascist"])
+    if(topCard) Actions.log(["Top card is fascist"])
     else {
       Actions.log(["\"", pCandidate, "\"", " and ", "\"", cCandidate as Player, "\"", " have passed a fascist policy"])
-      if(settings.getString("bribeInfo") === "Show True Government") Actions.log(["Shadow government: ", pCandidate, " → ", cCandidate as Player])
+      if(settings.getString("bribeInfo") === "Show True Government") 
+        Actions.log(["Shadow government: ", pCandidate, " → ", 
+        cCandidate as Player])
     }
     let special = getSpecialPhase(fPassed++)
-    if(special === Phase.endgame) fascistWin()
+    if(special === Phase.endgame){
+      let dictatorWin = Settings.getString("dictatorWin")
+      if(dictatorWin === "Dictator Election Required" && !dictatorElected){
+        special = Phase.assassinate
+      }
+      else{
+        fascistWin()
+      }
+    } 
     if(topCard || special === Phase.nominate) {
       if(exit) exitSD()
     }
@@ -575,7 +604,6 @@ function liberalWin(){
   const liberals = Players.filter(p => p.role.team === Team.liberal && p.bank > 0)
   loot(liberals, fascists)
   Actions.log("Liberals Win")
-  exitSD(Phase.endgame, false)
 }
 
 function fascistWin(){
@@ -583,11 +611,30 @@ function fascistWin(){
   const liberals = Players.filter(p => p.role.team === Team.liberal)
   loot(fascists, liberals)
   Actions.log("Fascists Win")
-  exitSD(Phase.endgame, false)
 }
 
-Players.onLiberalWin = liberalWin
-Players.onFascistWin = fascistWin
+function doesDictatorDeathEndGame(){
+  let dictatorWin = Settings.getString("dictatorWin")
+  if(dictatorWin === "Classic") return true
+  else if(dictatorWin === "No Dictator Win") return false
+  else return !dictatorElected
+}
+
+Players.onBankUpdate = () => {
+  let aliveLiberalCount = Players.filter(p => p.role.team === Team.liberal &&
+    p.bank > 0).length
+  let aliveFascistCount = Players.filter(p => p.role.team !== Team.liberal &&
+    p.bank > 0).length
+  let dictatorAlive = getDictator().bank > 0
+
+  let libWin = aliveFascistCount === 0 || (!dictatorAlive && doesDictatorDeathEndGame())
+  let fasWin = aliveLiberalCount === 0
+  if(libWin || fasWin){
+    if(libWin) liberalWin()
+    else fascistWin()
+  }
+  exitSD(Phase.endgame, false)
+}
 
 function exitSD(phase = Phase.poker, ub: boolean = true){
   cCandidate = undefined
@@ -600,9 +647,9 @@ function exitSD(phase = Phase.poker, ub: boolean = true){
 
 Actions.onReset.push(() => {initalized = false})
 
-export function getSpecialPhase(n: number){
+export function getSpecialPhase(n: number) : Phase{
   let playerLength = Players.players.length
-  return SpecialPhases[Math.floor((playerLength - 5) / 2)][n]
+  return SpecialPhases[Math.floor((playerLength - 5) / 2)][n] || Phase.endgame
 }
 
 export default function getSDState(){
@@ -617,7 +664,8 @@ export default function getSDState(){
     bg: Math.floor(240 + (5 - lPassed) / (11 - lPassed - fPassed)  * 120),
     activeBriber: activeBriber,
     activePolicies: activePolicies,
-    peakPolicies: policyDeck.slice(0,3)
+    peakPolicies: policyDeck.slice(0,3),
+    dictatorElected: dictatorElected
   }
 }
 

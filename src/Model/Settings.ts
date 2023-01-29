@@ -72,10 +72,13 @@ settings.register("fPolicyCount", {value: 11, name: "Fascist Policy Cards"})
 settings.register("lPolicyCount", {value: 6, name: "Fascist Policy Cards"})
 settings.register("investigationPower", {value: "Role", name: "Investigation Power", 
   values: ["Role", "Role + Bank", "Role + Bank + Cards"]})
-settings.register("debug", {value: true, name: "Debug Mode"})
 settings.register("bribeInfo", {value: "None", name: "Briber Information",
   values: ["None", "On Acceptance", "Before Acceptance", "Public Bribes", "Show True Government"]}) 
 settings.register("showVoting", {value: "Direction", name: "Show Voting",
   values: ["Anonymous", "Direction", "Value"]})
+
+settings.register("dictatorWin", {value: "Classic", name: "Dictator Win Rule",
+  values: ["Classic", "No Dictator Win", "Dictator Election Required"]})
+settings.register("debug", {value: false, name: "Debug Mode"})
 
 export default settings

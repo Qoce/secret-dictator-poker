@@ -113,6 +113,9 @@ class Players{
   filter(condition: (p: Player) => boolean){
     return this.players.filter(condition)
   }
+  getIndices(condition: (p: Player) => boolean){
+    return this.players.map((p, i) => condition(p) ? i : -1).filter(i => i !== -1)
+  }
   all(condition: (p: Player) => boolean){                              
     return this.filter(condition).length === this.players.length
   }
@@ -123,27 +126,18 @@ class Players{
   allDoneActing(){
     return this.allLiving(p => !p.canAct)
   }
+  
   updateBanks(f : (p: Player) => number){
-    let liberalsWon = false
     this.apply(p => {
       p.bank = f(p)
       if(p.bank === 0){
         Actions.log([p, " has died"])
-        if(p.role.team === Team.dictator){
-          Actions.log([p, " was the dictator"])
-          liberalsWon = true
-        }
         p.dead = true
       }
     }, p => !p.dead)
-    if(liberalsWon) {
-      this.onLiberalWin()
-    }
-    else if(this.filter(p => p.role.team === Team.liberal && p.bank > 0).length === 0)
-      this.onFascistWin()  
+    this.onBankUpdate()
   }
-  onFascistWin(){}
-  onLiberalWin(){}
+  onBankUpdate(){}
 }
 
 export default new Players()
