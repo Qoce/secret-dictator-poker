@@ -158,7 +158,7 @@ function startHand() : void{
   deck = getRandomDeck()
 
   updateDealer()
-  Players.applyLiving(preparePlayer)
+  Players.apply(preparePlayer)
   setDM(Players.nextLiving(dealer))
   if(dm !== false){
     bet(Players.get(dm), Math.floor(BB/2), true)
@@ -297,7 +297,7 @@ function preparePlayer(p : Player) : void{
     equity: 0,
     amtIn: 0,
     folded: p.bank === 0,
-    hand: [deck.pop() as number, deck.pop() as number],
+    hand: p.bank === 0 ? [] : [deck.pop() as number, deck.pop() as number],
     stack: p.bank,
     couldWin: 0,
     net: 0,

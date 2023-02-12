@@ -109,7 +109,7 @@ function getFascistPlayers(){
 }
 
 function getDictator() : Player{
-  return Players.filter(p => p.role.team !== Team.liberal)[0]
+  return Players.filter(p => p.role.team === Team.dictator)[0]
 }
 
 function nextPCandidate(){
