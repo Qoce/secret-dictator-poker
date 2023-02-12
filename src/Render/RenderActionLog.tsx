@@ -8,12 +8,11 @@ export default function ActionLog(args: {p: number, height: number, socket: any,
   let a : any
   const scrollRef = useRef(a)
 
-  useEffect(() => {
+  /*useEffect(() => {
     if(scrollRef && scrollRef.current)
       scrollRef.current.scrollIntoView({behavior: "smooth"})
-  })
+  })*/
   return <div className = 'scroller' style={{height: args.height}}>
-    <div style={{height: args.height}}>
       {
       Actions.getActionLog().map((a, i) => <Hoverable actionIndex = {i} key = {i} 
         socket = {args.socket} lobby = {args.lobby}>{
@@ -21,10 +20,8 @@ export default function ActionLog(args: {p: number, height: number, socket: any,
         {flatten(b.map((c,k) => renderContent(c,args.p, i * 1e4 + j * 1e2 + k)))} 
         <div ref = {scrollRef}/>
         </div>)
-      }</Hoverable>)
+      }</Hoverable>).reverse()
     }
-    </div>
-    
   </div>
 }
 

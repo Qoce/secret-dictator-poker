@@ -41,7 +41,10 @@
 
 .scroller {
   float: left;
-  display: table-cell;
+  display: flex;
+  flex-direction: column-reverse;
+  overflow: scroll;
+  width: 25vw;
 }
 
 .settings{
@@ -50,8 +53,6 @@
 }
 
 .scroller > div{
-  overflow: scroll;
-  width: 25vw;
   color: #000;
   text-align: left;
   -webkit-user-select: none;
