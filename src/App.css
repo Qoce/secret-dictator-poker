@@ -45,6 +45,9 @@
   flex-direction: column-reverse;
   overflow: scroll;
   width: 25vw;
+  margin-top: 10px;
+  border: 1px solid #999;
+  overflow-x: hidden;
 }
 
 .settings{
