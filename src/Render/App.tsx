@@ -1,11 +1,9 @@
 import Game from "./RenderGame"
 import './App.css';
+var  WebFont = require('webfontloader');
 require("../Model/Poker")
 require("../Model/SecretDictator")
 
-//
-//      <header className="App-header"> </header>
-//
 
 
 

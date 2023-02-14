@@ -42,7 +42,7 @@ function bgc(isUser: boolean, hovered: boolean, selected: boolean){
 
 function Name(args: {p: Player}){
   let str = args.p.bank === 0 ? "💀 " : ""
-  return <div className = "name" style = {{fontFamily: "Helvetica"}}>
+  return <div className = "name">
     {str + args.p.name + (args.p.connected ? "" : " (🔌)")}
   </div>
 }

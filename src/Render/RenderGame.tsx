@@ -6,7 +6,7 @@ import Lobby from '../Interface/Lobby'
 import Phase from '../Interface/Phase'
 import Player from './RenderPlayer'
 import Players from '../Model/Players'
-import React, {useCallback, useState} from 'react'
+import React, {useCallback, useEffect, useState} from 'react'
 import RenderJoinLobby from "./RenderJoinLobby"
 import RenderLobbyList from "./RenderLobbyList"
 import RenderPhase from "./RenderPhase"
@@ -15,6 +15,7 @@ import SDHeader from "./RenderSDHeader"
 import Settings from "../Model/Settings"
 import settings from '../Model/Settings'
 
+var WebFont = require('webfontloader')
 require("./RenderPoker")
 require("./RenderSDBottom")
 let {io} = require("socket.io-client")
@@ -61,6 +62,13 @@ export default function SDP(){
   const [username, setUsername] = useState("")
 
   console.log(rejoinLobbies)
+
+  useEffect (() => {
+    WebFont.load({
+      google: {
+        families: ["UnifrakturCook:700"]
+      }
+  })}, [])
 
   function initFromLobby(l: Lobby, username: string){
     setLobbyName(l.name)

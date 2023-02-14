@@ -64,6 +64,7 @@
   -ms-user-select: none;
   -o-user-select: none;
   user-select: none;
+  margin-left: 4px;
 }
 
 .wrapper {
@@ -81,6 +82,9 @@
   display: table;
 }
 
+:root {
+  --main-font: UnifrakturCook;
+}
 
 .name {
   border: 1px solid #999;
@@ -94,7 +98,7 @@
   padding: 0;
   text-align: center;
   width: 384px;
-  font-family: UnifrakturCook;
+  font-family: var(--main-font);
   -webkit-user-select: none;
   -khtml-user-select: none;
   -moz-user-select: none;
