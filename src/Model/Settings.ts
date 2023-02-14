@@ -1,5 +1,6 @@
 import SocketIO from 'socket.io'
 import Setting from '../Interface/Setting'
+import { refresh } from '../Render/RenderGame'
 
 let settings = {
   settings: new Map<string, Setting>(),
@@ -87,5 +88,6 @@ settings.register("font", {value: true, name: "Fun Font", local: true, onChange:
   document.documentElement.style.setProperty('--main-font', newFont)
 }})
 
+settings.register("4ColorDeck", {value: true, name: "4 Color Deck", local: true, onChange: refresh})
 
 export default settings

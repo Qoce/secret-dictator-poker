@@ -39,6 +39,12 @@ let updateRejoinLobbiesCallback : (l: [string, number, number][]) => void
 let updateGameCallback : (l: Lobby) => void
 let updateConnectedCallback : (l : boolean[]) => void
 
+let refreshPointee : () => void
+
+export function refresh(){
+  refreshPointee()
+}
+
 socket.on('startGame', (l : Lobby) => startGameCallback(l))
 socket.on('updateLobby', (l: Lobby) => updateLobbyCallback(l))
 socket.on('updateLobbies', (l: string[]) => updateLobbiesCallback(l))
@@ -68,13 +74,8 @@ export default function SDP(){
       google: {
         families: ["UnifrakturCook:700"]
       }
-  })}, [])
-
-  useEffect(() => {
-    const newFont = Settings.getBool("font") ? "UnifrakturCook" : "Arial"
-    console.log(newFont)
-    document.documentElement.style.setProperty('--main-font', newFont)
-  })
+    })
+  }, [])
 
   function initFromLobby(l: Lobby, username: string){
     setLobbyName(l.name)
@@ -151,6 +152,10 @@ export default function SDP(){
 
   //forces the component to rerender when an action occurs
   const [turn,forceUpdate] = useState(0)
+
+  useEffect(() => {
+    refreshPointee = () => forceUpdate(turn + 1)
+  }, [turn])
 
   Actions.onAction = useCallback(() => {forceUpdate(turn + 1)
     if(Settings.getBool("debug")) {
