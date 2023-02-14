@@ -10,7 +10,7 @@ import React, {useCallback, useEffect, useState} from 'react'
 import RenderJoinLobby from "./RenderJoinLobby"
 import RenderLobbyList from "./RenderLobbyList"
 import RenderPhase from "./RenderPhase"
-import RenderSettings from "./RenderSettings"
+import {SettingsRender, LocalSettingsRender} from "./RenderSettings"
 import SDHeader from "./RenderSDHeader"
 import Settings from "../Model/Settings"
 import settings from '../Model/Settings'
@@ -69,6 +69,12 @@ export default function SDP(){
         families: ["UnifrakturCook:700"]
       }
   })}, [])
+
+  useEffect(() => {
+    const newFont = Settings.getBool("font") ? "UnifrakturCook" : "Arial"
+    console.log(newFont)
+    document.documentElement.style.setProperty('--main-font', newFont)
+  })
 
   function initFromLobby(l: Lobby, username: string){
     setLobbyName(l.name)
@@ -211,77 +217,81 @@ export default function SDP(){
   }}>New Round</button>
 
   return (
-  <div className = "center">
-  <div className = "wrapper">
-    <div className = 'inLineRow'>
-      {appState === "browsing" && <RenderLobbyList
-        ls = {lobbies || []}
-        rj = {rejoinLobbies}
-        cr = {() => {
-          setAppState("joining")
-        }}
-        join = {(n : string) => {
-          setLobbyName(n)
-          setAppState("joining")
-        }}
-        qj = {() => 
-          socket.emit('getPlayersInLobby', DEBUG_LOBBY, (players: string[]) => {
-            if(players.length > 0){
-              for(let i = 1; i <= 10; i++){
-                if(!players.includes("" + i)){
-                  joinLobby(DEBUG_LOBBY, "" + i, "")
-                  break
+  <div>
+    <div className = "center">
+      <div className = "wrapper">
+        <LocalSettingsRender/>
+        <div className = 'inLineRow'>
+          {appState === "browsing" && <RenderLobbyList
+            ls = {lobbies || []}
+            rj = {rejoinLobbies}
+            cr = {() => {
+              setAppState("joining")
+            }}
+            join = {(n : string) => {
+              setLobbyName(n)
+              setAppState("joining")
+            }}
+            qj = {() => 
+              socket.emit('getPlayersInLobby', DEBUG_LOBBY, (players: string[]) => {
+                if(players.length > 0){
+                  for(let i = 1; i <= 10; i++){
+                    if(!players.includes("" + i)){
+                      joinLobby(DEBUG_LOBBY, "" + i, "")
+                      break
+                    }
+                  }
                 }
-              }
+                else{
+                  createOrJoinLobby(DEBUG_LOBBY, "1", "")
+                }
+              })
             }
-            else{
-              createOrJoinLobby(DEBUG_LOBBY, "1", "")
-            }
-          })
-        }
-      />}
-      {
-        appState === "joining" && <RenderJoinLobby 
-          oj = {createOrJoinLobby}
-          s = {lobbyName}
-        />
-      }
-      {appState === "inLobby" && <RenderSettings 
-        onStart = {() => {
-          socket.emit("startGame", lobbyName)
-        }} 
-        socket = {socket} 
-        lobby = {lobbyName} 
-        isHost = {Players.get(user).host}
-        numPlayers = {Players.players.length}
-      />}
-      {appState === "inGame" && <SDHeader user = {user}/>}
-      <div className = "center">
-        <div>
-          {(appState === "inLobby" || appState === "inGame") && egSort().map(p => 
-            <Player key = {p.name} p = {p} selected = {selected !== undefined && Players.get(selected) === p}
-            onSelected = {() => setSelected(Players.players.indexOf(p))} u = {Players.get(user)}
-            setUser = {() => setUser(Players.players.indexOf(p))}
-            appState = {appState}/>
-          )}
-        </div>
-        {restart_button}
-      </div>
-      <div className = "center">
-        {appState === "inGame" && Array.from(RenderPhase.keys()).map(rp => {
-          let r = RenderPhase.get(rp)
-          if(r && Game.getPhase() === rp){
-            return React.createElement(r, {p: user, t: selected, key: rp})
+          />}
+          {
+            appState === "joining" && <RenderJoinLobby 
+              oj = {createOrJoinLobby}
+              s = {lobbyName}
+            />
           }
-          return null
-        })}
+          {appState === "inLobby" && <SettingsRender 
+            onStart = {() => {
+              socket.emit("startGame", lobbyName)
+            }} 
+            socket = {socket} 
+            lobby = {lobbyName} 
+            isHost = {Players.get(user).host}
+            numPlayers = {Players.players.length}
+          />}
+          {appState === "inGame" && <SDHeader user = {user}/>}
+          <div className = "center">
+            <div>
+              {(appState === "inLobby" || appState === "inGame") && egSort().map(p => 
+                <Player key = {p.name} p = {p} selected = {selected !== undefined && Players.get(selected) === p}
+                onSelected = {() => setSelected(Players.players.indexOf(p))} u = {Players.get(user)}
+                setUser = {() => setUser(Players.players.indexOf(p))}
+                appState = {appState}/>
+              )}
+            </div>
+            {restart_button}
+          </div>
+          <div className = "center">
+            {appState === "inGame" && Array.from(RenderPhase.keys()).map(rp => {
+              let r = RenderPhase.get(rp)
+              if(r && Game.getPhase() === rp){
+                return React.createElement(r, {p: user, t: selected, key: rp})
+              }
+              return null
+            })}
+          </div>
+        </div>
+        {appState === "inGame" && <ActionLog p = {user}
+          lobby = {lobbyName || ""}
+          height = {Players.players.length * 40 + 271}
+          socket = {socket}
+        />}
       </div>
     </div>
-    {appState === "inGame" && <ActionLog p = {user}
-    lobby = {lobbyName || ""}
-    height = {Players.players.length * 40 + 271}
-    socket = {socket}
-    />}
   </div>
-  </div>)
+  )
 }

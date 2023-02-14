@@ -3,37 +3,12 @@ import SocketIO from 'socket.io'
 
 import react from 'react'
 
-export default function SettingsRender(props: 
+export function SettingsRender(props: 
   {socket: any, lobby: any, onStart: any, isHost: boolean, numPlayers: number}){
   const stngs : any[] = []
-  Settings.settings.forEach((_, key) => {
-    const setting = Settings.settings.get(key)?.value
-    if(typeof setting === "number"){
-      stngs.push(<NumberSetting sKey = {key} 
-        key = {key} 
-        socket = {props.socket} 
-        lobby = {props.lobby}
-        isHost = {props.isHost}
-        />)
-    }
-    if(typeof setting === "boolean"){
-      stngs.push(<BooleanSetting 
-        sKey = {key}
-        key = {key}
-        socket = {props.socket}
-        lobby = {props.lobby}
-        isHost = {props.isHost}
-      />)
-    }
-    if(typeof setting === "string"){
-      stngs.push(<StringSetting
-        sKey = {key}
-        key = {key}
-        socket = {props.socket}
-        lobby = {props.lobby}
-        isHost = {props.isHost}
-      />)
-    }
+  Settings.settings.forEach((val, key) => {
+    if(val.local) return
+    stngs.push(RenderSetting(key, props))
   })
   return <div className = "settings" style = {{marginRight: "10px"}}>
     {stngs}
@@ -50,7 +25,64 @@ interface SettingsProps {
   sKey: string,
   lobby: string,
   socket: SocketIO.Socket,
-  isHost: boolean
+  isHost: boolean,
+  onChange?: any
+}
+
+export function LocalSettingsRender(){
+  const [opened, setOpened] = react.useState(false)
+  
+  const stngs : any[] = []
+  Settings.settings.forEach((val, key) => {
+    if(!val.local) return
+    stngs.push(RenderSetting(key, {socket: null, lobby: null, isHost: true}))
+  })
+
+  return <div className = "inLineRow">
+    <div className = "gear" onClick = {
+      () => setOpened(!opened)
+      }>
+    ⚙️
+    </div>
+    <div style = {{"marginTop": "50px"}}>
+      {opened && stngs}
+    </div>
+  </div>
+}
+
+function RenderSetting(key : string, props: {socket: any, lobby: any, isHost: boolean}){
+  const s = Settings.settings.get(key)
+  const setting = s?.value
+  const onChange = s?.onChange
+  if(typeof setting === "number"){
+    return <NumberSetting sKey = {key} 
+      key = {key} 
+      socket = {props.socket} 
+      lobby = {props.lobby}
+      isHost = {props.isHost}
+      onChange = {onChange}
+      />
+  }
+  if(typeof setting === "boolean"){
+    return <BooleanSetting 
+      sKey = {key}
+      key = {key}
+      socket = {props.socket}
+      lobby = {props.lobby}
+      isHost = {props.isHost}
+      onChange = {onChange}
+    />
+  }
+  if(typeof setting === "string"){
+    return <StringSetting
+      sKey = {key}
+      key = {key}
+      socket = {props.socket}
+      lobby = {props.lobby}
+      isHost = {props.isHost}
+      onChange = {onChange}
+    />
+  }
 }
 
 function NumberSetting(props: SettingsProps){
@@ -67,6 +99,7 @@ function NumberSetting(props: SettingsProps){
       onChange = {(e) => {
         setNum(+e.target.value)
         Settings.set(props.sKey, +e.target.value, props.socket, props.lobby)
+        if(props.onChange) props.onChange(+e.target.value)
       }}/>
   </div>
 }
@@ -84,6 +117,7 @@ function BooleanSetting(props: SettingsProps){
       onChange = {(e) => {
        setBool(e.target.checked)
        Settings.set(props.sKey, e.target.checked, props.socket, props.lobby)
+       if(props.onChange) props.onChange(e.target.checked)
     }}/>
   </div>
 }
@@ -106,6 +140,7 @@ function StringSetting(props: SettingsProps){
       onChange = {event => {
         setStr(event.target.value)
         Settings.set(props.sKey, event.target.value, props.socket, props.lobby)
+        if(props.onChange) props.onChange(event.target.value)
       }}>
       {values.map((value, index) => {
         return <option key = {index} value = {value}>{value}</option>

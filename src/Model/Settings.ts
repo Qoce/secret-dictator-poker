@@ -1,7 +1,8 @@
 import SocketIO from 'socket.io'
+import Setting from '../Interface/Setting'
 
 let settings = {
-  settings: new Map<string, {value: number | boolean | string, name: string, values?: string[], max?: number, min?: number}>(),
+  settings: new Map<string, Setting>(),
   getNumber(key : string){
     const value = this.settings.get(key)?.value
     if(typeof value === 'undefined') throw Error('Setting ' + key + ' not found!')
@@ -37,7 +38,7 @@ let settings = {
           throw Error("Invalid setting value for " + key + ": " + value)
         }
       }
-      if(socket !== undefined){
+      if(socket !== undefined && s.local !== true){
         socket.emit('changeSetting', lobby, key, value)
       }
       else{
@@ -46,7 +47,7 @@ let settings = {
       }
     }
   },
-  register(key : string, val: {value : number | boolean | string, name : string, values?: string[], max?: number, min?: number}){
+  register(key : string, val: Setting){
     this.settings.set(key, val)
   },
   atLeast(key: string, value: string){
@@ -63,10 +64,10 @@ let settings = {
   }
 }
 
-settings.register("freeInfluence", {value: 200, name: "Free Influence"})
-settings.register("ecoBase", {value: 200, name: "Passive Income"})
-settings.register("startingBank", {value: 5000, name: "Starting Bank"})
-settings.register("BB", {value: 50, name: "Big Blind"})
+settings.register("freeInfluence", {value: 1, name: "Free Influence"})
+settings.register("ecoBase", {value: 1, name: "Passive Income"})
+settings.register("startingBank", {value: 200, name: "Starting Bank"})
+settings.register("BB", {value: 2, name: "Big Blind"})
 settings.register("fPolicyCount", {value: 11, name: "Fascist Policy Cards"})
 settings.register("lPolicyCount", {value: 6, name: "Fascist Policy Cards"})
 settings.register("investigationPower", {value: "Role", name: "Investigation Power", 
@@ -79,5 +80,12 @@ settings.register("showVoting", {value: "Direction", name: "Show Voting",
 settings.register("dictatorWin", {value: "Classic", name: "Dictator Win Rule",
   values: ["Classic", "No Dictator Win", "Dictator Election Required"]})
 settings.register("debug", {value: false, name: "Debug Mode"})
+
+settings.register("font", {value: true, name: "Fun Font", local: true, onChange: (value: boolean) => {
+  const newFont = value ? "UnifrakturCook" : "Arial"
+  console.log(newFont)
+  document.documentElement.style.setProperty('--main-font', newFont)
+}})
+
 
 export default settings
