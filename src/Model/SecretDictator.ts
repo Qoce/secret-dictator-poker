@@ -24,6 +24,8 @@ let pCandidate: Player
 let cCandidate: Player | undefined
 let president : Player | undefined
 let chancellor: Player | undefined
+
+let normalPCandidate: Player
 let forcedPCandidate: Player | undefined
 
 let lastElectedPresident: Player | undefined
@@ -96,6 +98,7 @@ export function initSD(){
     Actions.log({content: [p, ": " + Team[p.role.team]], visibleTo: Players.players.indexOf(p)})
   })
   pCandidate = players[RNG.nextInt(players.length)]
+  normalPCandidate = pCandidate
 
   policyDeck = Array(Settings.getNumber("fPolicyCount")).fill("f").concat(Array(Settings.getNumber("lPolicyCount")).fill("l"))
   discard = []
@@ -113,13 +116,20 @@ function getDictator() : Player{
 }
 
 function nextPCandidate(){
-  let next = Players.nextLiving(pCandidate)
-  if(next === false) {
-    Actions.log("Nobody else is alive, the government fails")
-    topCardToEnd()
+  if(forcedPCandidate){
+    pCandidate = forcedPCandidate
+    forcedPCandidate = undefined
   }
-  else {
-    pCandidate = Players.get(next)
+  else{
+    let next = Players.nextLiving(normalPCandidate)
+    if(next === false) {
+      Actions.log("Nobody else is alive, the government fails")
+      topCardToEnd()
+    }
+    else {
+      normalPCandidate = Players.get(next)
+      pCandidate = normalPCandidate
+    }
   }
 }
 
