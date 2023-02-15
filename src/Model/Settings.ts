@@ -88,12 +88,14 @@ settings.register("debugActionLog", {value: false, name: "Show Hidden Actions", 
   visibleIf: () => settings.getBool("debug"), onChange: refresh
 })
 
-settings.register("font", {value: true, name: "Fun Font", local: true, onChange: (value: boolean) => {
+settings.register("font", {value: true, name: "Fraktur", local: true, onChange: (value: boolean) => {
   const newFont = value ? "UnifrakturCook" : "Arial"
   document.documentElement.style.setProperty('--main-font', newFont)
   refresh()
 }})
 
 settings.register("4ColorDeck", {value: true, name: "4 Color Deck", local: true, onChange: refresh})
+settings.register("showActionLog", {value: true, name: "Show Action Log", local: true,
+  onChange: refresh})
 
 export default settings
