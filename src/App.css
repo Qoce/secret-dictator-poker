@@ -53,6 +53,7 @@
 .settings{
   float: left;
   display: table-cell;
+  font-family: var(--main-font);
 }
 
 .scroller > div{

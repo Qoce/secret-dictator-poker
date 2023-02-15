@@ -142,6 +142,13 @@ function getBoldness(p : Player){
 }
 
 function getTextColor(p: Player){
+  let color = getTextColorArial(p)
+  if(Settings.getBool("font") && getBoldness(p) === "bold") return "rgb(139,0,0)"
+  return color
+}
+
+//Text color if we are using default font. In this case, we make the active player bold.
+function getTextColorArial(p: Player){
   if(p.bank === 0) return "grey"
   if(inPoker() && !p.curHand.folded) return "black"
   if(inPoker()) return "grey"

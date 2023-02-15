@@ -91,6 +91,7 @@ settings.register("debugActionLog", {value: false, name: "Show Hidden Actions", 
 settings.register("font", {value: true, name: "Fun Font", local: true, onChange: (value: boolean) => {
   const newFont = value ? "UnifrakturCook" : "Arial"
   document.documentElement.style.setProperty('--main-font', newFont)
+  refresh()
 }})
 
 settings.register("4ColorDeck", {value: true, name: "4 Color Deck", local: true, onChange: refresh})
