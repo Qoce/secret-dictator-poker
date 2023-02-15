@@ -288,7 +288,7 @@ export default function SDP(){
             })}
           </div>
         </div>
-        {appState === "inGame" && <ActionLog p = {user}
+        {appState === "inGame" && Settings.getBool("showActionLog") && <ActionLog p = {user}
           lobby = {lobbyName || ""}
           height = {Players.players.length * 40 + 271}
           socket = {socket}
