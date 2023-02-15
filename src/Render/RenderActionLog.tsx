@@ -30,7 +30,7 @@ function renderContent(c: string | JSX.Element | Player | logElement, p: number,
   if("content" in c && "visibleTo" in c){
     const d = c as {content: string, visibleTo: number | number[] | boolean}
     const vt = d.visibleTo
-    if(Settings.getBool("debug") || vt === false) return flatten(arrayify(d.content).map((e,i) => renderContent(e, p, k * 1e2 + i)))
+    if(Settings.getBool("debugActionLog") || vt === false) return flatten(arrayify(d.content).map((e,i) => renderContent(e, p, k * 1e2 + i)))
     if(Array.isArray(vt)){
       if(vt.includes(p)) return flatten(arrayify(d.content).map((e,i) => renderContent(e, p, k * 1e2 + i)))
     }

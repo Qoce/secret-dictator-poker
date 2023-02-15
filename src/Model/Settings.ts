@@ -80,7 +80,11 @@ settings.register("showVoting", {value: "Direction", name: "Show Voting",
 
 settings.register("dictatorWin", {value: "Classic", name: "Dictator Win Rule",
   values: ["Classic", "No Dictator Win", "Dictator Election Required"]})
+
 settings.register("debug", {value: false, name: "Debug Mode"})
+settings.register("debugActionLog", {value: false, name: "Show Hidden Actions", local: true,
+  visibleIf: () => settings.getBool("debug"), onChange: refresh
+})
 
 settings.register("font", {value: true, name: "Fun Font", local: true, onChange: (value: boolean) => {
   const newFont = value ? "UnifrakturCook" : "Arial"

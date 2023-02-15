@@ -5,5 +5,6 @@ export default interface Setting{
   max?: number,
   min?: number,
   local?: boolean,
-  onChange?: any,
+  onChange?: (a: any) => void,
+  visibleIf?: () => boolean
 }
