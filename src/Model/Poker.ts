@@ -126,6 +126,7 @@ let street: Street
 let center: number[]
 let deck: number[]
 let leftOver: number = 0
+let handCount: number = 0
 
 let BB = Settings.getNumber("BB")
 
@@ -141,6 +142,7 @@ Actions.onReset.push(() => {
   deck = getRandomDeck()
   leftOver = 0
   initialized = false
+  handCount = 0
 })
 
 
@@ -281,8 +283,14 @@ function endHand(log = true) : void{
   
   Players.updateBanks(p => p.curHand.stack)
   Players.apply(p => p.curHand.hand = [])
-  if(Game.getPhase() !== Phase.endgame)
-    Game.setPhase(Phase.nominate)
+  if(Game.getPhase() !== Phase.endgame){
+    if(++handCount % Settings.getNumber("pokerHands")){
+      Game.setPhase(Phase.poker)
+    }
+    else{
+      Game.setPhase(Phase.nominate)
+    }
+  }
 }
 
 function dealCenter(n: number, log: boolean){

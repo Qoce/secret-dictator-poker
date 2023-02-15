@@ -67,8 +67,6 @@ export default function SDP(){
   const [rejoining, setRejoining] = useState(false as false | Lobby)
   const [username, setUsername] = useState("")
 
-  console.log(rejoinLobbies)
-
   useEffect (() => {
     WebFont.load({
       google: {
@@ -129,7 +127,7 @@ export default function SDP(){
       let u = JSON.parse(window.sessionStorage.getItem("name") || "null")
       let p = JSON.parse(window.sessionStorage.getItem("password") || "null")
       let n = JSON.parse(window.sessionStorage.getItem("lobby") || "null")
-      console.log(n, u, p)
+      console.log("Rejoining", n, u, p)
       if(u && (p || p === '') && n){
         joinLobby(n, u, p, true)
       }

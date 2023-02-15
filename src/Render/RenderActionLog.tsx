@@ -1,4 +1,4 @@
-import {useState, useRef, useEffect} from 'react'
+import {useState, useRef} from 'react'
 import Actions, {logElement} from '../Model/Actions'
 import Player from '../Interface/Player'
 import react from 'react'
@@ -8,10 +8,7 @@ export default function ActionLog(args: {p: number, height: number, socket: any,
   let a : any
   const scrollRef = useRef(a)
 
-  /*useEffect(() => {
-    if(scrollRef && scrollRef.current)
-      scrollRef.current.scrollIntoView({behavior: "smooth"})
-  })*/
+
   return <div className = 'scroller' style={{height: args.height}}>
       {
       Actions.getActionLog().map((a, i) => <Hoverable actionIndex = {i} key = {i} 

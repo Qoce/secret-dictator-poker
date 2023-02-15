@@ -81,6 +81,7 @@ settings.register("voteCostScaling", {value: "3^n", name: "Vote Cost Scaling",
   values: ["1", "n^2", "2^n", "3^n"]})
 settings.register("dictatorWin", {value: "Classic", name: "Dictator Win Rule",
   values: ["Classic", "No Dictator Win", "Dictator Election Required"]})
+settings.register("pokerHands", {value: 1, name: "Hands Per Round", min: 1})
 
 settings.register("debug", {value: false, name: "Debug Mode"})
 settings.register("debugActionLog", {value: false, name: "Show Hidden Actions", local: true,
@@ -89,7 +90,6 @@ settings.register("debugActionLog", {value: false, name: "Show Hidden Actions", 
 
 settings.register("font", {value: true, name: "Fun Font", local: true, onChange: (value: boolean) => {
   const newFont = value ? "UnifrakturCook" : "Arial"
-  console.log(newFont)
   document.documentElement.style.setProperty('--main-font', newFont)
 }})
 
