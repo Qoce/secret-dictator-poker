@@ -77,7 +77,8 @@ settings.register("bribeInfo", {value: "None", name: "Briber Information",
   values: ["None", "On Acceptance", "Before Acceptance", "Public Bribes", "Show True Government"]}) 
 settings.register("showVoting", {value: "Direction", name: "Show Voting",
   values: ["Anonymous", "Direction", "Value"]})
-
+settings.register("voteCostScaling", {value: "3^n", name: "Vote Cost Scaling",
+  values: ["1", "n^2", "2^n", "3^n"]})
 settings.register("dictatorWin", {value: "Classic", name: "Dictator Win Rule",
   values: ["Classic", "No Dictator Win", "Dictator Election Required"]})
 

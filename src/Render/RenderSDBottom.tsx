@@ -4,7 +4,7 @@ import Players from "../Model/Players"
 import RenderPhase from "./RenderPhase"
 import {RenderPhaseArgs} from "./RenderPhase"
 import Settings from "../Model/Settings"
-import SDState from "../Model/SecretDictator"
+import SDState, {getVoteCost} from "../Model/SecretDictator"
 import {useState} from 'react'
 import {VoteSquare, PolicySquare} from "./SDUtils"
 
@@ -56,13 +56,17 @@ function Votes(args: RenderPhaseArgs){
   }
 
   let p = Players.get(args.p)
+  let maxSpendable = 0
+  while(getVoteCost(maxSpendable++) <= p.role.influence);
+  maxSpendable -= 2
   if(p.canAct){
     return <div className = "center">
       <div className = "board-row">
-        <div> {Settings.getNumber('freeInfluence') + " + "}</div>
-        <input className = "textInput" type = 'number' min = {0} max = {p.role.influence}
+        <div  className = "frak"> {Settings.getNumber('freeInfluence') + " + "}</div>
+        <input className = "textInput" type = 'number' min = {0} max = {maxSpendable}
           onChange = {(event) => setInfluence(+event.target.value)}/>
       </div>
+      <div className = "frak"> {"Cost: " + getVoteCost(influence)}</div>
       <div className = "board-row">
         <VoteSquare onClick = {vote(true)} str = {"✔️"}/>
         <VoteSquare onClick = {vote(false)} str = {"❌"}/>

@@ -209,6 +209,10 @@
   user-select: none;
 }
 
+.frak {
+  font-family: var(--main-font);
+}
+
 .gear {
   position: absolute;
   top: 10px;

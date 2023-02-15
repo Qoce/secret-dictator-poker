@@ -168,17 +168,33 @@ Game.setPhaseListener(Phase.vote, () => {
   Players.apply(p => p.role.spent = 0)
 })
 
+export function getVoteCost(n: number){
+  const scaling = settings.getString("voteCostScaling")
+  if(scaling === "1") return n
+  else{
+    let cost = 0
+    for(let i = 1; i <= n; i++){
+      if(scaling === "n^2") cost += i * i
+      if(scaling === "2^n") cost += Math.pow(2, i - 1)
+      if(scaling === "3^n") cost += Math.pow(3, i - 1)
+    }
+    return cost
+  }
+}
+
 Actions.register(Phase.vote, (args: ActionArgs) => {
   let size = args.v
   let p = Players.get(args.p)
   if(!size) return false
-  if(Math.abs(size) > p.role.influence) return false
+  let bought = Math.floor(Math.abs(size))
+  let cost = getVoteCost(bought)
+  if(cost > p.role.influence) return false
   p.role.vote = size > 0
-  p.role.spent = Math.floor(Math.abs(size))
-  p.role.influence -= Math.floor(Math.abs(size))
+  p.role.spent = bought
+  p.role.influence -= cost
   p.canAct = false
   Actions.log([p, " votes",{
-    content: ": " + ["✔️", "❌"][p.role.vote ? 0 : 1] + p.role.spent,
+    content: ": " + ["✔️", "❌"][p.role.vote ? 0 : 1] + bought,
     visibleTo: Players.players.indexOf(p)
   }])
   if(Players.allDoneActing()) checkVotes()
@@ -465,7 +481,6 @@ function passPolicy(a: number, topCard = false, exit = true){
       Players.applyLiving(p => p.role.influence += Settings.getNumber("ecoBase"))
       if(exit){
         exitSD()
-        Game.setPhase(Phase.poker)
       }
     }
   }
