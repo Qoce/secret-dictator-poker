@@ -2,7 +2,7 @@ import Game from "../Model/Game"
 import Phase from "../Interface/Phase"
 import Player from "../Interface/Player"
 import Players from "../Model/Players"
-import dealer from "../Model/Poker"
+import dealer, { isStud } from "../Model/Poker"
 import Settings from "../Model/Settings"
 import {getCardString} from "./PokerUtils"
 import {PlayerRenderArgs} from "./RenderPlayer"
@@ -37,6 +37,7 @@ function getBlindString(p: Player){
 
 function PokerPosition(args: PlayerRenderArgs){
   if(!inPoker(args)) return null
+  if(isStud()) return null
   return <div className = "square">
     {getBlindString(args.p)}
   </div>
@@ -71,9 +72,19 @@ function Cards(args: PlayerRenderArgs){
   return null
 }
 
+function UpCards(args: PlayerRenderArgs){
+  if(inPoker(args) && isStud()){
+    return <div className = "cards" style = {{width: "160px"}}>
+      {args.p.curHand.upHand.map(getCardString)}
+    </div>
+  }
+  return null
+}
+
   
 
 columns.push({idx: -5, comp: PokerPosition})
 columns.push({idx: 5, comp: AmtIn})
 columns.push({idx: 10, comp: Stack})
 columns.push({idx: 15, comp: Cards})
+columns.push({idx: 20, comp: UpCards})

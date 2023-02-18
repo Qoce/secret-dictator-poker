@@ -26,6 +26,7 @@ import Settings from "./Settings"
  * Returns the score of the best 5 card subset from the given list of cards
  */
 function getCardsScore(cards: number[]): number{
+  if(cards.length < 5) throw Error("Not enough cards")
   let flush = getBestFlushHand(cards)
   let c = 13 ** 5
   if(flush !== null){
@@ -43,6 +44,48 @@ function getCardsScore(cards: number[]): number{
   if(nm[0][0] === 2 && nm[1][0] === 2) return c * 2 + nmhs
   if(nm[0][0] === 2) return c + nmhs
   return nmhs
+}
+
+function getStraight(cards: number[]): number[] {
+  let sv = getStraightValue(cards)
+  if(sv > 0) {
+    let straight : number[] = []
+    for(let i = 0; i < 5; i++){
+      straight.push(cards.filter(c => c % 13 === sv - 4 + i || ((sv - 4 + i === -1) && 
+        c % 13 === 12))[0])
+    }
+    return straight.sort().reverse()
+  }
+  return  []
+}
+
+function orderBestHand(cards: number[]): number[] {
+  let nm = getNumberMatches(cards)
+  let bestHand : number[] = []
+  for(let m of nm){
+    //Take high card kicker instead of redundant pair
+    if(m[0] == 2 && bestHand.length == 4){
+      bestHand.push(cards.filter(c => !bestHand.includes(c)).sort(p => p % 13).reverse()[0])
+      break
+    }
+    for(let c of cards){
+      if (c % 13 === m[1]) bestHand.push(c)
+    }
+  }
+  //If we are worse than full house
+  if(nm[0][0]< 3 || (nm[0][0] === 3 && nm[1][0] < 2)){
+    let flush = getBestFlushHand(cards)
+    if(flush !== null){
+      let svf = getStraightValue(flush)
+      if(svf > 0) return getStraight(flush)
+      else return flush.sort().reverse().slice(0, 5)
+    }
+    let sv = getStraightValue(cards)
+    if(sv > 0) return getStraight(cards)
+  }
+  if(getCardsScore(bestHand) !== getCardsScore(cards)) 
+    console.warn("orderBestHand score incosistent with getCardsScore - there is a bug with one")
+  return bestHand
 }
 
 function getScoreString(score: number) : string{
@@ -75,7 +118,7 @@ function getStraightValue(cards: number[]){
 function getBestFlushHand(cards: number[]){
   let suitCounts = Array(4)
   for(let i = 0; i < 4; i++) suitCounts[i] = []
-  for(const i of cards) suitCounts[Math.floor(i / 13)].push(i % 13);
+  for(const i of cards) suitCounts[Math.floor(i / 13)].push(i);
   let maxArray = [];
   for(const a of suitCounts){ //STOPPING POINT
     if(maxArray.length < a.length){
@@ -170,8 +213,20 @@ function startHand() : void{
   Players.apply(preparePlayer)
   setDM(Players.nextLiving(dealer))
   if(dm !== false){
-    bet(Players.get(dm), Math.floor(BB/2), true)
-    bet(Players.get(dm), BB, true)
+    if(!isStud()){
+      bet(Players.get(dm), Math.floor(BB/2), true)
+      bet(Players.get(dm), BB, true)
+    }
+    else{
+      while(dm !== -1){
+        bet(Players.get(dm), Settings.getNumber("ante"), true)
+      }
+      dm = Players.players.indexOf(
+        [...Players.players].sort((a,b) => (a.curHand.upHand[0] % 13 - b.curHand.upHand[0] % 13) * 100
+         + a.curHand.upHand[0] - a.curHand.upHand[0])[0]
+      )
+      bet(Players.get(dm), Settings.getNumber("ante"), true)
+    }
   }
   else throw Error('Not enough living players in poker')
   
@@ -185,35 +240,70 @@ function setDM(newDM : number | false){
   return dm
 }
 
-function nextStreet(log = true) : void{
-  maxAmtIn = 0
-  minRaise = BB
-  if(street < 3){
-    street++
-    dealCenter(street === 1 ? 3 : 1, log)
-  }
-  else{
-    endHand(log)
+function dealIndividual(up: boolean){
+  let inPlayers = Players.filter(p => !p.curHand.folded && p.bank > 0)
+  for(let i = 0; i < inPlayers.length; i++){
+    if(up) inPlayers[i].curHand.upHand.push(deck.pop() as number)
+    else inPlayers[i].curHand.hand.push(deck.pop() as number)
   }
 }
 
-function getHandScore(p: Player){
+function nextStreet(log = true) : void{
+  maxAmtIn = 0
+  minRaise = BB
+  if(!isStud()){
+    if(street < 3){
+      street++
+      dealCenter(street === 1 ? 3 : 1, log)
+    }
+    else{
+      endHand(log)
+    }
+  }
+  else{
+    if(street < 3){
+      street++
+      dealIndividual(true)
+    }
+    else if(street == 3){
+      dealIndividual(false)
+      street++
+    }
+    else{
+      endHand(log)
+    }
+  }
+}
+
+function getHand(p: Player){
   let variant = Settings.getString("pokerType")
-  if(variant === "Teaxas Hold'em"){
-    return getCardsScore(p.curHand.hand.concat(center))
+  if(variant === "Texas Hold'em"){
+    return orderBestHand(p.curHand.hand.concat(center))
   }
   else if(variant === "Omaha"){
     let maxScore = 0
+    let maxHand : number[] = []
+    //ok listen it's only 60 iterations plz don't judge me
     for(let i = 0; i < p.curHand.hand.length; i++){
       for(let j = i + 1; j < p.curHand.hand.length; j++){
-        let score = getCardsScore([p.curHand.hand[i], p.curHand.hand[j]].concat(center))
-        if(score > maxScore) maxScore = score
+        for(let k = 0; k < center.length; k++){
+          for(let l = k + 1; l < center.length; l++){
+            for(let m = l + 1; m < center.length; m++){
+              let h = [p.curHand.hand[i], p.curHand.hand[j], center[k], center[l], center[m]]
+              let score = getCardsScore(h)
+              if(score > maxScore) {
+                maxScore = score
+                maxHand = h
+              }
+            }
+          }
+        }
       }
     }
-    return maxScore
+    return orderBestHand(maxHand)
   }
   else{
-    return getCardsScore(p.curHand.hand.concat(p.curHand.upHand))
+    return orderBestHand(p.curHand.hand.concat(p.curHand.upHand))
   }
 }
 
@@ -221,8 +311,8 @@ function getHandScore(p: Player){
 function endHand(log = true) : void{
   let inPlayers = Players.filter(p => !p.curHand.folded && p.bank > 0)
   let playerScores = inPlayers.map((p) => {
-    let s = getHandScore(p)
-    return s
+    let bh = getHand(p)
+    return getCardsScore(bh)
   })
   let indices: number[] = Array(playerScores.length).fill(0)
   for(let i = 0; i < indices.length; i++) indices[i] = i
@@ -291,7 +381,11 @@ function endHand(log = true) : void{
   if(log){
     Actions.log(["Center: ", ...center.map(getCardString)])
     inPlayers.forEach((p,i) => {
-      Actions.log([p, " shows ",...p.curHand.hand.map(getCardString), ` ${getScoreString(playerScores[i])} `])
+      Actions.log([p, " shows ",...p.curHand.hand.map(getCardString)])
+    })
+    inPlayers.forEach((p,i) => {
+      Actions.log([p, ": ", ...getHand(p).map(getCardString),
+        ` ${getScoreString(playerScores[i])} `])
     })
   }
   Actions.log("Hand scores:")
@@ -382,14 +476,42 @@ function couldContinueBetting(p: Player): boolean{
 */
 export function getBetLimit(p: Player) : number{
   let type = Settings.getString("pokerType")
-  if(type === "Texas Hold'em" || type === "5 Card Draw") return 1e6
-  else if(type === "Omaha"){
+  if(type === "Omaha"){
     let amtToCall = maxAmtIn - p.curHand.amtIn
     let totalPot = pot + Players.players.map(p => p.curHand.amtIn).reduce((a,b) => a+b,0)
     return Math.max(totalPot + amtToCall * 2, BB)
   }
-  return 0
+  return 1e6
 } 
+
+function roundDownToBet(n: number, b: number){
+  return Math.floor(n / b) * b
+}
+
+export function studBetOptions(p: Player) : number[] {
+  let h = p.curHand
+  let options = [0, maxAmtIn - p.curHand.amtIn]
+  let bet = Settings.getNumber("bet")
+  if(street < 2){ //pre 5th street
+    options.push(roundDownToBet(maxAmtIn + bet, bet) - h.amtIn)
+    if(street === 1 && h.upHand[0] % 13 === h.upHand[1] % 13){
+      options.push(roundDownToBet(maxAmtIn + bet * 2, bet)  - h.amtIn)
+    }
+  }
+  else{
+    options.push(roundDownToBet(maxAmtIn + bet * 2, bet * 2) - h.amtIn)
+  }
+  return options
+}
+
+export function isStud() : boolean {
+  return Settings.getString("pokerType") === "7 Card Stud"
+}
+
+function lastStreet() : number{
+  if(isStud()) return 4
+  else return 3
+}
 
 function bet(p : Player, amt : number, f = false) : boolean {
   if(amt < 0) return false
@@ -403,6 +525,11 @@ function bet(p : Player, amt : number, f = false) : boolean {
       && amt < p.curHand.stack) return false
   //reject players betting above the limit defined by the game
   if(amt > getBetLimit(p)) return false
+  
+
+  if(!f && isStud() && !studBetOptions(p).includes(amt)) return false
+
+
   p.curHand.amtIn += amt
   p.curHand.stack -= amt
   if(p.curHand.amtIn > maxAmtIn){
@@ -425,6 +552,10 @@ function bet(p : Player, amt : number, f = false) : boolean {
   if(f) forced = p
   else if(forced === p) forced = false
   dm = setDM(Players.next(dm, guaranteedDecision))
+  //STUD Cludge
+  if(dm === false && f && isStud()){
+    dm = -1
+  }
   if(dm === false){
     Players.applyLiving(p => {
       p.curHand.checked = false
@@ -440,7 +571,7 @@ function bet(p : Player, amt : number, f = false) : boolean {
         allFold = true
       }
       setDM(false)
-      while(street < 3) nextStreet(false)
+      while(street < lastStreet()) nextStreet(false)
     }
     else{
       setDM(Players.next(dealer, p => !p.curHand.folded))

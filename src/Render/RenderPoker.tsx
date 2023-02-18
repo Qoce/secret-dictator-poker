@@ -1,7 +1,7 @@
 import Actions from "../Model/Actions"
 import Phase from "../Interface/Phase"
 import Players from "../Model/Players"
-import PokerState, {getBetLimit} from "../Model/Poker"
+import PokerState, {getBetLimit, isStud, studBetOptions} from "../Model/Poker"
 import RenderPhase, { RenderPhaseArgs } from "./RenderPhase"
 
 import {getCardString} from './PokerUtils'
@@ -9,7 +9,8 @@ import {useState, useCallback, useEffect} from 'react'
 
 
 function Center(){
-  return <div>
+  if(!isStud()) return null
+  return  <div>
     <div className = "board-row">
       <div className = "cards">
         {"Pot:"}
@@ -29,6 +30,37 @@ function Center(){
   </div>
 }
 
+function BetButton(args: {amt: number, callCost: number, stack: number, p: number}){
+  function fire(n : number){
+    Actions.fire({
+      p: args.p,
+      v: n
+    })
+  }
+  let str = "Fold"
+  if(args.amt === args.callCost){
+    if(args.callCost > 0){
+      str = "Call " + args.callCost
+    }
+    else{
+      str = "Check"
+    }
+  }
+  else if(args.amt > args.callCost){
+    str = args.callCost > 0 ? "Raise " : "Bet "
+    str += args.amt
+    if(args.amt === args.stack){
+      str += " All In"
+    }
+  }
+  return <button className = "button" onClick = {() => {fire(args.amt)}} 
+    disabled = {(args.amt > 0 && args.amt !== args.callCost) && 
+      (args.amt < args.callCost + PokerState().minRaise || 
+      args.amt > Math.min(getBetLimit(Players.get(args.p)), args.stack))}>
+        {str}
+    </button>
+}
+
 function PokerAction(args: RenderPhaseArgs){
   const [betAmt, setBetAmt] = useState(0)
   let user = Players.get(args.p)
@@ -37,6 +69,7 @@ function PokerAction(args: RenderPhaseArgs){
   let stack = user.curHand.stack
   let minRaise = Math.min(cost + PokerState().minRaise, stack)
   let callCost = stack > cost ? cost : stack
+
   function fire(n : number){
     return () => {
       Actions.fire({
@@ -45,6 +78,11 @@ function PokerAction(args: RenderPhaseArgs){
       })
     }
   }
+
+  function Button(n: number){
+    return <BetButton amt = {n} callCost = {cost} stack = {stack} p = {args.p}/>
+  }
+
   let foldFunc = fire(0)
   let callFunc = fire(callCost)
   let betFunc = fire(minRaise)
@@ -79,17 +117,30 @@ function PokerAction(args: RenderPhaseArgs){
   if(user.canAct){
     let call: undefined | JSX.Element
     if(cost > 0){
-      call = <button className = "button" onClick = {callFunc}>
-      {"Call " + callCost + (callCost === stack ? " (All in!)" : "")}
-    </button>
+      call = Button(callCost)
     }
-    let bet: undefined | JSX.Element
-    let input: undefined | JSX.Element
+    let bet: undefined | JSX.Element | JSX.Element[]
+    let input: undefined | JSX.Element = undefined
     if(stack > cost){
-      bet = <button className = "button" onClick = {betFunc}>
-        {(cost === 0 ? "Bet " : "Raise ") + minRaise + (minRaise === stack ? "(All in!)" : "")}
-      </button>
-      if(stack > minRaise){
+      if(!isStud()){
+        bet = Button(Math.min(minRaise,stack))
+      }
+      else{
+        let opts = studBetOptions(user)
+        bet = []
+        for(let o of opts){
+          if(o > callCost && o <= stack){
+            bet.push(Button(o))
+          }
+          if(o > stack){
+            bet.push(Button(stack))
+          }
+          if(o >= stack){
+            break
+          }
+        }
+      }
+      if(!isStud() && stack > minRaise){
         let limit = getBetLimit(user)
         let maxBet = Math.min(stack, limit)
         input = <div className = "board-row">
@@ -98,18 +149,13 @@ function PokerAction(args: RenderPhaseArgs){
             onChange = {(event) => {
               return setBetAmt(+event.target.value)
             }}/>
-          <button className = "button" disabled = {betAmt < minRaise || betAmt > maxBet}
-          onClick = {customBetFunc}>
-            {(cost === 0 ? "Bet " : "Raise ") + betAmt + (betAmt === stack ? "(All in!)" : "")}
-          </button>
+          {Button(betAmt)}
         </div>
       }
     }
     return <div>
       <div className = "board-row">
-        <button className = "button" onClick = {foldFunc}>
-          {cost > 0 ? "Fold" : "Check"}
-        </button>
+        {Button(0)}
         {call}
         {bet}
       </div>
