@@ -702,3 +702,7 @@ export function setFPassed(n: number){
 export function setLPassed(n: number){
   lPassed = n
 }
+
+export function inSD(){
+  return Game.getPhase() !== Phase.poker && Game.getPhase() !== Phase.endgame
+}

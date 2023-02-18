@@ -18,6 +18,9 @@ import settings from '../Model/Settings'
 var WebFont = require('webfontloader')
 require("./RenderPoker")
 require("./RenderSDBottom")
+require("./RenderPokerPlayer")
+require("./RenderSDPlayer")
+
 let {io} = require("socket.io-client")
 
 const socket = io()

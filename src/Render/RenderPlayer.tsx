@@ -1,7 +1,4 @@
-import {getCardString} from './PokerUtils'
-import {getTeamString} from './SDUtils'
-import {useState} from 'react'
-import dealer from '../Model/Poker'
+import React, {useState} from 'react'
 import Game from '../Model/Game'
 import Phase from '../Interface/Phase'
 import Player from '../Interface/Player'
@@ -47,87 +44,8 @@ function Name(args: {p: Player}){
   </div>
 }
 
-function TeamSquare(args: {p: Player, u: Player}){
-  if(appState !== "inGame") return null
-  return <div className = "square">
-    {getTeamString({
-      p: args.p,
-      u: args.u,
-      inEndgame: inEndgame()
-    })}
-  </div>
-}
-  
-function getBlindString(p: Player){
-  let d = Players.get(dealer().dealer)
-  if(d === p) return "D"
-  else{
-    let nl = Players.nextLiving(d)
-    if(nl !== false) d = Players.get(nl)
-  }
-  if(d === p) return "SB"
-  else{
-    let nl = Players.nextLiving(d)
-    if(nl !== false) d = Players.get(nl)
-  }
-  if(d === p) return "BB"
-}
-
-function inPoker(){
-  return appState === "inGame" && Game.getPhase() === Phase.poker
-}
-
-function inEndgame(){
-  return Game.getPhase() === Phase.endgame
-}
-
-function PokerPosition(args: {p: Player}){
-  if(!inPoker()) return null
-  return <div className = "square">
-    {getBlindString(args.p)}
-  </div>
-}
-
-function Stack(args: {p: Player, u: Player}){
-  if(appState !== "inGame") return null
-  let n = args.p.role.influence
-  if(inPoker()) n = args.p.curHand.stack
-  else if(inEndgame()) n = args.p.bank
-  
-  return <div className = "cards">
-    {(inEndgame() || args.u === args.p ||
-    (args.u.bankVision.includes(args.p) && Settings.getString("investigationPower") !== "Role"))
-    && n}
-  </div>
-}
-
-function Cards(args: {p: Player, u: Player}){
-  if(inPoker()){
-    const show = args.p === args.u || (Settings.getString("investigationPower") === "Role + Bank + Cards" && 
-      args.u.bankVision.includes(args.p))
-    return <div className = "cards">
-      {show ? args.p.curHand.hand.map(getCardString) : null}
-    </div>
-  }
-  return null
-}
-
-function AmtIn(args: {p: Player}){
-  if(!inPoker()) return null
-  return <div className = "cards">
-    {args.p.curHand.amtIn}
-  </div>
-}
-
-function Government(args: {p: Player, chan?: Player, pres: Player}){
-  if(appState !== "inGame") return null
-  if(inPoker() || inEndgame()) return null
-  let str = ""
-  if(args.p === args.pres) str = "P"
-  else if(args.p === args.chan) str = "C"
-  return <div className = "square">
-    {str}
-  </div>
+function inPoker(args: PlayerRenderArgs){
+  return args.appState === "inGame" && Game.getPhase() === Phase.poker
 }
 
 function inGovernment(){
@@ -141,24 +59,40 @@ function getBoldness(p : Player){
   return "normal"
 }
 
-function getTextColor(p: Player){
-  let color = getTextColorArial(p)
-  if(Settings.getBool("font") && getBoldness(p) === "bold") return "rgb(139,0,0)"
+function getTextColor(args: PlayerRenderArgs){
+  let color = getTextColorArial(args)
+  if(Settings.getBool("font") && getBoldness(args.p) === "bold") return "rgb(139,0,0)"
   return color
 }
 
 //Text color if we are using default font. In this case, we make the active player bold.
-function getTextColorArial(p: Player){
-  if(p.bank === 0) return "grey"
-  if(inPoker() && !p.curHand.folded) return "black"
-  if(inPoker()) return "grey"
+function getTextColorArial(args: PlayerRenderArgs){
+  if(args.p.bank === 0) return "grey"
+  if(inPoker(args) && !args.p.curHand.folded) return "black"
+  if(inPoker(args)) return "grey"
   if(Players.players.filter(p => p.targetable).length > 0){
-    if(!p.targetable && !p.canAct) return "grey"
+    if(!args.p.targetable && !args.p.canAct) return "grey"
   }
   return "black"
 }
 
-interface PlayerRenderArgs{
+//Display a number if the player has bank vision on the user
+export function BankVision(args: PlayerRenderArgs, n: number){
+  if(args.appState !== "inGame") return null
+  return <div className = "cards">
+    {((args.u.bankVision.includes(args.p) && Settings.getString("investigationPower") !== "Role")
+    || Game.getPhase() === Phase.endgame || args.u === args.p)
+    && n}
+  </div>
+}
+
+function Bank(args: PlayerRenderArgs){
+  if(args.appState !== "inGame") return null
+  if(Game.getPhase() === Phase.endgame) return BankVision(args, args.p.bank)
+  return null
+}
+
+export interface PlayerRenderArgs{
   p: Player
   u: Player
   selected: boolean
@@ -167,18 +101,19 @@ interface PlayerRenderArgs{
   appState: "browsing" | "joining" | "inLobby" | "inGame" 
 }
 
-let appState = ""
+export let columns : {idx: number, comp : React.FunctionComponent<PlayerRenderArgs>}[] = []
+
+columns.push({idx: 0, comp: Name})
+columns.push({idx: 5, comp: Bank})
 
 export default function RenderPlayer(args : PlayerRenderArgs){
-  appState = args.appState
   let p = args.p
   let selected = args.selected
   const [hovered, setHovered] = useState(false)
-  const SDInfo = SDData()
 
   return <div className = "board-row" 
     style = {{fontWeight: getBoldness(p), 
-      backgroundColor: bgc(args.u === args.p, hovered, selected), color: getTextColor(p)}}
+      backgroundColor: bgc(args.u === args.p, hovered, selected), color: getTextColor(args)}}
     onMouseEnter = {() => {if(p.targetable && args.u.canAct) setHovered(true)}}
     onMouseLeave = {() => {if(p.targetable && args.u.canAct) setHovered(false)}}
     onClick = {() => {
@@ -190,12 +125,9 @@ export default function RenderPlayer(args : PlayerRenderArgs){
       }
     }}
   >
-    <PokerPosition p = {p}/>
-    <TeamSquare p = {args.p} u = {args.u}/>
-    <Government p = {args.p} chan = {SDInfo.cCandidate} pres = {SDInfo.pCandidate}/>
-    <Name p = {args.p}/>
-    <AmtIn p = {args.p}/>
-    <Stack p = {args.p} u = {args.u}/>
-    <Cards p = {args.p} u = {args.u}/>
+    {columns.sort((a, b) => a.idx - b.idx).map((c, _) => React.createElement(
+      c.comp, args
+    ))}
   </div>
 }
+

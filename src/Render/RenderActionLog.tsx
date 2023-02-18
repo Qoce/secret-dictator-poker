@@ -62,7 +62,9 @@ function flatten(a: JSX.Element | any[]) : JSX.Element[]{
 function Hoverable(props: {actionIndex: number, children: any, socket: any, lobby: string}){
   const [hover,setHover] = useState(false)
   return <div onMouseEnter = {() => setHover(true)} onMouseLeave = {() => setHover(false)} style = {{textDecoration: hover ? "underline" : "", marginBottom: "5px"}}
-  onClick = {() => props.socket.emit('rollback', props.lobby, props.actionIndex)}>
+    onClick = {() => {
+      if(Settings.getBool("debug")) props.socket.emit('rollback', props.lobby, props.actionIndex)
+    }}>
     {props.children}
   </div>
 }
