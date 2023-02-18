@@ -49,12 +49,22 @@ function AmtIn(args: PlayerRenderArgs){
   </div>
 }
 
+function getDownCards(){
+  switch(Settings.getString("pokerType")){
+    case "Texas Hold'em": return 2
+    case "Omaha": return 4
+    case "5 Card Draw": return 5
+    case "7 Card Stud": return 2
+    default: return 0
+  }
+}
+
 function Cards(args: PlayerRenderArgs){
   if(inPoker(args)){
     const show = args.p === args.u || (
       Settings.getString("investigationPower") === "Role + Bank + Cards" &&
       args.u.bankVision.includes(args.p))
-    return <div className = "cards">
+    return <div className = "cards" style = {{width: (40 * getDownCards()+ 22) + "px"}}>
       {show ? args.p.curHand.hand.map(getCardString) : null}
     </div>
   }

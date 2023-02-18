@@ -21,7 +21,11 @@ import Settings from "./Settings"
 //7 full house ...
 //8 four of a kind ... 
 //9 straight flush - highest card
-function getHandScore(cards: number[]): number{
+
+/*
+ * Returns the score of the best 5 card subset from the given list of cards
+ */
+function getCardsScore(cards: number[]): number{
   let flush = getBestFlushHand(cards)
   let c = 13 ** 5
   if(flush !== null){
@@ -113,8 +117,6 @@ function getRandomDeck() : number[]{
   return sortedDeck
 }
 
-type Street = "Preflop" | "Flop" | "Turn" | "River"
-
 let dealer: number = 0
 let forced: Player | false
 //decision maker
@@ -122,7 +124,12 @@ let dm: number | false = 0
 let pot: number 
 let maxAmtIn: number
 let minRaise: number
-let street: Street
+/*
+ * NLHE / PLO: 0 = preflop, 1 = flop, 2 = turn, 3 = river
+ * 7 Stud: 0 = 3rd, 1 = 4th, 2 = 5th, 3 = 6th, 4 = 7th
+ * 5 Draw: 0 = Initial, 1 = post draw
+ */
+let street: number
 let center: number[]
 let deck: number[]
 let leftOver: number = 0
@@ -137,7 +144,7 @@ Actions.onReset.push(() => {
   pot = 0
   maxAmtIn = 0
   minRaise = 0
-  street = "Preflop"
+  street = 0
   center = []
   deck = getRandomDeck()
   leftOver = 0
@@ -155,7 +162,7 @@ function startHand() : void{
   pot = 0
   maxAmtIn = 0
   minRaise = BB
-  street = "Preflop"
+  street = 0
   center = []
   deck = getRandomDeck()
 
@@ -181,29 +188,40 @@ function setDM(newDM : number | false){
 function nextStreet(log = true) : void{
   maxAmtIn = 0
   minRaise = BB
-  switch(street){
-    case "Preflop":
-      street = "Flop"
-      dealCenter(3, log)
-      break
-    case "Flop":
-      street = "Turn"
-      dealCenter(1, log)
-      break
-    case "Turn":
-      street = "River"
-      dealCenter(1, log)
-      break
-    case "River":
-      endHand(log)
-      return
+  if(street < 3){
+    street++
+    dealCenter(street === 1 ? 3 : 1, log)
+  }
+  else{
+    endHand(log)
   }
 }
+
+function getHandScore(p: Player){
+  let variant = Settings.getString("pokerType")
+  if(variant === "Teaxas Hold'em"){
+    return getCardsScore(p.curHand.hand.concat(center))
+  }
+  else if(variant === "Omaha"){
+    let maxScore = 0
+    for(let i = 0; i < p.curHand.hand.length; i++){
+      for(let j = i + 1; j < p.curHand.hand.length; j++){
+        let score = getCardsScore([p.curHand.hand[i], p.curHand.hand[j]].concat(center))
+        if(score > maxScore) maxScore = score
+      }
+    }
+    return maxScore
+  }
+  else{
+    return getCardsScore(p.curHand.hand.concat(p.curHand.upHand))
+  }
+}
+
 
 function endHand(log = true) : void{
   let inPlayers = Players.filter(p => !p.curHand.folded && p.bank > 0)
   let playerScores = inPlayers.map((p) => {
-    let s = getHandScore(p.curHand.hand.concat(center))
+    let s = getHandScore(p)
     return s
   })
   let indices: number[] = Array(playerScores.length).fill(0)
@@ -300,17 +318,42 @@ function dealCenter(n: number, log: boolean){
   }
 }
 
+function dealPlayerCards(p : Player){
+  switch (Settings.getString("pokerType")){
+    case "Texas Hold'em":
+      p.curHand.hand = [deck.pop() as number, deck.pop() as number]
+      p.curHand.upHand = []
+      break
+    case "Omaha":
+      p.curHand.hand = [deck.pop() as number, deck.pop() as number, deck.pop() as number, 
+        deck.pop() as number]
+      p.curHand.upHand = []
+      break
+    case "5 Card Draw":
+      p.curHand.hand = [deck.pop() as number, deck.pop() as number, deck.pop() as number, 
+        deck.pop() as number, deck.pop() as number]
+      p.curHand.upHand = []
+      break
+    case "7 Card Stud":
+      p.curHand.hand = [deck.pop() as number, deck.pop() as number]
+      p.curHand.upHand = [deck.pop() as number]
+      break
+  }
+}
+
 function preparePlayer(p : Player) : void{
   p.curHand = {
     equity: 0,
     amtIn: 0,
     folded: p.bank === 0,
-    hand: p.bank === 0 ? [] : [deck.pop() as number, deck.pop() as number],
+    hand: [],
+    upHand: [],
     stack: p.bank,
     couldWin: 0,
     net: 0,
     checked: false
   }
+  if(p.bank > 0) dealPlayerCards(p)
   if(p.bankVision.length === 0) p.bankVision.push(p)
 }
 
@@ -333,6 +376,20 @@ function couldContinueBetting(p: Player): boolean{
   return !h.folded && h.stack > 0
 }
 
+/*
+ * Limit for the specific player based on the game rules that is lower than their stack
+ * Not bounded by player's stack
+*/
+export function getBetLimit(p: Player) : number{
+  let type = Settings.getString("pokerType")
+  if(type === "Texas Hold'em" || type === "5 Card Draw") return 1e6
+  else if(type === "Omaha"){
+    let amtToCall = maxAmtIn - p.curHand.amtIn
+    let totalPot = pot + Players.players.map(p => p.curHand.amtIn).reduce((a,b) => a+b,0)
+    return Math.max(totalPot + amtToCall * 2, BB)
+  }
+  return 0
+} 
 
 function bet(p : Player, amt : number, f = false) : boolean {
   if(amt < 0) return false
@@ -344,6 +401,8 @@ function bet(p : Player, amt : number, f = false) : boolean {
   //reject players raising by less than the previous raise if they aren't all in
   if(!f && p.curHand.amtIn + amt - maxAmtIn > 0 && p.curHand.amtIn + amt - maxAmtIn < minRaise
       && amt < p.curHand.stack) return false
+  //reject players betting above the limit defined by the game
+  if(amt > getBetLimit(p)) return false
   p.curHand.amtIn += amt
   p.curHand.stack -= amt
   if(p.curHand.amtIn > maxAmtIn){
@@ -381,7 +440,7 @@ function bet(p : Player, amt : number, f = false) : boolean {
         allFold = true
       }
       setDM(false)
-      while(street !== "River") nextStreet(false)
+      while(street < 3) nextStreet(false)
     }
     else{
       setDM(Players.next(dealer, p => !p.curHand.folded))

@@ -68,7 +68,7 @@ let settings = {
 settings.register("freeInfluence", {value: 1, name: "Free Influence"})
 settings.register("ecoBase", {value: 1, name: "Passive Income"})
 settings.register("startingBank", {value: 200, name: "Starting Bank"})
-settings.register("BB", {value: 2, name: "Big Blind"})
+
 settings.register("fPolicyCount", {value: 11, name: "Fascist Policy Cards"})
 settings.register("lPolicyCount", {value: 6, name: "Fascist Policy Cards"})
 settings.register("investigationPower", {value: "Role", name: "Investigation Power", 
@@ -81,7 +81,24 @@ settings.register("voteCostScaling", {value: "3^n", name: "Vote Cost Scaling",
   values: ["1", "n^2", "2^n", "3^n"]})
 settings.register("dictatorWin", {value: "Classic", name: "Dictator Win Rule",
   values: ["Classic", "No Dictator Win", "Dictator Election Required"]})
+
 settings.register("pokerHands", {value: 1, name: "Hands Per Round", min: 1})
+
+settings.register("pokerType", {value: "Texas Hold'em", name: "Poker Variant",
+  values: ["Texas Hold'em", "Omaha", "5 Card Draw", "7 Card Stud"]})
+
+settings.register("BB", {value: 2, name: "Big Blind", 
+  visibleIf: () => settings.getString("pokerType") !== "7 Card Stud"
+})
+settings.register("ante", {value: 1, name: "Ante", 
+  visibleIf: () => settings.getString("pokerType") === "7 Card Stud"
+})
+settings.register("bet", {value: 4, name: "Small Bet", 
+  visibleIf: () => settings.getString("pokerType") === "7 Card Stud"
+})
+
+
+
 
 settings.register("debug", {value: false, name: "Debug Mode"})
 settings.register("debugActionLog", {value: false, name: "Show Hidden Actions", local: true,

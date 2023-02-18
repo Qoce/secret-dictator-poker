@@ -3,6 +3,7 @@ export default interface PokerHand {
   amtIn: number
   folded: boolean
   hand: number[]
+  upHand: number[]
   stack: number
   couldWin: number
   net: number

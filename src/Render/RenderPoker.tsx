@@ -1,7 +1,7 @@
 import Actions from "../Model/Actions"
 import Phase from "../Interface/Phase"
 import Players from "../Model/Players"
-import PokerState from "../Model/Poker"
+import PokerState, {getBetLimit} from "../Model/Poker"
 import RenderPhase, { RenderPhaseArgs } from "./RenderPhase"
 
 import {getCardString} from './PokerUtils'
@@ -90,13 +90,15 @@ function PokerAction(args: RenderPhaseArgs){
         {(cost === 0 ? "Bet " : "Raise ") + minRaise + (minRaise === stack ? "(All in!)" : "")}
       </button>
       if(stack > minRaise){
+        let limit = getBetLimit(user)
+        let maxBet = Math.min(stack, limit)
         input = <div className = "board-row">
-          <input className = "textInput" type = 'number' min = {0} max = {stack} 
+          <input className = "textInput" type = 'number' min = {0} max = {maxBet} 
             value = {betAmt}
             onChange = {(event) => {
               return setBetAmt(+event.target.value)
             }}/>
-          <button className = "button" disabled = {betAmt < minRaise || betAmt > stack}
+          <button className = "button" disabled = {betAmt < minRaise || betAmt > maxBet}
           onClick = {customBetFunc}>
             {(cost === 0 ? "Bet " : "Raise ") + betAmt + (betAmt === stack ? "(All in!)" : "")}
           </button>
