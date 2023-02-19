@@ -9,7 +9,17 @@ import {useState, useCallback, useEffect} from 'react'
 
 
 function Center(){
-  if(!isStud()) return null
+  let center = null
+  if(PokerState().center.length > 0 || !isStud()) {
+    center = <div className = "board-row">
+    <div className = "cards">
+      {"Center:"}
+    </div>
+    <div className = "cards" style = {{width: "172px"}}>
+      {PokerState().center.map(getCardString)}
+    </div>
+  </div>
+  }
   return  <div>
     <div className = "board-row">
       <div className = "cards">
@@ -19,18 +29,11 @@ function Center(){
         {PokerState().pot}
       </div>
     </div>
-    <div className = "board-row">
-      <div className = "cards">
-        {"Center:"}
-      </div>
-      <div className = "cards" style = {{width: "172px"}}>
-        {PokerState().center.map(getCardString)}
-      </div>
-    </div>
+    {center}
   </div>
 }
 
-function BetButton(args: {amt: number, callCost: number, stack: number, p: number}){
+function BetButton(args: {amt: number, callCost: number, stack: number, p: number, enabled: boolean}){
   function fire(n : number){
     Actions.fire({
       p: args.p,
@@ -54,7 +57,7 @@ function BetButton(args: {amt: number, callCost: number, stack: number, p: numbe
     }
   }
   return <button className = "button" onClick = {() => {fire(args.amt)}} 
-    disabled = {(args.amt > 0 && args.amt !== args.callCost) && 
+    disabled = {!args.enabled && (args.amt > 0 && args.amt !== args.callCost) && 
       (args.amt < args.callCost + PokerState().minRaise || 
       args.amt > Math.min(getBetLimit(Players.get(args.p)), args.stack))}>
         {str}
@@ -79,14 +82,14 @@ function PokerAction(args: RenderPhaseArgs){
     }
   }
 
-  function Button(n: number){
-    return <BetButton amt = {n} callCost = {cost} stack = {stack} p = {args.p}/>
+  function Button(n: number, enabled = true){
+    return <BetButton amt = {n} callCost = {cost} stack = {stack} p = {args.p}
+      enabled = {enabled}/>
   }
 
   let foldFunc = fire(0)
   let callFunc = fire(callCost)
   let betFunc = fire(minRaise)
-  let customBetFunc = fire(betAmt)
 
   const handleUserKeyPress = useCallback((event : any) => {
     if(!user.canAct) return
@@ -115,25 +118,22 @@ function PokerAction(args: RenderPhaseArgs){
   }, [handleUserKeyPress]);
 
   if(user.canAct){
-    let call: undefined | JSX.Element
-    if(cost > 0){
-      call = Button(callCost)
-    }
-    let bet: undefined | JSX.Element | JSX.Element[]
+    let buttons : JSX.Element[] = []
     let input: undefined | JSX.Element = undefined
     if(stack > cost){
       if(!isStud()){
-        bet = Button(Math.min(minRaise,stack))
+        buttons.push(Button(0))
+        if(cost > 0) buttons.push(Button(cost))
+        buttons.push(Button(Math.min(minRaise,stack)))
       }
       else{
         let opts = studBetOptions(user)
-        bet = []
         for(let o of opts){
-          if(o > callCost && o <= stack){
-            bet.push(Button(o))
+          if(o <= stack){
+            buttons.push(Button(o))
           }
           if(o > stack){
-            bet.push(Button(stack))
+            buttons.push(Button(stack))
           }
           if(o >= stack){
             break
@@ -155,9 +155,7 @@ function PokerAction(args: RenderPhaseArgs){
     }
     return <div>
       <div className = "board-row">
-        {Button(0)}
-        {call}
-        {bet}
+        {buttons}
       </div>
       {input}
     </div>

@@ -128,7 +128,22 @@ class Players{
   allDoneActing(){
     return this.allLiving(p => !p.canAct)
   }
-  
+  argMin(func: (p: Player) => number){
+    let min = 0
+    let minVal = Infinity
+    for(let i = 0; i < this.players.length; i++){
+      let val = func(this.players[i])
+      if(val < minVal){
+        min = i
+        minVal = val
+      }
+    }
+    return min
+  }
+  argMax(func: (p: Player) => number){
+    return this.argMin(p => -func(p))
+  }
+
   updateBanks(f : (p: Player) => number){
     this.apply(p => {
       p.bank = f(p)

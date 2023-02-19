@@ -7,6 +7,7 @@ import Player from './../Interface/Player'
 import Players from './Players'
 import Rng from "./Rng"
 import Settings from "./Settings"
+import { createImportSpecifier } from 'typescript'
 
 //Hand types:
 //Card represented as 0 to 51
@@ -26,22 +27,25 @@ import Settings from "./Settings"
  * Returns the score of the best 5 card subset from the given list of cards
  */
 function getCardsScore(cards: number[]): number{
-  if(cards.length < 5) throw Error("Not enough cards")
-  let flush = getBestFlushHand(cards)
+  let flush = null
+  let sv = 0
   let c = 13 ** 5
-  if(flush !== null){
-    let svf = getStraightValue(flush)
-    if(svf > 0) return c * 8 + svf //straight flush
+  if(cards.length >= 5){
+    flush = getBestFlushHand(cards)
+    if(flush !== null){
+      let svf = getStraightValue(flush)
+      if(svf > 0) return c * 8 + svf //straight flush
+    }
+    sv = getStraightValue(cards)
   }
   let nm = getNumberMatches(cards)
   let nmhs = getNMHandScore(nm)
   if(nm[0][0] === 4) return c * 7 + nmhs //quads
-  if(nm[0][0] === 3 && nm[1][0] === 2) return c * 6 + nmhs //FH
+  if(nm[0][0] === 3 && nm[1] && nm[1][0] === 2) return c * 6 + nmhs //FH
   if(flush != null) return c * 5 + nmhs //flush
-  let sv = getStraightValue(cards)
   if(sv > 0) return c * 4 + sv; //straight
-  if(nm[0][0] === 3 && nm[1][0] === 1) return c * 3 + nmhs
-  if(nm[0][0] === 2 && nm[1][0] === 2) return c * 2 + nmhs
+  if(nm[0][0] === 3 && nm[1] && nm[1][0] === 1) return c * 3 + nmhs
+  if(nm[0][0] === 2 && nm[1] && nm[1][0] === 2) return c * 2 + nmhs
   if(nm[0][0] === 2) return c + nmhs
   return nmhs
 }
@@ -54,7 +58,7 @@ function getStraight(cards: number[]): number[] {
       straight.push(cards.filter(c => c % 13 === sv - 4 + i || ((sv - 4 + i === -1) && 
         c % 13 === 12))[0])
     }
-    return straight.sort().reverse()
+    return straight.sort((a,b) => a % 13 - b % 13)
   }
   return  []
 }
@@ -63,17 +67,12 @@ function orderBestHand(cards: number[]): number[] {
   let nm = getNumberMatches(cards)
   let bestHand : number[] = []
   for(let m of nm){
-    //Take high card kicker instead of redundant pair
-    if(m[0] == 2 && bestHand.length == 4){
-      bestHand.push(cards.filter(c => !bestHand.includes(c)).sort(p => p % 13).reverse()[0])
-      break
-    }
     for(let c of cards){
       if (c % 13 === m[1]) bestHand.push(c)
     }
   }
   //If we are worse than full house
-  if(nm[0][0]< 3 || (nm[0][0] === 3 && nm[1][0] < 2)){
+  if(cards.length >= 5 && (nm[0][0]< 3 || (nm[0][0] === 3 && nm[1][0] < 2))){
     let flush = getBestFlushHand(cards)
     if(flush !== null){
       let svf = getStraightValue(flush)
@@ -132,15 +131,24 @@ function getBestFlushHand(cards: number[]){
 function getNumberMatches(cards: number[]): number[][]{
   let nums = Array(13).fill(0)
   for(let i = 0; i < cards.length; i++){
-    nums[12 - cards[i] % 13]++
+    nums[cards[i] % 13]++
   }
-  let sum = 0
+  let cardsLeft = Math.min(5, cards.length)
   let pairs: number[][] = []
-  while(sum < 5){
-    let max = Math.max(...nums)
-    pairs.push([Math.min(max, 5 - sum), 12 - nums.indexOf(max)])
-    sum += max
-    nums[nums.indexOf(max)] = 0
+  let n = 5
+  while(n > 0){
+    for(let j = 12; j >= 0; j--){
+      if(nums[j] >= n){
+        pairs.push([n, j])
+        nums[j] = 0
+        cardsLeft -= n
+        if(n > cardsLeft){
+          n = cardsLeft
+          break
+        }
+      }
+      if(j === 0) n--
+    }
   }
   return pairs;
 }
@@ -161,7 +169,7 @@ function getRandomDeck() : number[]{
 }
 
 let dealer: number = 0
-let forced: Player | false
+let forced: Player[]
 //decision maker
 let dm: number | false = 0
 let pot: number 
@@ -193,6 +201,7 @@ Actions.onReset.push(() => {
   leftOver = 0
   initialized = false
   handCount = 0
+  forced = []
 })
 
 
@@ -218,14 +227,12 @@ function startHand() : void{
       bet(Players.get(dm), BB, true)
     }
     else{
-      while(dm !== -1){
+      let temp = dm
+      do{
         bet(Players.get(dm), Settings.getNumber("ante"), true)
-      }
-      dm = Players.players.indexOf(
-        [...Players.players].sort((a,b) => (a.curHand.upHand[0] % 13 - b.curHand.upHand[0] % 13) * 100
-         + a.curHand.upHand[0] - a.curHand.upHand[0])[0]
+      }while(dm !== temp)
+      setDM(Players.argMin((p) => p.curHand.upHand[0] % 13 * 100 + p.curHand.upHand[0])
       )
-      bet(Players.get(dm), Settings.getNumber("ante"), true)
     }
   }
   else throw Error('Not enough living players in poker')
@@ -240,11 +247,24 @@ function setDM(newDM : number | false){
   return dm
 }
 
-function dealIndividual(up: boolean){
+function dealIndividual(up: boolean, n: number = 1) : void{
   let inPlayers = Players.filter(p => !p.curHand.folded && p.bank > 0)
+  if(inPlayers.length + (4 - street) > deck.length){
+    Actions.log("Not enough cards left in deck - dealing in center")
+    dealCenter(n, true)
+    return
+  }
   for(let i = 0; i < inPlayers.length; i++){
-    if(up) inPlayers[i].curHand.upHand.push(deck.pop() as number)
-    else inPlayers[i].curHand.hand.push(deck.pop() as number)
+    let cards = []
+    for(let i = 0; i < n; i++) cards.push(deck.pop() as number)
+    if(up) {
+      Actions.log([inPlayers[i], ": ", ...cards.map(getCardString)])
+      inPlayers[i].curHand.upHand.push(...cards)
+    }
+    else {
+      Actions.log({content: [inPlayers[i], ": ", ...cards.map(getCardString)], visibleTo: i})
+      inPlayers[i].curHand.hand.push(...cards)
+    }
   }
 }
 
@@ -252,6 +272,7 @@ function nextStreet(log = true) : void{
   maxAmtIn = 0
   minRaise = BB
   if(!isStud()){
+    Actions.log((street + 3) + "th Street: ")
     if(street < 3){
       street++
       dealCenter(street === 1 ? 3 : 1, log)
@@ -265,7 +286,7 @@ function nextStreet(log = true) : void{
       street++
       dealIndividual(true)
     }
-    else if(street == 3){
+    else if(street === 3){
       dealIndividual(false)
       street++
     }
@@ -303,7 +324,7 @@ function getHand(p: Player){
     return orderBestHand(maxHand)
   }
   else{
-    return orderBestHand(p.curHand.hand.concat(p.curHand.upHand))
+    return orderBestHand(p.curHand.hand.concat(p.curHand.upHand).concat(center))
   }
 }
 
@@ -457,11 +478,13 @@ function updateDealer() : void{
   else throw Error('Not enough living players in poker')
 }
 
+/*
+ * If a player will have the option to make a decision later in the current betting round
+ * regardless of other players' actions
+*/
 function guaranteedDecision(p : Player) : boolean{
   let h = p.curHand
-  if(forced){
-    if(forced === p && Players.next(forced,couldContinueBetting)) return true
-  }
+  if(forced.includes(p) && Players.next(p,couldContinueBetting)) return true
   return !h.folded && h.stack > 0 && (h.amtIn < maxAmtIn || (maxAmtIn === 0 && !h.checked))
 }
 
@@ -490,8 +513,16 @@ function roundDownToBet(n: number, b: number){
 
 export function studBetOptions(p: Player) : number[] {
   let h = p.curHand
-  let options = [0, maxAmtIn - p.curHand.amtIn]
+  let options : number[] = []
   let bet = Settings.getNumber("bet")
+  let ante = Settings.getNumber("ante")
+  if(street === 0 && maxAmtIn === ante){
+    options.push(ante)
+  }
+  else {
+    options.push(0)
+    if(maxAmtIn > p.curHand.amtIn) options.push(maxAmtIn - p.curHand.amtIn)
+  }
   if(street < 2){ //pre 5th street
     options.push(roundDownToBet(maxAmtIn + bet, bet) - h.amtIn)
     if(street === 1 && h.upHand[0] % 13 === h.upHand[1] % 13){
@@ -516,20 +547,24 @@ function lastStreet() : number{
 function bet(p : Player, amt : number, f = false) : boolean {
   if(amt < 0) return false
   if(dm === false || Players.get(dm) !== p) return false
-  //reject players spending more than they have
-  if(amt > p.curHand.stack) return false
-  //reject players undercalling if they aren't all in
-  if(amt > 0 && amt < p.curHand.stack && p.curHand.amtIn + amt < maxAmtIn) return false
-  //reject players raising by less than the previous raise if they aren't all in
-  if(!f && p.curHand.amtIn + amt - maxAmtIn > 0 && p.curHand.amtIn + amt - maxAmtIn < minRaise
-      && amt < p.curHand.stack) return false
+  //reject players spending more than they have unless it's a blind and then correct to all in
+  if(amt > p.curHand.stack) {
+    if(f) return false
+    else amt = p.curHand.stack
+  }
   //reject players betting above the limit defined by the game
   if(amt > getBetLimit(p)) return false
-  
 
-  if(!f && isStud() && !studBetOptions(p).includes(amt)) return false
-
-
+  if(amt < p.curHand.stack){
+    //reject stud bets outside of the list of options
+    if(!f && isStud() && !studBetOptions(p).includes(amt)) return false
+    //reject players undercalling
+    if(amt > 0 && p.curHand.amtIn + amt < maxAmtIn) return false
+    //reject players raising by less than the previous raise in NL
+    if(!isStud() && !f && p.curHand.amtIn + amt - maxAmtIn > 0 && 
+      p.curHand.amtIn + amt - maxAmtIn < minRaise)
+      return false
+  }
   p.curHand.amtIn += amt
   p.curHand.stack -= amt
   if(p.curHand.amtIn > maxAmtIn){
@@ -549,13 +584,10 @@ function bet(p : Player, amt : number, f = false) : boolean {
     p.curHand.checked = true
     Actions.log([p , " checks"])
   }
-  if(f) forced = p
-  else if(forced === p) forced = false
+  if(f) forced.push(p)
+  else if(forced.includes(p)) forced.splice(forced.indexOf(p), 1)
   dm = setDM(Players.next(dm, guaranteedDecision))
-  //STUD Cludge
-  if(dm === false && f && isStud()){
-    dm = -1
-  }
+
   if(dm === false){
     Players.applyLiving(p => {
       p.curHand.checked = false
@@ -574,9 +606,14 @@ function bet(p : Player, amt : number, f = false) : boolean {
       while(street < lastStreet()) nextStreet(false)
     }
     else{
-      setDM(Players.next(dealer, p => !p.curHand.folded))
+      if(!isStud()){
+        setDM(Players.next(dealer, p => !p.curHand.folded))
+      }
     }
     nextStreet(!allFold)
+    if(isStud()){
+      setDM(Players.argMax(p => getCardsScore(p.curHand.upHand)))
+    }
   }
   return true
 }

@@ -75,7 +75,7 @@ function Cards(args: PlayerRenderArgs){
 function UpCards(args: PlayerRenderArgs){
   if(inPoker(args) && isStud()){
     return <div className = "cards" style = {{width: "160px"}}>
-      {args.p.curHand.upHand.map(getCardString)}
+      {!args.p.curHand.folded && args.p.curHand.upHand.map(getCardString)}
     </div>
   }
   return null
