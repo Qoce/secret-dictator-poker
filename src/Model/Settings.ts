@@ -65,36 +65,60 @@ let settings = {
   }
 }
 
-settings.register("freeInfluence", {value: 1, name: "Free Influence"})
-settings.register("ecoBase", {value: 1, name: "Passive Income"})
-settings.register("startingBank", {value: 200, name: "Starting Bank"})
+export function gameMode(){
+  return settings.getString("gameMode")
+}
 
-settings.register("fPolicyCount", {value: 11, name: "Fascist Policy Cards"})
-settings.register("lPolicyCount", {value: 6, name: "Fascist Policy Cards"})
+settings.register("gameMode", {value: "SDP", name: "Game Mode", values:
+  ["SDP", "SD", "P"], onChange: refresh})
+
+//SDP Only
+settings.register("freeInfluence", {value: 1, name: "Free Influence",
+  visibleIf: () => settings.getString("gameMode") === "SDP"})
+settings.register("ecoBase", {value: 1, name: "Passive Income",
+visibleIf: () => settings.getString("gameMode") === "SDP"})
 settings.register("investigationPower", {value: "Role", name: "Investigation Power", 
-  values: ["Role", "Role + Bank", "Role + Bank + Cards"]})
+  values: ["Role", "Role + Bank", "Role + Bank + Cards"],
+  visibleIf: () => settings.getString("gameMode") === "SDP"})
 settings.register("bribeInfo", {value: "None", name: "Briber Information",
-  values: ["None", "On Acceptance", "Before Acceptance", "Public Bribes", "Show True Government"]}) 
+  values: ["None", "On Acceptance", "Before Acceptance", "Public Bribes", "Show True Government"],
+  visibleIf: () => settings.getString("gameMode") === "SDP"})
 settings.register("showVoting", {value: "Direction", name: "Show Voting",
-  values: ["Anonymous", "Direction", "Value"]})
+  values: ["Anonymous", "Direction", "Value"],
+  visibleIf: () => settings.getString("gameMode") === "SDP"})
 settings.register("voteCostScaling", {value: "3^n", name: "Vote Cost Scaling",
-  values: ["1", "n^2", "2^n", "3^n"]})
-settings.register("dictatorWin", {value: "Classic", name: "Dictator Win Rule",
-  values: ["Classic", "No Dictator Win", "Dictator Election Required"]})
+  values: ["1", "n^2", "2^n", "3^n"],
+  visibleIf: () => settings.getString("gameMode") === "SDP"})
+settings.register("pokerHands", {value: 1, name: "Hands Per Round", min: 1,
+  visibleIf: () => settings.getString("gameMode") === "SDP"})
 
-settings.register("pokerHands", {value: 1, name: "Hands Per Round", min: 1})
+
+//SD 
+settings.register("fPolicyCount", {value: 11, name: "Fascist Policy Cards",
+visibleIf: () => settings.getString("gameMode") !== "P"})
+settings.register("lPolicyCount", {value: 6, name: "Fascist Policy Cards",
+visibleIf: () => settings.getString("gameMode") !== "P"})
+settings.register("dictatorWin", {value: "Classic", name: "Dictator Win Rule",
+  values: ["Classic", "No Dictator Win", "Dictator Election Required"],
+  visibleIf: () => settings.getString("gameMode") !== "P"})
+
 
 settings.register("pokerType", {value: "Texas Hold'em", name: "Poker Variant",
-  values: ["Texas Hold'em", "Omaha", "5 Card Draw", "7 Card Stud"]})
-
+  values: ["Texas Hold'em", "Omaha",/* "5 Card Draw",*/ "7 Card Stud"],
+  visibleIf: () => settings.getString("gameMode") !== "SD"})
+settings.register("startingBank", {value: 200, name: "Starting Bank",
+  visibleIf: () => settings.getString("gameMode") !== "SD"})
 settings.register("BB", {value: 2, name: "Big Blind", 
-  visibleIf: () => settings.getString("pokerType") !== "7 Card Stud"
+  visibleIf: () => settings.getString("pokerType") !== "7 Card Stud" &&
+  settings.getString("gameMode") !== "SD"
 })
 settings.register("ante", {value: 1, name: "Ante", 
-  visibleIf: () => settings.getString("pokerType") === "7 Card Stud"
+  visibleIf: () => settings.getString("pokerType") === "7 Card Stud" &&
+  settings.getString("gameMode") !== "SD"
 })
 settings.register("bet", {value: 4, name: "Small Bet", 
-  visibleIf: () => settings.getString("pokerType") === "7 Card Stud"
+  visibleIf: () => settings.getString("pokerType") === "7 Card Stud" &&
+  settings.getString("gameMode") !== "SD"
 })
 
 

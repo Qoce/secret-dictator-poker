@@ -6,7 +6,7 @@ import Phase from "../Interface/Phase"
 import Player from './../Interface/Player'
 import Players from './Players'
 import Rng from "./Rng"
-import Settings from "./Settings"
+import Settings, { gameMode } from "./Settings"
 import { createImportSpecifier } from 'typescript'
 
 //Hand types:
@@ -217,6 +217,7 @@ function startHand() : void{
   street = 0
   center = []
   deck = getRandomDeck()
+  forced = []
 
   updateDealer()
   Players.apply(preparePlayer)
@@ -234,9 +235,10 @@ function startHand() : void{
       setDM(Players.argMin((p) => p.curHand.upHand[0] % 13 * 100 + p.curHand.upHand[0])
       )
     }
+  } 
+  else{
+    Game.setPhase(Phase.endgame)
   }
-  else throw Error('Not enough living players in poker')
-  
 }
 
 Game.setPhaseListener(Phase.poker, startHand)
@@ -272,7 +274,6 @@ function nextStreet(log = true) : void{
   maxAmtIn = 0
   minRaise = BB
   if(!isStud()){
-    Actions.log((street + 3) + "th Street: ")
     if(street < 3){
       street++
       dealCenter(street === 1 ? 3 : 1, log)
@@ -282,6 +283,7 @@ function nextStreet(log = true) : void{
     }
   }
   else{
+    Actions.log((street + 3) + "th Street: ")
     if(street < 3){
       street++
       dealIndividual(true)
@@ -417,7 +419,7 @@ function endHand(log = true) : void{
   Players.updateBanks(p => p.curHand.stack)
   Players.apply(p => p.curHand.hand = [])
   if(Game.getPhase() !== Phase.endgame){
-    if(++handCount % Settings.getNumber("pokerHands")){
+    if(++handCount % Settings.getNumber("pokerHands") || gameMode() === "P"){
       Game.setPhase(Phase.poker)
     }
     else{
@@ -475,7 +477,7 @@ function preparePlayer(p : Player) : void{
 function updateDealer() : void{
   let nl = Players.nextLiving(dealer)
   if(nl !== false) dealer = nl
-  else throw Error('Not enough living players in poker')
+  else Game.setPhase(Phase.endgame)
 }
 
 /*
@@ -484,7 +486,7 @@ function updateDealer() : void{
 */
 function guaranteedDecision(p : Player) : boolean{
   let h = p.curHand
-  if(forced.includes(p) && Players.next(p,couldContinueBetting)) return true
+  if(forced.includes(p) && Players.next(p,couldContinueBetting) !== false) return true
   return !h.folded && h.stack > 0 && (h.amtIn < maxAmtIn || (maxAmtIn === 0 && !h.checked))
 }
 
@@ -549,7 +551,7 @@ function bet(p : Player, amt : number, f = false) : boolean {
   if(dm === false || Players.get(dm) !== p) return false
   //reject players spending more than they have unless it's a blind and then correct to all in
   if(amt > p.curHand.stack) {
-    if(f) return false
+    if(!f) return false
     else amt = p.curHand.stack
   }
   //reject players betting above the limit defined by the game
@@ -567,11 +569,14 @@ function bet(p : Player, amt : number, f = false) : boolean {
   }
   p.curHand.amtIn += amt
   p.curHand.stack -= amt
+  pot += amt
   if(p.curHand.amtIn > maxAmtIn){
     minRaise = Math.max(p.curHand.amtIn - maxAmtIn, BB)
     maxAmtIn = p.curHand.amtIn
     if(f) Actions.log([p , " posts blind of " + p.curHand.amtIn])
-    else Actions.log([p , " raises to " + p.curHand.amtIn])
+    else {
+      Actions.log([p , " raises to " + p.curHand.amtIn])
+    }
   }
   else if(p.curHand.amtIn + amt < maxAmtIn && p.curHand.stack > 0){
     p.curHand.folded = true
@@ -584,6 +589,7 @@ function bet(p : Player, amt : number, f = false) : boolean {
     p.curHand.checked = true
     Actions.log([p , " checks"])
   }
+
   if(f) forced.push(p)
   else if(forced.includes(p)) forced.splice(forced.indexOf(p), 1)
   dm = setDM(Players.next(dm, guaranteedDecision))
@@ -594,7 +600,6 @@ function bet(p : Player, amt : number, f = false) : boolean {
     }, p => !p.curHand.folded)
     Players.applyLiving(p => {
       p.curHand.equity += p.curHand.amtIn
-      pot += p.curHand.amtIn
       p.curHand.amtIn = 0
     })
     let allFold = false

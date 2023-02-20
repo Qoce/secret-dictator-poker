@@ -2,7 +2,7 @@ import Game from "../Model/Game"
 import Phase from "../Interface/Phase"
 import SDData, {getSpecialPhase, setFPassed, setLPassed} from "../Model/SecretDictator"
 import {Team} from "../Interface/Role"
-import Settings from "../Model/Settings"
+import Settings, { gameMode } from "../Model/Settings"
 import Players from "../Model/Players"
 
 
@@ -53,6 +53,7 @@ function getPhaseIcon(phase: Phase, endgame: string){
 }
 
 export default function SDHeader(args: {user: number}){
+  if(gameMode() === "P") return null
   let data = SDData()
   let fascistSquares: JSX.Element[] = []
 

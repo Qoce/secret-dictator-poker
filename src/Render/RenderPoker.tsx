@@ -41,9 +41,9 @@ function BetButton(args: {amt: number, callCost: number, stack: number, p: numbe
     })
   }
   let str = "Fold"
-  if(args.amt === args.callCost){
+  if(args.amt === args.callCost || (args.amt < args.callCost && args.amt === args.stack)){
     if(args.callCost > 0){
-      str = "Call " + args.callCost
+      str = "Call " + args.amt
     }
     else{
       str = "Check"
@@ -52,9 +52,9 @@ function BetButton(args: {amt: number, callCost: number, stack: number, p: numbe
   else if(args.amt > args.callCost){
     str = args.callCost > 0 ? "Raise " : "Bet "
     str += args.amt
-    if(args.amt === args.stack){
-      str += " All In"
-    }
+  }
+  if(args.amt === args.stack){
+    str += " All In"
   }
   return <button className = "button" onClick = {() => {fire(args.amt)}} 
     disabled = {!args.enabled && (args.amt > 0 && args.amt !== args.callCost) && 
@@ -125,6 +125,21 @@ function PokerAction(args: RenderPhaseArgs){
         buttons.push(Button(0))
         if(cost > 0) buttons.push(Button(cost))
         buttons.push(Button(Math.min(minRaise,stack)))
+        let calledPot = PokerState().pot + cost
+        if(minRaise < stack){
+          for(let i of [1 / 3, 1 / 2, 2 /3, 1]){
+            let amt = Math.floor(calledPot * i) + cost
+            if(amt > minRaise){
+              if(amt >= stack) {
+                buttons.push(Button(stack))
+                break
+              }
+              else{
+                buttons.push(Button(amt))
+              }
+            }
+          }
+        }
       }
       else{
         let opts = studBetOptions(user)
@@ -152,6 +167,10 @@ function PokerAction(args: RenderPhaseArgs){
           {Button(betAmt)}
         </div>
       }
+    }
+    else{
+      buttons.push(Button(0))
+      buttons.push(Button(stack))
     }
     return <div>
       <div className = "board-row">

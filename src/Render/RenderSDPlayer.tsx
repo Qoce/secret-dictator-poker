@@ -4,8 +4,10 @@ import {PlayerRenderArgs} from "./RenderPlayer"
 import {getTeamString} from "./SDUtils"
 import SDState, {inSD} from "../Model/SecretDictator"
 import {columns, BankVision} from "./RenderPlayer"
+import { gameMode } from "../Model/Settings"
 
 function TeamSquare(args: PlayerRenderArgs){
+  if(gameMode() === "P") return null
   if(args.appState !== "inGame") return null
   return <div className = "square">
     {getTeamString({

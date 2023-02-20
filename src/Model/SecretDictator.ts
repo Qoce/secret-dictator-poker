@@ -6,10 +6,11 @@ import {getTeamString} from "../Render/SDUtils"
 import Actions from "./Actions"
 import Phase from "../Interface/Phase"
 import Game from "./Game"
-import Settings from "./Settings"
+import Settings, { gameMode } from "./Settings"
 import ActionArgs from "../Interface/Action"
 import {colorPolicy} from '../Render/SDUtils'
 import settings from "./Settings"
+import game from "./Game"
 
 let SpecialPhases = [
   //5,6
@@ -97,6 +98,7 @@ export function initSD(){
     }
     Actions.log({content: [p, ": " + Team[p.role.team]], visibleTo: Players.players.indexOf(p)})
   })
+  Players.onBankUpdate = onBankUpdate
   pCandidate = players[RNG.nextInt(players.length)]
   normalPCandidate = pCandidate
 
@@ -113,6 +115,17 @@ function getFascistPlayers(){
 
 function getDictator() : Player{
   return Players.filter(p => p.role.team === Team.dictator)[0]
+}
+
+function startBribePhase(){
+  if(gameMode() === "SDP"){
+    Game.setPhase(Phase.bribe)
+  }
+  else{
+    president = pCandidate
+    chancellor = cCandidate
+    Game.setPhase(Phase.president)
+  }
 }
 
 function nextPCandidate(){
@@ -249,10 +262,10 @@ function checkVotes(){
         dictatorElected = true
         Actions.log({content: [chancellor, " is the dictator"], 
           visibleTo: getFascistPlayers()})
-        Game.setPhase(Phase.bribe)
+          startBribePhase()
       }
     }
-    else Game.setPhase(Phase.bribe)
+    else startBribePhase()
   }
   else {
     Actions.log("The vote fails")
@@ -617,22 +630,30 @@ Game.setPhaseListener(Phase.endgame, () => {
 })
 
 function loot(w: Player[], l: Player[]){
-  const lSum = l.map(p => p.bank).reduce((a,b) => a+b)
-  if(w.length > 0){
-    l.forEach(p => p.bank = Math.floor(p.bank / 2))
+  if(gameMode() === "SD"){
+    l.forEach(p => p.bank = 0)
+    w.forEach(p => p.bank = 1)
   }
-  w.forEach(p => p.bank += Math.floor(lSum / w.length / 2))
+  else{
+    const lSum = l.map(p => p.bank).reduce((a,b) => a+b)
+    if(w.length > 0){
+      l.forEach(p => p.bank = Math.floor(p.bank / 2))
+    }
+    w.forEach(p => p.bank += Math.floor(lSum / w.length / 2))
+  }
 }
 
 function liberalWin(){
   const fascists = Players.filter(p => p.role.team !== Team.liberal)
-  const liberals = Players.filter(p => p.role.team === Team.liberal && p.bank > 0)
+  const liberals = Players.filter(p => p.role.team === Team.liberal && (p.bank > 0 || 
+    gameMode() === "SD"))
   loot(liberals, fascists)
   Actions.log("Liberals Win")
 }
 
 function fascistWin(){
-  const fascists = Players.filter(p => p.role.team !== Team.liberal && p.bank > 0)
+  const fascists = Players.filter(p => p.role.team !== Team.liberal && (p.bank > 0 || 
+    gameMode() === "SD"))
   const liberals = Players.filter(p => p.role.team === Team.liberal)
   loot(fascists, liberals)
   Actions.log("Fascists Win")
@@ -645,7 +666,7 @@ function doesDictatorDeathEndGame(){
   else return !dictatorElected
 }
 
-Players.onBankUpdate = () => {
+function onBankUpdate() {
   let aliveLiberalCount = Players.filter(p => p.role.team === Team.liberal &&
     p.bank > 0).length
   let aliveFascistCount = Players.filter(p => p.role.team !== Team.liberal &&
@@ -668,7 +689,8 @@ function exitSD(phase = Phase.poker, ub: boolean = true){
   activePolicies = []
   failCount = 0
   if(ub) Players.updateBanks(p => p.role.influence)
-  Game.setPhase(phase)
+  if(phase !== Phase.poker || gameMode() === "SDP") Game.setPhase(phase)
+  else Game.setPhase(Phase.nominate)
 }
 
 Actions.onReset.push(() => {initalized = false})

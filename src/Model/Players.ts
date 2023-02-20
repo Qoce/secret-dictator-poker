@@ -76,6 +76,7 @@ class Players{
   }
   reset(){
     this.apply(this.resetPlayer)
+    this.onBankUpdate = () => {}
   }
   add(p : Player){
     this.players.push(p)

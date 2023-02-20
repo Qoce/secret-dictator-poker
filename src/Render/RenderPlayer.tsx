@@ -4,7 +4,7 @@ import Phase from '../Interface/Phase'
 import Player from '../Interface/Player'
 import Players from '../Model/Players'
 import SDData from '../Model/SecretDictator'
-import Settings from '../Model/Settings'
+import Settings, {gameMode} from '../Model/Settings'
 
 //function getBonus(){
 //  let ecoSize = this.props.ecoSize
@@ -54,7 +54,8 @@ function inGovernment(){
 }
 
 function getBoldness(p : Player){
-  if(inGovernment() && Settings.getString("bribeInfo") !== "Show True Government") return "normal"
+  if(inGovernment() && Settings.getString("bribeInfo") !== "Show True Government"
+    && gameMode() === "SDP") return "normal"
   if(p.canAct) return "bold"
   return "normal"
 }
@@ -88,6 +89,7 @@ export function BankVision(args: PlayerRenderArgs, n: number){
 
 function Bank(args: PlayerRenderArgs){
   if(args.appState !== "inGame") return null
+  if(gameMode() === "SD") return null
   if(Game.getPhase() === Phase.endgame) return BankVision(args, args.p.bank)
   return null
 }

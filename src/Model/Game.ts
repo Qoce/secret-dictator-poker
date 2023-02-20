@@ -4,10 +4,10 @@ let p : Phase = Phase.poker
 let phaseListeners = new Map<Phase, () => void>()
 let game = {
   setPhase(phase : Phase){
+    p = phase
     let pl = phaseListeners.get(phase)
     if(pl !== undefined) pl()
     else throw Error("Phase " + phase + " missing a phase listener")
-    p = phase
   },
   getPhase(){
     return p

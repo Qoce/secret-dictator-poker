@@ -4,6 +4,7 @@ import Players from "./Players"
 import Phase from "../Interface/Phase"
 import Game from "./Game"
 import Rng from "./Rng"
+import {gameMode} from "./Settings"
 
 let actions = new Map<Phase, (args: ActionArgs) => boolean>() //{[key in Phase]: (args: ActionArgs) => boolean}
 let actionHistory : ActionArgs[] = []
@@ -38,8 +39,10 @@ let a = {
     this.onReset.forEach(f => f())
 
     actionLog = [[]]
-    Game.setPhase(Phase.nominate)
-    Game.setPhase(Phase.poker)
+    
+    //TODO: this should be moved... this code should work outside of this specific game
+    if(gameMode() !== "P") Game.setPhase(Phase.nominate)
+    if(gameMode() !== "SD") Game.setPhase(Phase.poker)
 
     for(let i in actionHistory){
       if(+i >= upTo) {

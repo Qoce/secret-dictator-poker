@@ -1,4 +1,4 @@
-import  Settings from "../Model/Settings"
+import  Settings, {gameMode} from "../Model/Settings"
 import SocketIO from 'socket.io'
 
 import react from 'react'
@@ -10,11 +10,12 @@ export function SettingsRender(props:
     if(val.local) return
     stngs.push(RenderSetting(key, props))
   })
+  let playersNeeded = gameMode() === "P" ? 2 : 5
   return <div className = "settings" style = {{marginRight: "10px"}}>
     {stngs}
     <button 
       onClick = {props.onStart}
-      disabled = {!props.isHost || props.numPlayers < 5}
+      disabled = {!props.isHost || props.numPlayers < playersNeeded}
     >
       Start
     </button>
