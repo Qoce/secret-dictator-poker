@@ -615,10 +615,10 @@ function bet(p : Player, amt : number, f = false) : boolean {
         setDM(Players.next(dealer, p => !p.curHand.folded))
       }
     }
-    nextStreet(!allFold)
     if(isStud()){
       setDM(Players.argMax(p => getCardsScore(p.curHand.upHand)))
     }
+    nextStreet(!allFold)
   }
   return true
 }
