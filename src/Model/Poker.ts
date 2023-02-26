@@ -614,9 +614,9 @@ function bet(p : Player, amt : number, f = false) : boolean {
       if(!isStud()){
         setDM(Players.next(dealer, p => !p.curHand.folded))
       }
-    }
-    if(isStud()){
-      setDM(Players.argMax(p => getCardsScore(p.curHand.upHand)))
+      else{
+        setDM(Players.argMax(p => getCardsScore(p.curHand.upHand)))
+      }
     }
     nextStreet(!allFold)
   }

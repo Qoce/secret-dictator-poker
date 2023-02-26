@@ -1,13 +1,10 @@
-import {useState, useRef} from 'react'
+import {useState} from 'react'
 import Actions, {logElement} from '../Model/Actions'
 import Player from '../Interface/Player'
 import react from 'react'
 import Settings from '../Model/Settings'
 
 export default function ActionLog(args: {p: number, height: number, socket: any, lobby: string}){
-  let a : any
-  const scrollRef = useRef(a)
-
 
   return <div className = 'scroller' style={{height: args.height}}>
       {
@@ -15,7 +12,6 @@ export default function ActionLog(args: {p: number, height: number, socket: any,
         socket = {args.socket} lobby = {args.lobby}>{
         a.map((b, j) => <div style = {{marginLeft: j === 0 ? "30px" : undefined}} key = {i * 100 + j}>
         {flatten(b.map((c,k) => renderContent(c,args.p, i * 1e4 + j * 1e2 + k)))} 
-        <div ref = {scrollRef}/>
         </div>)
       }</Hoverable>).reverse()
     }

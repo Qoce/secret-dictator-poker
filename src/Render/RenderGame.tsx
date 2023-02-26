@@ -11,6 +11,7 @@ import RenderJoinLobby from "./RenderJoinLobby"
 import RenderLobbyList from "./RenderLobbyList"
 import RenderPhase from "./RenderPhase"
 import {SettingsRender, LocalSettingsRender} from "./RenderSettings"
+import SDLog from './RenderSDLog'
 import SDHeader from "./RenderSDHeader"
 import Settings from "../Model/Settings"
 import settings from '../Model/Settings'
@@ -296,6 +297,10 @@ export default function SDP(){
           height = {Players.players.length * 40 + 271}
           socket = {socket}
         />}
+        {appState === "inGame" &&
+          <SDLog height = {Players.players.length * 40 + 271}/>
+        }
+
       </div>
     </div>
   </div>

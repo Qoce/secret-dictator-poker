@@ -68,13 +68,18 @@
   margin-left: 4px;
 }
 
+
+.board-row > span{
+  display: inline
+}
+
 .wrapper {
   display: table-row;
 }
 
 .board-row > div {
   white-space: nowrap;
-  display: inline;
+  display: inline-block;
 }
 
 .board-row:after {
@@ -106,6 +111,22 @@
   -ms-user-select: none;
   -o-user-select: none;
   user-select: none;
+}
+
+.sdlog-name{
+  min-width: 100px;
+  font-weight: bold
+}
+.sdlog-action{
+  min-width: 25px;
+}
+.sdlog-vote{
+  min-width: 40px;
+}
+.sdlog-policy{
+  min-width: 50px;
+  font-weight: bold;
+  text-align: center
 }
 
 .textInputBig {

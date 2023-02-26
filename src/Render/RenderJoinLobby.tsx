@@ -12,7 +12,7 @@ export default function JoinLobby(args: {s?: string, oj: (n: string, u:string, p
     </div>}
     <div>
       <label>Username</label>
-      <input className = "textInput" type = "text" ref = {username}/>
+      <input className = "textInput" type = "text" ref = {username} maxLength = {14}/>
     </div>
     <div>
       <label>Password</label>

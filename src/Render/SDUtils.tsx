@@ -1,4 +1,4 @@
-import SDState from "../Model/SecretDictator"
+import SDState, {Policy} from "../Model/SecretDictator"
 import {useState} from 'react'
 import Player from "../Interface/Player"
 import {Team} from "../Interface/Role"
@@ -22,7 +22,7 @@ export function VoteSquare(props : VoteSquareArgs){
 }
 
 interface PolicySquareArgs{
-  team: "l" | "f",
+  team: Policy,
   selected: boolean,
   selectable: boolean,
   setSelected: (selected : boolean) => void
@@ -30,18 +30,19 @@ interface PolicySquareArgs{
 
 export function PolicySquare(props: PolicySquareArgs){
   const [hovered, setHovered] = useState(false)
-  let bgColor = [["lightBlue","blue"],["pink","red"]][props.team === 'l' ? 0 : 1][props.selected ? 1 : 0]
+  let bgColor = [["lightBlue","blue"],["pink","red"]]
+    [props.team === Policy.liberal ? 0 : 1][props.selected ? 1 : 0]
   return <div className = "square" style = {{backgroundColor: bgColor, marginLeft: 5 ,
     marginTop: "2px", border: "2px solid", borderColor: hovered ? "green" : "grey"}}
      onClick = {() => {if(props.selectable) props.setSelected(!props.selected)}} 
      onMouseEnter = {() => {if(props.selectable) setHovered(true)}} 
      onMouseLeave = {() => setHovered(false)}>
-    {props.team.toUpperCase()}
+    {props.team === Policy.liberal ? "L" : "F"}
   </div>  
 }
 
-export function colorPolicy(p: "l" | "f"){
-  if(p === "l") return <span style = {{color: "blue", fontWeight: "bold"}}> L </span>
+export function colorPolicy(p: Policy){
+  if(p === Policy.liberal) return <span style = {{color: "blue", fontWeight: "bold"}}> L </span>
   else return <span style = {{color: "red", fontWeight: "bold"}}> F </span>
 }
 

@@ -43,7 +43,7 @@ function ProgSquare(props : ProgSquareArgs){
   </div>  
 }
 
-function getPhaseIcon(phase: Phase, endgame: string){
+export function getPhaseIcon(phase: Phase, endgame: string){
   if(phase === Phase.investigate) return "🔎"
   if(phase === Phase.assassinate) return "🗡️"
   if(phase === Phase.peak) return "🃏"

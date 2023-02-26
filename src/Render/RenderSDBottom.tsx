@@ -161,8 +161,8 @@ function Policies(args: PolicyArgs){
   for(let i in policies) indicies.push(+i)
 
   let veto : undefined | JSX.Element
-  if(args.vetoButton && SDState().fPassed === 5){
-    <button className = "button" onClick = {() => 
+  if(args.vetoButton && SDState().fPassed >= 5 && !SDState().vetoOverriden){
+    veto = <button className = "button" onClick = {() => 
       Actions.fire({
         p: args.p,
         v: -1

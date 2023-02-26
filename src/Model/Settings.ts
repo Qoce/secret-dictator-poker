@@ -138,5 +138,8 @@ settings.register("font", {value: true, name: "Fraktur", local: true, onChange: 
 settings.register("4ColorDeck", {value: true, name: "4 Color Deck", local: true, onChange: refresh})
 settings.register("showActionLog", {value: true, name: "Show Action Log", local: true,
   onChange: refresh})
+settings.register("showSDLog", {value: true, name: "Show SD Log", local: true, onChange: refresh,
+  visibleIf: () => gameMode() !== "P"})
+
 
 export default settings
