@@ -19,7 +19,7 @@ function TeamSquare(args: PlayerRenderArgs){
 }
 
 function Influence(args: PlayerRenderArgs){
-  if(inSD()){
+  if(inSD() && gameMode() !== "SD"){
     return BankVision(args, args.p.role.influence)
   }
   return null
