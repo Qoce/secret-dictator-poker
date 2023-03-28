@@ -158,17 +158,19 @@ class Players{
   }
 
   distribute(n : number, inc: (p: Player, n: number) => void){
-    let d = Math.floor(n / this.players.length)
-    let l = n % this.players.length
     let ps = this.filter(p => p.bank > 0)
-    ps.map(p => inc(p, l))
+    let d = Math.floor(n / ps.length)
+    let l = n % ps.length
+    ps.map(p => inc(p, d))
     while(l > 0){
       let p : Player | undefined = ps.splice(rng.nextInt(ps.length),1)[0]
       if(p){
         inc(p,1)
       }
       l--
+      console.log(p.name)
     }
+    console.log(this.players.map(p => p.role.influence).reduce((a,b) => a + b, 0))
   }
   onBankUpdate(){}
 }
