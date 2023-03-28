@@ -7,7 +7,6 @@ import Player from './../Interface/Player'
 import Players from './Players'
 import Rng from "./Rng"
 import Settings, { gameMode } from "./Settings"
-import { createImportSpecifier } from 'typescript'
 
 //Hand types:
 //Card represented as 0 to 51

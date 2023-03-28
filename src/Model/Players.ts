@@ -2,6 +2,7 @@ import { Team } from "../Interface/Role"
 import Player from "./../Interface/Player"
 import Actions from "./Actions"
 import Settings from "./Settings"
+import rng from "./Rng"
 
 class Players{
   players: Player[]
@@ -154,6 +155,20 @@ class Players{
       }
     }, p => !p.dead)
     this.onBankUpdate()
+  }
+
+  distribute(n : number, inc: (p: Player, n: number) => void){
+    let d = Math.floor(n / this.players.length)
+    let l = n % this.players.length
+    let ps = this.filter(p => p.bank > 0)
+    ps.map(p => inc(p, l))
+    while(l > 0){
+      let p : Player | undefined = ps.splice(rng.nextInt(ps.length),1)[0]
+      if(p){
+        inc(p,1)
+      }
+      l--
+    }
   }
   onBankUpdate(){}
 }

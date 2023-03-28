@@ -75,8 +75,6 @@ settings.register("gameMode", {value: "SDP", name: "Game Mode", values:
 //SDP Only
 settings.register("freeInfluence", {value: 1, name: "Free Influence",
   visibleIf: () => settings.getString("gameMode") === "SDP"})
-settings.register("ecoBase", {value: 1, name: "Passive Income",
-visibleIf: () => settings.getString("gameMode") === "SDP"})
 settings.register("investigationPower", {value: "Role", name: "Investigation Power", 
   values: ["Role", "Role + Bank", "Role + Bank + Cards"],
   visibleIf: () => settings.getString("gameMode") === "SDP"})

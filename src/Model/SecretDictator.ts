@@ -54,6 +54,7 @@ let fPassed = 0
 let initalized = false
 let dictatorElected = false
 let vetoOverriden = false
+let votePool = 0
 export let sdlog = {log: [] as SDLogElement[]}
 
 
@@ -71,6 +72,7 @@ export function initSD(){
   dictatorElected = false
   sdlog.log = []
   vetoOverriden = false
+  votePool = 0
 
   let players = Players.players
   if(players.length < 5) throw Error('not enough players to start secret dictator')
@@ -234,6 +236,7 @@ Actions.register(Phase.vote, (args: ActionArgs) => {
   p.role.vote = size > 0
   p.role.spent = bought
   p.role.influence -= cost
+  votePool += cost
   p.canAct = false
   Actions.log([p, " votes",{
     content: ": " + ["✔️", "❌"][p.role.vote ? 0 : 1] + bought,
@@ -254,6 +257,8 @@ function mapPlayerVotes(){
 
 function checkVotes(){
   let alivePlayers = Players.filter(p => p.bank > 0)
+  Players.distribute(votePool, (p, n) => p.role.influence += n)
+  votePool = 0
   sdlog.log[sdlog.log.length - 1].v = mapPlayerVotes()
   let spents = alivePlayers.map(p => p.role.spent)
   let votes = alivePlayers.map(p => p.role.vote)
@@ -537,7 +542,6 @@ function passPolicy(a: number, topCard = false, exit = true){
       liberalWin()
     }
     else{
-      Players.applyLiving(p => p.role.influence += Settings.getNumber("ecoBase"))
       if(exit){
         exitSD()
       }
