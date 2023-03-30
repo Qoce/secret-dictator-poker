@@ -184,7 +184,7 @@ Game.setPhaseListener(Phase.nominate, () => {
   Players.setActors(p => p === pCandidate)
   Players.apply(p => p.targetable = 
     (p !== pCandidate && p !== lastElectedPresident && 
-     p !== lastElectedChancellor && p.bank > 0))
+     p !== lastElectedChancellor && !p.dead))
   if(failCount === 0){
     Players.apply(p => p.role.influence = p.bank)
   }
@@ -206,7 +206,7 @@ Actions.register(Phase.nominate, (args : ActionArgs) => {
 })
 
 Game.setPhaseListener(Phase.vote, () => {
-  Players.setActors(p => p.bank > 0)
+  Players.setActors(p => !p.dead)
   Players.apply(p => p.targetable = false)
   Players.apply(p => p.role.vote = undefined)
   Players.apply(p => p.role.spent = 0)
@@ -248,7 +248,7 @@ Actions.register(Phase.vote, (args: ActionArgs) => {
 
 
 function mapPlayerVotes(){
-  let alivePlayers = Players.filter(p => p.bank > 0)
+  let alivePlayers = Players.filter(p => !p.dead)
   let voteMap = new Map<Player, number>()
   alivePlayers.forEach(p => voteMap.set(p, (p.role.vote ? 1 : -1) * (p.role.spent + 
     Settings.getNumber("freeInfluence"))))
@@ -256,7 +256,7 @@ function mapPlayerVotes(){
 }
 
 function checkVotes(){
-  let alivePlayers = Players.filter(p => p.bank > 0)
+  let alivePlayers = Players.filter(p => !p.dead)
   Players.distribute(votePool, (p, n) => p.role.influence += n)
   votePool = 0
   sdlog.log[sdlog.log.length - 1].v = mapPlayerVotes()
@@ -574,7 +574,7 @@ function passPolicy(a: number, topCard = false, exit = true){
 
 Game.setPhaseListener(Phase.assassinate, () => {
   Players.setActors(p => p === president)
-  Players.apply(p => p.targetable = p !== president && p.bank > 0)
+  Players.apply(p => p.targetable = p !== president && !p.dead)
 })
 
 Actions.register(Phase.assassinate, (args: ActionArgs) => {
@@ -647,7 +647,7 @@ Actions.register(Phase.peak, (args: ActionArgs) => {
 
 Game.setPhaseListener(Phase.pickPres, () => {
   Players.setActors(p => p === president)
-  Players.apply(p => p.targetable = p !== president && p.bank > 0)
+  Players.apply(p => p.targetable = p !== president && !p.dead)
 })
 
 Actions.register(Phase.pickPres, (args: ActionArgs) => {
@@ -705,14 +705,14 @@ function loot(w: Player[], l: Player[]){
 
 function liberalWin(){
   const fascists = Players.filter(p => p.role.team !== Team.liberal)
-  const liberals = Players.filter(p => p.role.team === Team.liberal && (p.bank > 0 || 
+  const liberals = Players.filter(p => p.role.team === Team.liberal && (!p.dead || 
     gameMode() === "SD"))
   loot(liberals, fascists)
   Actions.log("Liberals Win")
 }
 
 function fascistWin(){
-  const fascists = Players.filter(p => p.role.team !== Team.liberal && (p.bank > 0 || 
+  const fascists = Players.filter(p => p.role.team !== Team.liberal && (!p.dead || 
     gameMode() === "SD"))
   const liberals = Players.filter(p => p.role.team === Team.liberal)
   loot(fascists, liberals)
@@ -728,10 +728,10 @@ function doesDictatorDeathEndGame(){
 
 function onBankUpdate() {
   let aliveLiberalCount = Players.filter(p => p.role.team === Team.liberal &&
-    p.bank > 0).length
+    !p.dead).length
   let aliveFascistCount = Players.filter(p => p.role.team !== Team.liberal &&
-    p.bank > 0).length
-  let dictatorAlive = getDictator().bank > 0
+    !p.dead).length
+  let dictatorAlive = getDictator().!dead
 
   let libWin = aliveFascistCount === 0 || (!dictatorAlive && doesDictatorDeathEndGame())
   let fasWin = aliveLiberalCount === 0

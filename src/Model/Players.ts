@@ -95,10 +95,10 @@ class Players{
     if(filtered.length > 0) filtered.map(action)
   }
   applyLiving(action : (p : Player) => void, condition : (p: Player) => boolean = _ => true){
-    this.apply(action, p => p.bank > 0 && condition(p))
+    this.apply(action, p => !p.dead && condition(p))
   }
   nextLiving(i : number | Player) : number | false{
-    return this.next(i, p => p.bank > 0)
+    return this.next(i, p => !p.dead)
   }
   get(i : number){
     return this.players[i]
@@ -112,7 +112,7 @@ class Players{
     this.apply(p => p.canAct = false, p => !f(p))
   }
   setActors(condition: (p : Player) => boolean){
-    this.apply(p => p.canAct = condition(p) && p.bank > 0)
+    this.apply(p => p.canAct = condition(p) && !p.dead)
   }
   filter(condition: (p: Player) => boolean){
     return this.players.filter(condition)
@@ -124,8 +124,8 @@ class Players{
     return this.filter(condition).length === this.players.length
   }
   allLiving(condition: (p: Player) => boolean){
-    return this.filter(p => p.bank > 0 && condition(p)).length === 
-      this.players.filter(p => p.bank > 0).length
+    return this.filter(p => !p.dead && condition(p)).length === 
+      this.players.filter(p => !p.dead).length
   }
   allDoneActing(){
     return this.allLiving(p => !p.canAct)
@@ -158,7 +158,7 @@ class Players{
   }
 
   distribute(n : number, inc: (p: Player, n: number) => void){
-    let ps = this.filter(p => p.bank > 0)
+    let ps = this.filter(p => !p.dead)
     let d = Math.floor(n / ps.length)
     let l = n % ps.length
     ps.map(p => inc(p, d))
