@@ -38,7 +38,7 @@ function bgc(isUser: boolean, hovered: boolean, selected: boolean){
 }
 
 function Name(args: {p: Player}){
-  let str = args.p.bank === 0 ? "💀 " : ""
+  let str = args.p.dead ? "💀 " : ""
   return <div className = "name">
     {str + args.p.name + (args.p.connected ? "" : " (🔌)")}
   </div>
@@ -68,7 +68,7 @@ function getTextColor(args: PlayerRenderArgs){
 
 //Text color if we are using default font. In this case, we make the active player bold.
 function getTextColorArial(args: PlayerRenderArgs){
-  if(args.p.bank === 0) return "grey"
+  if(args.p.dead) return "grey"
   if(inPoker(args) && !args.p.curHand.folded) return "black"
   if(inPoker(args)) return "grey"
   if(Players.players.filter(p => p.targetable).length > 0){

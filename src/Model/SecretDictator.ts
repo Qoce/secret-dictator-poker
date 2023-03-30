@@ -239,7 +239,7 @@ Actions.register(Phase.vote, (args: ActionArgs) => {
   votePool += cost
   p.canAct = false
   Actions.log([p, " votes",{
-    content: ": " + ["✔️", "❌"][p.role.vote ? 0 : 1] + bought,
+    content: ": " + ["✔️", "❌"][p.role.vote ? 0 : 1] + (bought ? bought : ""),
     visibleTo: Players.players.indexOf(p)
   }])
   if(Players.allDoneActing()) checkVotes()
@@ -268,6 +268,7 @@ function checkVotes(){
   Players.applyLiving(p => {
     let showVoting = Settings.getString("showVoting") 
     Actions.log([p, ': ' + ["✔️", "❌"][p.role.vote ? 0 : 1], 
+      gameMode() !== 'SD' &&
       {
         content: ' ' + p.role.spent,
         visibleTo: showVoting !== "Value" && Players.players.indexOf(p)
@@ -580,15 +581,14 @@ Game.setPhaseListener(Phase.assassinate, () => {
 Actions.register(Phase.assassinate, (args: ActionArgs) => {
   if(args.t === undefined) return false
   let t = Players.get(args.t)
-  t.bank = 0
-  t.role.influence = 0
   sdlog.log.push({
     p: pCandidate,
     c: t,
     a: Phase.assassinate
   })
   Actions.log(["\"", pCandidate, "\"", " assassinates ", t])
-  Players.updateBanks(p => p.bank)
+  Players.updateBanks(p => p.role.influence)
+  t.dead = true
   if(Game.getPhase() !== Phase.endgame) exitSD()
   return true
 })
@@ -695,11 +695,11 @@ function loot(w: Player[], l: Player[]){
     w.forEach(p => p.bank = 1)
   }
   else{
-    const lSum = l.map(p => p.bank).reduce((a,b) => a+b)
+    let totalLooted = w.map(p => Math.ceil(p.bank / 2)).reduce((a,b) => a+b)
     if(w.length > 0){
       l.forEach(p => p.bank = Math.floor(p.bank / 2))
     }
-    w.forEach(p => p.bank += Math.floor(lSum / w.length / 2))
+    Players.distribute(totalLooted, (p, n) => p.bank += n)
   }
 }
 
@@ -731,7 +731,7 @@ function onBankUpdate() {
     !p.dead).length
   let aliveFascistCount = Players.filter(p => p.role.team !== Team.liberal &&
     !p.dead).length
-  let dictatorAlive = getDictator().!dead
+  let dictatorAlive = !getDictator().dead
 
   let libWin = aliveFascistCount === 0 || (!dictatorAlive && doesDictatorDeathEndGame())
   let fasWin = aliveLiberalCount === 0

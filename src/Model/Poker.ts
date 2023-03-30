@@ -249,7 +249,7 @@ function setDM(newDM : number | false){
 }
 
 function dealIndividual(up: boolean, n: number = 1) : void{
-  let inPlayers = Players.filter(p => !p.curHand.folded && !p.dead)
+  let inPlayers = Players.filter(p => !p.curHand.folded && p.bank > 0)
   if(inPlayers.length + (4 - street) > deck.length){
     Actions.log("Not enough cards left in deck - dealing in center")
     dealCenter(n, true)
@@ -331,7 +331,7 @@ function getHand(p: Player){
 
 
 function endHand(log = true) : void{
-  let inPlayers = Players.filter(p => !p.curHand.folded && !p.dead)
+  let inPlayers = Players.filter(p => !p.curHand.folded && p.bank > 0)
   let playerScores = inPlayers.map((p) => {
     let bh = getHand(p)
     return getCardsScore(bh)
@@ -357,14 +357,14 @@ function endHand(log = true) : void{
   for(let player in inPlayers){
     let p = inPlayers[player]
     let pot = 0
-    for(let pi of Players.filter(p => !p.dead)){
+    for(let pi of Players.filter(p => p.bank > 0)){
       pot += Math.min(pi.curHand.equity, p.curHand.equity)
     }
     p.curHand.couldWin = pot
     p.curHand.net = -p.curHand.equity
   }
 
-  for(let player of Players.filter(p => !p.dead && p.curHand.folded)){
+  for(let player of Players.filter(p => p.bank > 0 && p.curHand.folded)){
     player.curHand.net = -player.curHand.equity
   }
 
@@ -469,7 +469,7 @@ function preparePlayer(p : Player) : void{
     net: 0,
     checked: false
   }
-  if(!p.dead) dealPlayerCards(p)
+  if(p.bank > 0) dealPlayerCards(p)
   if(p.bankVision.length === 0) p.bankVision.push(p)
 }
 
@@ -485,13 +485,18 @@ function updateDealer() : void{
 */
 function guaranteedDecision(p : Player) : boolean{
   let h = p.curHand
+  if(p.dead) return false
   if(forced.includes(p) && Players.next(p,couldContinueBetting) !== false) return true
   return !h.folded && h.stack > 0 && (h.amtIn < maxAmtIn || (maxAmtIn === 0 && !h.checked))
 }
 
+/*
+ * If the player has any possiblity of making another deicsion in the hand
+ */
+
 function couldContinueBetting(p: Player): boolean{
   let h = p.curHand
-  return !h.folded && h.stack > 0
+  return !h.folded && h.stack > 0 && !p.dead
 }
 
 /*
