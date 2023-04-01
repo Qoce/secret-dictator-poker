@@ -604,8 +604,8 @@ Actions.register(Phase.assassinate, (args: ActionArgs) => {
     a: Phase.assassinate
   })
   Actions.log(["\"", pCandidate, "\"", " assassinates ", t])
-  Players.updateBanks(p => p.role.influence)
   t.dead = true
+  Players.updateBanks(p => p.role.influence)
   if(Game.getPhase() !== Phase.endgame) exitSD()
   return true
 })
