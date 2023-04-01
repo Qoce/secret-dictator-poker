@@ -48,7 +48,8 @@ class Players{
       bankVision: [],
       connected: true,
       host: this.players.length === 0,
-      dead: false
+      dead: false,
+      deadline: 0
     })
   }
   resetPlayer(p : Player){

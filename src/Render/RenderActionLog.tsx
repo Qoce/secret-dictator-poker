@@ -1,6 +1,5 @@
 import {useState} from 'react'
-import Actions, {logElement, LogContent} from '../Model/Actions'
-import Player from '../Interface/Player'
+import Actions, {LogContent} from '../Model/Actions'
 import react from 'react'
 import Settings from '../Model/Settings'
 

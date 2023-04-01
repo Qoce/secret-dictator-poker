@@ -1,9 +1,10 @@
-import React, {useState} from 'react'
+import React, {useState, useEffect} from 'react'
 import Game from '../Model/Game'
 import Phase from '../Interface/Phase'
 import Player from '../Interface/Player'
 import Players from '../Model/Players'
 import SDData from '../Model/SecretDictator'
+import Actions from '../Model/Actions'
 import Settings, {gameMode} from '../Model/Settings'
 
 //function getBonus(){
@@ -94,6 +95,28 @@ function Bank(args: PlayerRenderArgs){
   return null
 }
 
+function Timer(args: PlayerRenderArgs){
+  const [seconds, setSeconds] = useState(0)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if(args.p.deadline > Date.now()){
+        setSeconds(args.p.deadline - Date.now())
+      }
+      else if(args.p.deadline > 0 && args.p == args.u){
+        Actions.fire({p: Players.players.indexOf(args.p)})
+        setSeconds(0)
+      }
+    }, 10)
+    return () => clearInterval(interval)
+  }, [args.p])
+  if(args.appState !== "inGame") return null
+  if(!Game.getPhaseTimer()) return null
+  if(args.p.deadline === 0) return <div className = "cards"></div>
+  return <div className = "cards" style = {{'textAlign': 'left'}}>
+    {"⏰" + Math.floor(seconds / 1000)}
+  </div>
+}
+
 export interface PlayerRenderArgs{
   p: Player
   u: Player
@@ -107,6 +130,7 @@ export let columns : {idx: number, comp : React.FunctionComponent<PlayerRenderAr
 
 columns.push({idx: 0, comp: Name})
 columns.push({idx: 5, comp: Bank})
+columns.push({idx: -10, comp: Timer})
 
 export default function RenderPlayer(args : PlayerRenderArgs){
   let p = args.p

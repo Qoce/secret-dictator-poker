@@ -12,4 +12,5 @@ export default interface Player {
   connected: boolean
   host: boolean
   dead: boolean
+  deadline: number
 }

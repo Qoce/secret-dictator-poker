@@ -241,6 +241,8 @@ function startHand() : void{
 }
 
 Game.setPhaseListener(Phase.poker, startHand)
+Game.setPhaseTimer(Phase.poker, () => Settings.getBool("pokerTimed") ? 
+  Settings.getNumber("pokerTime") : 0)
 
 function setDM(newDM : number | false){
   Players.setActive(newDM)
@@ -563,7 +565,10 @@ function bet(p : Player, amt : number, f = false) : boolean {
 
   if(amt < p.curHand.stack){
     //reject stud bets outside of the list of options
-    if(!f && isStud() && !studBetOptions(p).includes(amt)) return false
+    if(!f && isStud() && !studBetOptions(p).includes(amt)){
+      if(amt > 0) return false
+      else amt = studBetOptions(p)[0]
+    }
     //reject players undercalling
     if(amt > 0 && p.curHand.amtIn + amt < maxAmtIn) return false
     //reject players raising by less than the previous raise in NL
@@ -634,10 +639,9 @@ function initPoker(){
   dealer = Rng.nextInt(Players.players.length)
   initialized = true
 }
-
 Actions.register(Phase.poker, (args: ActionArgs) => {
-  if(args.v === undefined) return false
-  return bet(Players.get(args.p), args.v, false)
+  let betAmt = args.v ? args.v : 0
+  return bet(Players.get(args.p), betAmt, false)
 })
 
 

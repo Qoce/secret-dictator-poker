@@ -30,6 +30,17 @@ let a = {
   fire(args: ActionArgs){
     this.socket.emit("action", this.lobby, args)
   },
+  setTimer(){
+    let timer = Game.getPhaseTimer()
+    if(timer) {
+      for(let player of Players.filter(p => p.canAct)){
+        player.deadline = Date.now() + timer * 1000 
+      }
+      for(let player of Players.filter(p => !p.canAct)){
+        player.deadline = 0
+      }
+    }
+  },
   clearHistory(){
     actionHistory = []
     actionLog = [[]]
@@ -60,6 +71,7 @@ let a = {
         }
       }
     }
+    this.setTimer()
     this.onAction()
   },
   reset(){
