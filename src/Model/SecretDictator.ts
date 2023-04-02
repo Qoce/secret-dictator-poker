@@ -300,7 +300,10 @@ function checkVotes(){
         dictatorElected = true
         Actions.log({content: [chancellor, " is the dictator"], 
           visibleTo: getFascistPlayers()})
-          startBribePhase()
+          if(fPassed < 6)
+            startBribePhase()
+          else
+            fascistWin()
       }
     }
     else startBribePhase()
