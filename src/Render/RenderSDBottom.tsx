@@ -61,8 +61,8 @@ function Votes(args: RenderPhaseArgs){
   maxSpendable -= 2
   let influenceSlider = gameMode() === "SDP" && <div className = "board-row">
   <div  className = "frak"> {Settings.getNumber('freeInfluence') + " + "}</div>
-    <input className = "textInput" type = 'number' min = {0} max = {maxSpendable}
-      onChange = {(event) => setInfluence(+event.target.value)}/>
+    <input className = "textInput" type = 'number' step = {1} min = {0} max = {maxSpendable}
+      onChange = {(event) => setInfluence(Math.floor(+event.target.value))}/>
   </div>
   if(p.canAct){
     return <div className = "center">
@@ -84,8 +84,8 @@ function Bribe(args: RenderPhaseArgs){
   if(p.canAct){
     return <div>
     <div>
-      <input className = "textInput" type = 'number' min = {0} max = {p.role.influence}
-        onChange = {(event) => setInfluence(+event.target.value)}/>
+      <input className = "textInput" type = 'number' step = {1} min = {0} max = {p.role.influence}
+        onChange = {(event) => setInfluence(Math.floor(+event.target.value))}/>
     </div>
       <button className = "button" onClick = {() => {
         Actions.fire({

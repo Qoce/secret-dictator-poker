@@ -725,16 +725,14 @@ function loot(w: Player[], l: Player[]){
 
 function liberalWin(){
   const fascists = Players.filter(p => p.role.team !== Team.liberal)
-  const liberals = Players.filter(p => p.role.team === Team.liberal && (!p.dead || 
-    gameMode() === "SD"))
+  const liberals = Players.filter(p => p.role.team === Team.liberal)
   loot(liberals, fascists)
   Actions.log("Liberals Win")
   exitSD(Phase.endgame, false)
 }
 
 function fascistWin(){
-  const fascists = Players.filter(p => p.role.team !== Team.liberal && (!p.dead || 
-    gameMode() === "SD"))
+  const fascists = Players.filter(p => p.role.team !== Team.liberal)
   const liberals = Players.filter(p => p.role.team === Team.liberal)
   loot(fascists, liberals)
   Actions.log("Fascists Win")

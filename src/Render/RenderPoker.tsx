@@ -159,12 +159,12 @@ function PokerAction(args: RenderPhaseArgs){
         let limit = getBetLimit(user)
         let maxBet = Math.min(stack, limit)
         input = <div className = "board-row">
-          <input className = "textInput" type = 'number' min = {0} max = {maxBet} 
+          <input className = "textInput" type = 'number' step = {1} min = {0} max = {maxBet} 
             value = {betAmt}
             onChange = {(event) => {
-              return setBetAmt(+event.target.value)
+              return setBetAmt(Math.floor(+event.target.value))
             }}/>
-          {Button(betAmt)}
+          {Button(betAmt, false)}
         </div>
       }
     }
