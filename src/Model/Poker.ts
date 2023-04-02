@@ -251,7 +251,7 @@ function setDM(newDM : number | false){
 }
 
 function dealIndividual(up: boolean, n: number = 1) : void{
-  let inPlayers = Players.filter(p => !p.curHand.folded && p.bank > 0)
+  let inPlayers = Players.filter(p => !p.curHand.folded && !p.dead)
   if(inPlayers.length + (4 - street) > deck.length){
     Actions.log("Not enough cards left in deck - dealing in center")
     dealCenter(n, true)
@@ -333,7 +333,7 @@ function getHand(p: Player){
 
 
 function endHand(log = true) : void{
-  let inPlayers = Players.filter(p => !p.curHand.folded && p.bank > 0)
+  let inPlayers = Players.filter(p => !p.curHand.folded && !p.dead)
   let playerScores = inPlayers.map((p) => {
     let bh = getHand(p)
     return getCardsScore(bh)
@@ -359,14 +359,14 @@ function endHand(log = true) : void{
   for(let player in inPlayers){
     let p = inPlayers[player]
     let pot = 0
-    for(let pi of Players.filter(p => p.bank > 0)){
+    for(let pi of Players.filter(p => !p.dead)){
       pot += Math.min(pi.curHand.equity, p.curHand.equity)
     }
     p.curHand.couldWin = pot
     p.curHand.net = -p.curHand.equity
   }
 
-  for(let player of Players.filter(p => p.bank > 0 && p.curHand.folded)){
+  for(let player of Players.filter(p => !p.dead && p.curHand.folded)){
     player.curHand.net = -player.curHand.equity
   }
 
@@ -471,7 +471,7 @@ function preparePlayer(p : Player) : void{
     net: 0,
     checked: false
   }
-  if(p.bank > 0) dealPlayerCards(p)
+  if(!p.dead) dealPlayerCards(p)
   if(p.bankVision.length === 0) p.bankVision.push(p)
 }
 
