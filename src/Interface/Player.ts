@@ -13,4 +13,5 @@ export default interface Player {
   host: boolean
   dead: boolean
   deadline: number
+  timerCount: number
 }

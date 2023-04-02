@@ -49,7 +49,8 @@ class Players{
       connected: true,
       host: this.players.length === 0,
       dead: false,
-      deadline: 0
+      deadline: 0,
+      timerCount: 0
     })
   }
   resetPlayer(p : Player){
@@ -111,6 +112,7 @@ class Players{
     let f = condition as (p: Player) => boolean
     this.apply(p => p.canAct = true, f)
     this.apply(p => p.canAct = false, p => !f(p))
+    Actions.updateTimers()
   }
   setActors(condition: (p : Player) => boolean){
     this.apply(p => p.canAct = condition(p) && !p.dead)

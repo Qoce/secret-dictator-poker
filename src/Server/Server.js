@@ -88,6 +88,8 @@ io.on('connection', (socket) => {
       password: lobby.password,
       players: [lobby.username],
       connected: [true],
+      //[a,b], where a is the id and b is the timestamp of timer start
+      timers: [null],
       inGame: false,
       seed: Math.floor(Math.random() * 1000000),
       actions: [],
@@ -115,6 +117,7 @@ io.on('connection', (socket) => {
           if(idx === -1){
             l.players.push(lobby.username)
             l.connected.push(true)
+            l.timers.push(null)
             socket.to(l.name).emit('updateLobby', l)
             if(l.players.length == 10){
               updateLobbies()
@@ -156,7 +159,6 @@ io.on('connection', (socket) => {
       l.inGame = true
       //TODO, randomize player order?
       io.sockets.in(l.name).emit('startGame', l)
-    //  callback(l)
     }
   })
   socket.on('action', (lobby, action) => {
@@ -165,6 +167,22 @@ io.on('connection', (socket) => {
       l.actions.push(action)
       io.sockets.in(l.name).emit('updateGame', l)
     } 
+  })
+  socket.on('setTimer', (lobby, player, timer, timerIdx) => {
+    const l = lobbies.find(l => l.name === lobby)
+    console.log("here-1")
+    if(l){
+      let oldT = l.timers[player]
+      if(!oldT || oldT[0] < timerIdx) {
+        l.timers[player]= [timerIdx, timer]
+      }
+    }
+  })
+  socket.on('getTimer', (lobby, player, callback) => {
+    const l = lobbies.find(l => l.name === lobby)
+    if(l && l.timers[player] && l.timers[player].length == 2){
+      callback(l.timers[player][1])
+    }
   })
   socket.on('rollback', (lobby, n) => {
     const l = lobbies.find(l => l.name === lobby)

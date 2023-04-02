@@ -4,7 +4,7 @@ import Players from "./Players"
 import Phase from "../Interface/Phase"
 import Game from "./Game"
 import Rng from "./Rng"
-import {gameMode} from "./Settings"
+import settings, {gameMode} from "./Settings"
 
 export type LogContent = false | string | JSX.Element | Player | logElement
 let actions = new Map<Phase, (args: ActionArgs) => boolean>() //{[key in Phase]: (args: ActionArgs) => boolean}
@@ -20,7 +20,7 @@ export interface logElement{
 let a = {
   startingSeed: 0,
   socket: undefined as any,
-  lobby: undefined as any,
+  lobby: undefined as string | undefined,
   onAction(){},
   onReset: [] as (() => void)[],
   register(phase: Phase, action: (args: ActionArgs) => boolean){
@@ -30,14 +30,20 @@ let a = {
   fire(args: ActionArgs){
     this.socket.emit("action", this.lobby, args)
   },
-  setTimer(){
+  updateTimers(){
     let timer = Game.getPhaseTimer()
     if(timer) {
       for(let player of Players.filter(p => p.canAct)){
-        player.deadline = Date.now() + timer * 1000 
+        if(this.socket){
+          this.socket.emit("setTimer", this.lobby, Players.players.indexOf(player), 
+          Date.now() + timer * 1000, ++player.timerCount)
+        }
       }
       for(let player of Players.filter(p => !p.canAct)){
-        player.deadline = 0
+        if(this.socket){
+          this.socket.emit("setTimer", this.lobby, Players.players.indexOf(player), 
+          0, ++player.timerCount)
+        }
       }
     }
   },
@@ -68,7 +74,13 @@ let a = {
         }
       }
     }
-    this.onAction()
+
+    for(let i = 0; i < Players.players.length; i++){
+      this.socket.emit("getTimer", this.lobby, i, (t : number) => {
+        Players.get(i).deadline = t
+        this.onAction()
+      })
+    }
   },
   log(emts : (LogContent)[] | (LogContent)){
     if(!Array.isArray(emts)) emts = [emts]
@@ -95,6 +107,6 @@ let a = {
   }
 }
 
-Game.onPhaseChange = a.setTimer
+Game.onPhaseChange = () => a.updateTimers()
 
 export default a
