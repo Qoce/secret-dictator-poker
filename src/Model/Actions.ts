@@ -68,7 +68,6 @@ let a = {
         }
       }
     }
-    this.setTimer()
     this.onAction()
   },
   log(emts : (LogContent)[] | (LogContent)){
@@ -95,5 +94,7 @@ let a = {
     }
   }
 }
+
+Game.onPhaseChange = a.setTimer
 
 export default a
