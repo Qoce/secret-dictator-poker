@@ -111,7 +111,10 @@ function Timer(args: PlayerRenderArgs){
   }, [args.p])
   if(args.appState !== "inGame") return null
   if(!Game.getPhaseTimer()) return null
-  if(args.p.deadline === 0) return <div className = "cards"></div>
+  if(args.p.deadline === 0 || (getBoldness(args.p) === 'normal'
+    && args.p !== args.u)) {
+    return <div className = "cards"></div>
+  }
   return <div className = "cards" style = {{'textAlign': 'left'}}>
     {"⏰" + Math.floor(seconds / 1000)}
   </div>
