@@ -102,13 +102,13 @@ function Timer(args: PlayerRenderArgs){
       if(args.p.deadline > Date.now()){
         setSeconds(args.p.deadline - Date.now())
       }
-      else if(args.p.deadline > 0 && args.p == args.u){
+      else if(args.p.deadline > 0 && args.p === args.u){
         Actions.fire({p: Players.players.indexOf(args.p)})
         setSeconds(0)
       }
     }, 10)
     return () => clearInterval(interval)
-  }, [args.p])
+  }, [args.p, args.u])
   if(args.appState !== "inGame") return null
   if(!Game.getPhaseTimer()) return null
   if(args.p.deadline === 0 || (getBoldness(args.p) === 'normal'

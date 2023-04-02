@@ -41,11 +41,7 @@ let a = {
       }
     }
   },
-  clearHistory(){
-    actionHistory = []
-    actionLog = [[]]
-  },
-  resimulate(upTo : number = actionHistory.length){
+  reset(){
     Rng.setSeed(this.startingSeed)
     Players.reset()
     this.onReset.forEach(f => f())
@@ -55,8 +51,9 @@ let a = {
     //TODO: this should be moved... this code should work outside of this specific game
     if(gameMode() !== "P") Game.setPhase(Phase.nominate)
     if(gameMode() !== "SD") Game.setPhase(Phase.poker)
-
-    for(let i in actionHistory){
+  },
+  resimulate(from: number = 0, upTo: number = actionHistory.length){
+    for(let i = from; i < actionHistory.length; i++){
       if(+i >= upTo) {
         actionLog.splice(upTo + 1)
         break
@@ -74,10 +71,6 @@ let a = {
     this.setTimer()
     this.onAction()
   },
-  reset(){
-    this.clearHistory()
-    this.resimulate()
-  },
   log(emts : (LogContent)[] | (LogContent)){
     if(!Array.isArray(emts)) emts = [emts]
     actionLog[actionLog.length - 1].push(emts)
@@ -86,8 +79,20 @@ let a = {
     return actionLog
   },
   loadActions(actions : ActionArgs[]){
-    actionHistory = actions
-    this.resimulate()
+    //If actionHistory is not equal to the start of actions fully resimulate
+    if(actions.length <= actionHistory.length || !actionHistory.every(
+      (val, idx) => val.p === actions[idx].p && val.t === actions[idx].t &&
+        val.v === actions[idx].v
+    )){
+      actionHistory = actions
+      this.reset()
+      this.resimulate()
+    }
+    else{
+      let n = actionHistory.length
+      actionHistory = actions
+      this.resimulate(n)
+    }
   }
 }
 

@@ -169,9 +169,7 @@ class Players{
         inc(p,1)
       }
       l--
-      console.log(p.name)
     }
-    console.log(this.players.map(p => p.role.influence).reduce((a,b) => a + b, 0))
   }
   onBankUpdate(){}
 }
