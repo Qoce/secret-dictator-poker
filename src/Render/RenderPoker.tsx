@@ -15,7 +15,7 @@ function Center(){
     <div className = "cards">
       {"Center:"}
     </div>
-    <div className = "cards" style = {{width: "172px"}}>
+    <div className = "cards cleanFont" style = {{width: "172px"}}>
       {PokerState().center.map(getCardString)}
     </div>
   </div>
@@ -25,7 +25,7 @@ function Center(){
       <div className = "cards">
         {"Pot:"}
       </div>
-      <div className = "cards">
+      <div className = "cards cleanFont">
         {PokerState().pot}
       </div>
     </div>
@@ -56,7 +56,7 @@ function BetButton(args: {amt: number, callCost: number, stack: number, p: numbe
   if(args.amt === args.stack){
     str += " All In"
   }
-  return <button className = "button" onClick = {() => {fire(args.amt)}} 
+  return <button className = "button cleanFont" onClick = {() => {fire(args.amt)}} 
     disabled = {!args.enabled && (args.amt > 0 && args.amt !== args.callCost) && 
       (args.amt < args.callCost + PokerState().minRaise || 
       args.amt > Math.min(getBetLimit(Players.get(args.p)), args.stack))}>
@@ -159,7 +159,7 @@ function PokerAction(args: RenderPhaseArgs){
         let limit = getBetLimit(user)
         let maxBet = Math.min(stack, limit)
         input = <div className = "board-row">
-          <input className = "textInput" type = 'number' step = {1} min = {0} max = {maxBet} 
+          <input className = "textInput cleanFont" type = 'number' step = {1} min = {0} max = {maxBet} 
             value = {betAmt}
             onChange = {(event) => {
               return setBetAmt(Math.floor(+event.target.value))

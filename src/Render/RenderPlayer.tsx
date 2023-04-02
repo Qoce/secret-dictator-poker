@@ -81,7 +81,7 @@ function getTextColorArial(args: PlayerRenderArgs){
 //Display a number if the player has bank vision on the user
 export function BankVision(args: PlayerRenderArgs, n: number){
   if(args.appState !== "inGame") return null
-  return <div className = "cards">
+  return <div className = "cards cleanFont">
     {((args.u.bankVision.includes(args.p) && Settings.getString("investigationPower") !== "Role")
     || Game.getPhase() === Phase.endgame || args.u === args.p)
     && n}

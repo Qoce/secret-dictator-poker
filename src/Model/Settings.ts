@@ -133,7 +133,7 @@ settings.register("debugActionLog", {value: false, name: "Show Hidden Actions", 
 })
 
 settings.register("font", {value: true, name: "Fraktur", local: true, onChange: (value: boolean) => {
-  const newFont = value ? "UnifrakturCook" : "Arial"
+  const newFont = value ? "UnifrakturCook" : "Helvetica"
   document.documentElement.style.setProperty('--main-font', newFont)
   refresh()
 }})

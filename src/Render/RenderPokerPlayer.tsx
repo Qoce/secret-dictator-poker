@@ -38,14 +38,14 @@ function getBlindString(p: Player){
 function PokerPosition(args: PlayerRenderArgs){
   if(!inPoker(args)) return null
   if(isStud()) return null
-  return <div className = "square">
+  return <div className = "square cleanFont">
     {getBlindString(args.p)}
   </div>
 }
 
 function AmtIn(args: PlayerRenderArgs){
   if(!inPoker(args)) return null
-  return <div className = "cards">
+  return <div className = "cards cleanFont">
     {args.p.curHand.amtIn}
   </div>
 }
@@ -65,7 +65,7 @@ function Cards(args: PlayerRenderArgs){
     const show = args.p === args.u || (
       Settings.getString("investigationPower") === "Role + Bank + Cards" &&
       args.u.bankVision.includes(args.p))
-    return <div className = "cards" style = {{width: (40 * getDownCards()+ 22) + "px"}}>
+    return <div className = "cards cleanFont" style = {{width: (40 * getDownCards()+ 22) + "px"}}>
       {show ? args.p.curHand.hand.map(getCardString) : null}
     </div>
   }

@@ -210,6 +210,10 @@
   user-select: none;
 }
 
+.cleanFont {
+  font-family: 'Helvetica';
+}
+
 .bonus {
   float: left;
   font-size: 27px;
