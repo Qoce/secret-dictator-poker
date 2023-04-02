@@ -30,7 +30,7 @@ let settings = {
   set(key : string, value : number | boolean | string, socket : SocketIO.Socket | undefined = undefined, lobby : string | undefined = undefined){
     let s = this.settings.get(key) 
     if(s !== undefined){
-      if(typeof s.value === "number"){
+      if(typeof s.value === "number" && typeof value === "number"){
         if(value < (s.min || 0)) value = s.min || 0
         if(value > (s.max || 1e6)) value = s.max || 1e6
       }
@@ -43,7 +43,6 @@ let settings = {
         socket.emit('changeSetting', lobby, key, value)
       }
       else{
-        
         s.value = value
       }
     }
@@ -75,8 +74,6 @@ settings.register("gameMode", {value: "SDP", name: "Game Mode", values:
 //SDP Only
 settings.register("freeInfluence", {value: 1, name: "Free Influence",
   visibleIf: () => settings.getString("gameMode") === "SDP"})
-settings.register("ecoBase", {value: 1, name: "Passive Income",
-visibleIf: () => settings.getString("gameMode") === "SDP"})
 settings.register("investigationPower", {value: "Role", name: "Investigation Power", 
   values: ["Role", "Role + Bank", "Role + Bank + Cards"],
   visibleIf: () => settings.getString("gameMode") === "SDP"})
@@ -101,8 +98,12 @@ visibleIf: () => settings.getString("gameMode") !== "P"})
 settings.register("dictatorWin", {value: "Classic", name: "Dictator Win Rule",
   values: ["Classic", "No Dictator Win", "Dictator Election Required"],
   visibleIf: () => settings.getString("gameMode") !== "P"})
+settings.register("sdTimed", {value: false, name: "Timed Secret Dictator",
+  visibleIf: () => settings.getString("gameMode") !== "P"})
+settings.register("sdTime", {value: 60, name: "Secret Dictator Time Limit", min: 1, max: 3000,
+  visibleIf: () => settings.getBool("sdTimed") && settings.getString("gameMode") !== "P"})
 
-
+//P
 settings.register("pokerType", {value: "Texas Hold'em", name: "Poker Variant",
   values: ["Texas Hold'em", "Omaha",/* "5 Card Draw",*/ "7 Card Stud"],
   visibleIf: () => settings.getString("gameMode") !== "SD"})
@@ -120,8 +121,10 @@ settings.register("bet", {value: 4, name: "Small Bet",
   visibleIf: () => settings.getString("pokerType") === "7 Card Stud" &&
   settings.getString("gameMode") !== "SD"
 })
-
-
+settings.register("pokerTimed", {value: false, name: "Timed Poker", visibleIf:
+  () => settings.getString("gameMode") !== "SD"})
+settings.register("pokerTime", {value: 30, name: "Poker Time Limit", min: 1, max: 120,
+  visibleIf: () => settings.getBool("pokerTimed") && settings.getString("gameMode") !== "SD"})
 
 
 settings.register("debug", {value: false, name: "Debug Mode"})

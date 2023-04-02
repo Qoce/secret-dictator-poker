@@ -6,13 +6,14 @@ import Game from "./Game"
 import Rng from "./Rng"
 import {gameMode} from "./Settings"
 
+export type LogContent = false | string | JSX.Element | Player | logElement
 let actions = new Map<Phase, (args: ActionArgs) => boolean>() //{[key in Phase]: (args: ActionArgs) => boolean}
 let actionHistory : ActionArgs[] = []
-let actionLog : (string | JSX.Element | Player | logElement)[][][] = [[]]
+let actionLog : (LogContent)[][][] = [[]]
 
 export interface logElement{
   visibleTo: number[] | number | false
-  content: string | JSX.Element | Player | logElement | (string | JSX.Element | Player | logElement)[]
+  content: LogContent | (LogContent)[]
   delayed?: boolean
 }
 
@@ -28,6 +29,17 @@ let a = {
   },
   fire(args: ActionArgs){
     this.socket.emit("action", this.lobby, args)
+  },
+  setTimer(){
+    let timer = Game.getPhaseTimer()
+    if(timer) {
+      for(let player of Players.filter(p => p.canAct)){
+        player.deadline = Date.now() + timer * 1000 
+      }
+      for(let player of Players.filter(p => !p.canAct)){
+        player.deadline = 0
+      }
+    }
   },
   clearHistory(){
     actionHistory = []
@@ -59,13 +71,14 @@ let a = {
         }
       }
     }
+    this.setTimer()
     this.onAction()
   },
   reset(){
     this.clearHistory()
     this.resimulate()
   },
-  log(emts : (string | JSX.Element | Player | logElement)[] | (string | JSX.Element | Player | logElement)){
+  log(emts : (LogContent)[] | (LogContent)){
     if(!Array.isArray(emts)) emts = [emts]
     actionLog[actionLog.length - 1].push(emts)
   },

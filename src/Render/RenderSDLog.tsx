@@ -1,4 +1,4 @@
-import {Policy, sdlog, SDLogElement} from '../Model/SecretDictator'
+import {sdlog, SDLogElement} from '../Model/SecretDictator'
 import {getPhaseIcon} from "./RenderSDHeader"
 import {colorPolicy} from '../Render/SDUtils'
 import Settings, {gameMode} from "../Model/Settings"

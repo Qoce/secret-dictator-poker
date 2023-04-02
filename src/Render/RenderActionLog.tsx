@@ -1,6 +1,5 @@
 import {useState} from 'react'
-import Actions, {logElement} from '../Model/Actions'
-import Player from '../Interface/Player'
+import Actions, {LogContent} from '../Model/Actions'
 import react from 'react'
 import Settings from '../Model/Settings'
 
@@ -18,8 +17,9 @@ export default function ActionLog(args: {p: number, height: number, socket: any,
   </div>
 }
 
-function renderContent(c: string | JSX.Element | Player | logElement, p: number, k: number) : JSX.Element | JSX.Element[]{ 
+function renderContent(c: LogContent, p: number, k: number) : JSX.Element | JSX.Element[]{ 
   if(typeof c === "string") return <span key = {k}>{c}</span>
+  if(!c) return <react.Fragment key={k}>{c}</react.Fragment>
   if("content" in c && "visibleTo" in c){
     const d = c as {content: string, visibleTo: number | number[] | boolean}
     const vt = d.visibleTo
@@ -34,7 +34,7 @@ function renderContent(c: string | JSX.Element | Player | logElement, p: number,
   return <react.Fragment key={k}>{c}</react.Fragment>
 }
 
-function arrayify(c: string | JSX.Element | Player | logElement | (string | JSX.Element | Player | logElement)[]) : (string | JSX.Element | Player | logElement)[]{
+function arrayify(c: LogContent | (LogContent)[]) : (LogContent)[]{
   if(Array.isArray(c)) return c
   return [c]
 }
