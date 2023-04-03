@@ -715,11 +715,12 @@ function loot(w: Player[], l: Player[]){
     w.forEach(p => p.bank = 1)
   }
   else{
-    let totalLooted = w.map(p => Math.ceil(p.bank / 2)).reduce((a,b) => a+b)
+    let totalLooted = l.map(p => Math.ceil(p.bank / 2)).reduce((a,b) => a+b)
     if(w.length > 0){
       l.forEach(p => p.bank = Math.floor(p.bank / 2))
     }
-    Players.distribute(totalLooted, (p, n) => p.bank += n)
+    Players.distribute(totalLooted, (p, n) => p.bank += n,
+      p => w.includes(p))
   }
 }
 

@@ -160,8 +160,8 @@ class Players{
     this.onBankUpdate()
   }
 
-  distribute(n : number, inc: (p: Player, n: number) => void){
-    let ps = this.filter(p => !p.dead)
+  distribute(n : number, inc: (p: Player, n: number) => void, to: (p: Player) => boolean = _ => true){
+    let ps = this.filter(p => !p.dead && to(p))
     let d = Math.floor(n / ps.length)
     let l = n % ps.length
     ps.map(p => inc(p, d))
