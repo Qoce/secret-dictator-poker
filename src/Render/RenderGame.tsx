@@ -5,6 +5,7 @@ import getSDState from '../Model/SecretDictator'
 import Lobby from '../Interface/Lobby'
 import Phase from '../Interface/Phase'
 import Player from './RenderPlayer'
+import PlayerType from '../Interface/Player'
 import Players from '../Model/Players'
 import React, {useCallback, useEffect, useState} from 'react'
 import RenderJoinLobby from "./RenderJoinLobby"
@@ -59,6 +60,10 @@ socket.on('updateConnected', (l: boolean[]) => updateConnectedCallback(l))
 
 Actions.socket = socket
 
+socket.on("updateTimer", (t: number[]) => {
+  Players.players.map((p: PlayerType, i: number) => p.deadline = t[i])
+  Actions.onAction()
+})
 export default function SDP(){
   let sel : undefined | number
   const [selected,setSelected] = useState(sel)

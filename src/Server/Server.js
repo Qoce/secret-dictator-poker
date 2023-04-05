@@ -170,18 +170,20 @@ io.on('connection', (socket) => {
   })
   socket.on('setTimer', (lobby, player, timer, timerIdx) => {
     const l = lobbies.find(l => l.name === lobby)
-    console.log("here-1")
+    let updatedAny = false
     if(l){
       let oldT = l.timers[player]
       if(!oldT || oldT[0] < timerIdx) {
         l.timers[player]= [timerIdx, timer]
+        updatedAny = true
       }
     }
+    if(updatedAny) io.sockets.in(l.name).emit('updateTimer', l.timers.map(x => x ? x[1] : null))
   })
-  socket.on('getTimer', (lobby, player, callback) => {
+  socket.on('getTimers', (lobby, callback) => {
     const l = lobbies.find(l => l.name === lobby)
-    if(l && l.timers[player] && l.timers[player].length == 2){
-      callback(l.timers[player][1])
+    if(l){
+      callback(l.timers.map(x => x ? x[1] : null))
     }
   })
   socket.on('rollback', (lobby, n) => {

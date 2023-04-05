@@ -74,13 +74,6 @@ let a = {
         }
       }
     }
-
-    for(let i = 0; i < Players.players.length; i++){
-      this.socket.emit("getTimer", this.lobby, i, (t : number) => {
-        Players.get(i).deadline = t
-        this.onAction()
-      })
-    }
   },
   log(emts : (LogContent)[] | (LogContent)){
     if(!Array.isArray(emts)) emts = [emts]
@@ -90,6 +83,7 @@ let a = {
     return actionLog
   },
   loadActions(actions : ActionArgs[]){
+    let wasEmpty = actionHistory.length === 0
     //If actionHistory is not equal to the start of actions fully resimulate
     if(actions.length <= actionHistory.length || !actionHistory.every(
       (val, idx) => val.p === actions[idx].p && val.t === actions[idx].t &&
@@ -104,6 +98,10 @@ let a = {
       actionHistory = actions
       this.resimulate(n)
     }
+    if(wasEmpty) this.socket.emit("getTimers", this.lobby, (ts: number[]) => {
+      Players.players.map((p: Player, i : number) => p.deadline = ts[i])
+      this.onAction()
+    })
   }
 }
 
