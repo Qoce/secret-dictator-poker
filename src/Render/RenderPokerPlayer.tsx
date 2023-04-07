@@ -1,3 +1,4 @@
+import {classWidths} from "../Utils/CSSRef"
 import Game from "../Model/Game"
 import Phase from "../Interface/Phase"
 import Player from "../Interface/Player"
@@ -83,8 +84,8 @@ function UpCards(args: PlayerRenderArgs){
 
   
 
-columns.push({idx: -5, comp: PokerPosition})
-columns.push({idx: 5, comp: AmtIn})
-columns.push({idx: 10, comp: Stack})
-columns.push({idx: 15, comp: Cards})
-columns.push({idx: 20, comp: UpCards})
+columns.push({idx: -5, comp: PokerPosition, width: classWidths['square']})
+columns.push({idx: 5, comp: AmtIn, width: classWidths['cards']})
+columns.push({idx: 10, comp: Stack, width: classWidths['cards']})
+columns.push({idx: 15, comp: Cards, width: classWidths['cards']})
+columns.push({idx: 20, comp: UpCards, width: 160})

@@ -1,3 +1,4 @@
+import {classWidths} from '../Utils/CSSRef'
 import React, {useState, useEffect} from 'react'
 import Game from '../Model/Game'
 import Phase from '../Interface/Phase'
@@ -33,7 +34,7 @@ import Settings, {gameMode} from '../Model/Settings'
 //}
 
 function bgc(isUser: boolean, hovered: boolean, selected: boolean){
-  if(isUser) return "hsl(" + SDData().bg + ",100%,40%)"
+  if(isUser && Settings.getBool("debug")) return "hsl(" + SDData().bg + ",100%,40%)"
   else if(hovered) return "hsl(" + SDData().bg + ",80%,60%)"
   else if(selected) return "hsl(" + SDData().bg + ",80%,60%)"
 }
@@ -129,19 +130,28 @@ export interface PlayerRenderArgs{
   appState: "browsing" | "joining" | "inLobby" | "inGame" 
 }
 
-export let columns : {idx: number, comp : React.FunctionComponent<PlayerRenderArgs>}[] = []
+export let columns : {idx: number, comp : React.FunctionComponent<PlayerRenderArgs>,
+  width: number}[] = []
 
-columns.push({idx: 0, comp: Name})
-columns.push({idx: 5, comp: Bank})
-columns.push({idx: -10, comp: Timer})
+columns.push({idx: 0, comp: Name, width: classWidths['name']})
+columns.push({idx: 5, comp: Bank, width: classWidths['cards']})
+columns.push({idx: -10, comp: Timer, width: classWidths['cards']})
 
 export default function RenderPlayer(args : PlayerRenderArgs){
   let p = args.p
   let selected = args.selected
   const [hovered, setHovered] = useState(false)
-
+  let i = 0
+  let leftWidth = 0
+  let rightWidth = 0
+  for(let c of columns){
+    if(c.comp(args) === null) continue
+    if(c.idx < 0) leftWidth += c.width - 1
+    else if(c.idx > 0) rightWidth += c.width - 1
+  }
+  console.log(leftWidth, rightWidth)
   return <div className = "board-row" 
-    style = {{fontWeight: getBoldness(p), 
+    style = {{fontWeight: getBoldness(p), marginLeft: rightWidth - leftWidth + "px",
       backgroundColor: bgc(args.u === args.p, hovered, selected), color: getTextColor(args)}}
     onMouseEnter = {() => {if(p.targetable && args.u.canAct) setHovered(true)}}
     onMouseLeave = {() => {if(p.targetable && args.u.canAct) setHovered(false)}}
@@ -153,10 +163,10 @@ export default function RenderPlayer(args : PlayerRenderArgs){
         args.setUser()
       }
     }}
-  >
-    {columns.sort((a, b) => a.idx - b.idx).map((c, _) => React.createElement(
-      c.comp, args
-    ))}
-  </div>
+    >
+      {columns.sort((a, b) => a.idx - b.idx).map((c, _) => React.createElement(
+        c.comp, args
+      ))}
+    </div>
 }
 

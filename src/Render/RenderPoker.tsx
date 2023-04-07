@@ -15,7 +15,7 @@ function Center(){
     <div className = "cards">
       {"Center:"}
     </div>
-    <div className = "cards cleanFont" style = {{width: "172px"}}>
+    <div className = "cards cleanFont" style = {{width: "200px"}}>
       {PokerState().center.map(getCardString)}
     </div>
   </div>

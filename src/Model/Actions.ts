@@ -98,6 +98,7 @@ let a = {
       actionHistory = actions
       this.resimulate(n)
     }
+    this.onAction()
     if(wasEmpty) this.socket.emit("getTimers", this.lobby, (ts: number[]) => {
       Players.players.map((p: Player, i : number) => p.deadline = ts[i])
       this.onAction()

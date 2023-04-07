@@ -1,3 +1,4 @@
+import {classWidths} from '../Utils/CSSRef'
 import {sdlog, SDLogElement} from '../Model/SecretDictator'
 import {getPhaseIcon} from "./RenderSDHeader"
 import {colorPolicy} from '../Render/SDUtils'
@@ -75,4 +76,4 @@ function RenderPlayerVotes(args: PlayerRenderArgs){
   return <div className = "square">{str}</div>
 }
 
-columns.push({idx: -15, comp: RenderPlayerVotes})
+columns.push({idx: -15, comp: RenderPlayerVotes, width: classWidths['square']})
