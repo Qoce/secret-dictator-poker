@@ -8,6 +8,7 @@ export function SettingsRender(props:
   const stngs : any[] = []
   Settings.settings.forEach((val, key) => {
     if(val.local) return
+    if(val.hostOnly && !props.isHost) return
     stngs.push(RenderSetting(key, props))
   })
   let playersNeeded = gameMode() === "P" ? 2 : 5

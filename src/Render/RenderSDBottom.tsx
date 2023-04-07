@@ -174,7 +174,7 @@ function Policies(args: PolicyArgs){
 
   return <div className = "center">
     <div className = "board-row">
-      {indicies.map(i => <PolicySquare key = {i} team = {policies[i]} selectable = {args.selectable}
+      {indicies.map(i => <PolicySquare key = {i} policy = {policies[i]} selectable = {args.selectable}
         selected = {selections[i]} setSelected = {(s: boolean) => {
           selections[i] = s
           //sets selections to copy of itself

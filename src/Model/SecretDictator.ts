@@ -25,7 +25,7 @@ let SDPhases = [Phase.assassinate, Phase.bribe, Phase.chanBribe, Phase.chancello
  Phase.pickPres, Phase.veto, Phase.vote]
 
 export enum Policy{
-  liberal, fascist
+  liberal, fascist, libertarian
 }
 
 export interface SDLogElement {
@@ -55,6 +55,7 @@ let discard : Policy[] = []
 let activePolicies : Policy[] = []
 let lPassed = 0
 let fPassed = 0
+let libertarianPassed = 0
 let initalized = false
 let dictatorElected = false
 let vetoOverriden = false
@@ -69,6 +70,7 @@ export function initSD(){
   activeBriber = undefined
   lPassed = 0
   fPassed = 0
+  libertarianPassed = 0
   president = undefined
   chancellor = undefined
   lastElectedPresident = undefined
@@ -126,6 +128,7 @@ export function initSD(){
 
   policyDeck = Array(Settings.getNumber("fPolicyCount")).fill(Policy.fascist)
     .concat(Array(Settings.getNumber("lPolicyCount")).fill(Policy.liberal))
+    .concat(Array(Settings.getNumber("libertarianPolicyCount")).fill(Policy.libertarian))
   discard = []
   activePolicies = []
   //shuffles policyDeck
@@ -538,31 +541,26 @@ function passPolicy(a: number, topCard = false, exit = true){
   }
   if(!topCard && (pCandidate === undefined || cCandidate === undefined)){
     throw Error("pCandidate or cCandidate is undefined while passing policy")
-  } 
+  }
+  let policyLogStr = {
+    [Policy.liberal]: "liberal",
+    [Policy.fascist]: "fascist",
+    [Policy.libertarian]: "libertarian"
+  }[policy]
+  if(topCard) Actions.log(["Top card is ", policyLogStr])
+  else {
+    Actions.log(["\"", pCandidate, "\"", " and ", "\"", cCandidate as Player,
+     "\"", " have passed a ", policyLogStr, " policy"])
+    if(settings.getString("bribeInfo") === "Show True Government") 
+      Actions.log(["Shadow government: ", pCandidate, " => ",
+        cCandidate as Player])
+  }
   if(policy === Policy.liberal){
-    if(topCard) Actions.log(["Top card is liberal"])
-    else {
-      Actions.log(["\"", pCandidate, "\"", " and ", "\"", cCandidate as Player, "\"", " have passed a liberal policy"])
-      if(settings.getString("bribeInfo") === "Show True Government") Actions.log(["Shadow government: ", pCandidate, " => ", cCandidate as Player])
-    }
     lPassed++
-    if(lPassed === 5){
-      liberalWin()
-    }
-    else{
-      if(exit){
-        exitSD()
-      }
-    }
+    if(lPassed === 5) liberalWin()
+    else if(exit) exitSD()
   }
   else if(policy === Policy.fascist){
-    if(topCard) Actions.log(["Top card is fascist"])
-    else {
-      Actions.log(["\"", pCandidate, "\"", " and ", "\"", cCandidate as Player, "\"", " have passed a fascist policy"])
-      if(settings.getString("bribeInfo") === "Show True Government") 
-        Actions.log(["Shadow government: ", pCandidate, " → ", 
-        cCandidate as Player])
-    }
     let special = getSpecialPhase(fPassed++)
     if(special === Phase.endgame){
       let dictatorWin = Settings.getString("dictatorWin")
@@ -578,6 +576,11 @@ function passPolicy(a: number, topCard = false, exit = true){
       if(exit) exitSD()
     }
     else if(exit) Game.setPhase(special)
+  }
+  else if(policy === Policy.libertarian){
+    if(topCard) Actions.log(["Top card is libertarian"])
+    libertarianPassed++
+    if(exit) exitSD()
   }
 }
 /*
@@ -792,6 +795,7 @@ export default function getSDState(){
     failCount: failCount,
     fPassed: fPassed,
     lPassed: lPassed,
+    libertarianPassed: libertarianPassed,
     pCandidate: pCandidate,
     president: president,
     bg: Math.floor(240 + (5 - lPassed) / (11 - lPassed - fPassed)  * 120),
