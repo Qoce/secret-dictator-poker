@@ -1,3 +1,4 @@
+import {Notifier} from "../Render/RenderNotificationText"
 import Players from "./Players"
 import Player from '../Interface/Player'
 import RNG from "./Rng"
@@ -580,6 +581,14 @@ function passPolicy(a: number, topCard = false, exit = true){
   else if(policy === Policy.libertarian){
     if(topCard) Actions.log(["Top card is libertarian"])
     libertarianPassed++
+    let blindStr = "big blind"
+    let total = Settings.getNumber("BB") * (2 * libertarianPassed + 1)
+    if(Settings.getString("pokerType") === "7 Card STud"){
+      blindStr = "small bet"
+      total = Settings.getNumber("bet") * (2 * libertarianPassed + 1)
+    }
+    Notifier.notify("A libertarian policy has been passed. \n The " + blindStr 
+    + " has increased to " + total)
     if(exit) exitSD()
   }
 }

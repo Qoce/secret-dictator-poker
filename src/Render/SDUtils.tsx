@@ -47,7 +47,6 @@ export function PolicySquare(props: PolicySquareArgs){
       "Libertarian policy: Triple the value of the poker big blind or bet."
   }[props.policy]
   let bgColor = colors[props.selected ? 1 : 0]
-  console.log(bgColor)
   return <div className = "square hoverable" style = {{backgroundColor: bgColor, marginLeft: 5 ,
     marginTop: "2px", border: "2px solid", borderColor: hovered ? "green" : "grey"}}
      onClick = {() => {if(props.selectable) props.setSelected(!props.selected)}} 

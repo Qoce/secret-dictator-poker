@@ -149,7 +149,6 @@ export default function RenderPlayer(args : PlayerRenderArgs){
     if(c.idx < 0) leftWidth += c.width - 1
     else if(c.idx > 0) rightWidth += c.width - 1
   }
-  console.log(leftWidth, rightWidth)
   return <div className = "board-row" 
     style = {{fontWeight: getBoldness(p), marginLeft: rightWidth - leftWidth + "px",
       backgroundColor: bgc(args.u === args.p, hovered, selected), color: getTextColor(args)}}

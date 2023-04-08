@@ -3,6 +3,7 @@ import Actions from '../Model/Actions'
 import Game from '../Model/Game'
 import getSDState from '../Model/SecretDictator'
 import Lobby from '../Interface/Lobby'
+import Notification from './RenderNotificationText'
 import Phase from '../Interface/Phase'
 import Player from './RenderPlayer'
 import PlayerType from '../Interface/Player'
@@ -275,6 +276,7 @@ export default function SDP(){
             isHost = {Players.get(user).host}
             numPlayers = {Players.players.length}
           />}
+          <Notification user = {user}/>
           {appState === "inGame" && <SDHeader user = {user}/>}
           <div className = "center">
             <div>
