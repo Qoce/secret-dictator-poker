@@ -2,23 +2,30 @@ import SocketIO from 'socket.io'
 import Setting from '../Interface/Setting'
 import { refresh } from '../Render/RenderGame'
 
+interface StoredSetting extends Setting{
+  default: number | boolean | string
+}
+
 let settings = {
-  settings: new Map<string, Setting>(),
+  settings: new Map<string, StoredSetting>(),
+  getValue(key : string){
+    if(!this.settings.has(key)) throw Error('Setting ' + key + ' not found!')
+    let visibleIf = this.settings.get(key)?.visibleIf
+    if(!visibleIf || visibleIf()) return this.settings.get(key)?.value
+    else return this.settings.get(key)?.default
+  },
   getNumber(key : string){
-    const value = this.settings.get(key)?.value
-    if(typeof value === 'undefined') throw Error('Setting ' + key + ' not found!')
+    const value = this.getValue(key)
     if(typeof value !== "number") throw Error("Settings field " + key + " is not a number")
     return value
   },
   getString(key : string){
-    const value = this.settings.get(key)?.value
-    if(typeof value === 'undefined') throw Error('Setting ' + key + ' not found!')
+    const value = this.getValue(key)
     if(typeof value !== "string") throw Error("Settings field " + key + " is not a string")
     return value
   },
   getBool(key : string){
-    const value = this.settings.get(key)?.value
-    if(typeof value === 'undefined') throw Error('Setting ' + key + ' not found!')
+    const value = this.getValue(key)
     if(typeof value !== "boolean") throw Error("Settings field " + key + " is not a bool")
     return value
   },
@@ -48,7 +55,7 @@ let settings = {
     }
   },
   register(key : string, val: Setting){
-    this.settings.set(key, val)
+    this.settings.set(key, {...val, default: val.value})
   },
   atLeast(key: string, value: string){
     const s = this.settings.get(key)?.value
@@ -90,7 +97,8 @@ settings.register("pokerHands", {value: 1, name: "Hands Per Round", min: 1,
   visibleIf: () => settings.getString("gameMode") === "SDP"})
 settings.register("libertarianPolicyCount", {value: 100, name: "Libertarian Policies", min: 0, max: 3000,
   visibleIf: () => settings.getString("gameMode") === "SDP", hostOnly: true})  
-
+settings.register("bloodPact", {value: true, name: "Blood Pact",
+  visibleIf: () => settings.getString("gameMode") === "SDP", hostOnly: true})
 
 //SD 
 settings.register("fPolicyCount", {value: 11, name: "Fascist Policy Cards",

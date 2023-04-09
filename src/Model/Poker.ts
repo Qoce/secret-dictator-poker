@@ -248,7 +248,8 @@ Game.setPhaseTimer(Phase.poker, () => Settings.getBool("pokerTimed") ?
   Settings.getNumber("pokerTime") : 0)
 
 function setDM(newDM : number | false){
-  Players.setActive(newDM)
+  Players.setActors((p : Player) => newDM !== false &&
+    p === Players.get(newDM))
   dm = newDM
   return dm
 }
@@ -423,12 +424,12 @@ function endHand(log = true) : void{
   Players.updateBanks(p => p.curHand.stack)
   Players.apply(p => p.curHand.hand = [])
   if(Game.getPhase() !== Phase.endgame){
-    if(++handCount % Settings.getNumber("pokerHands") || gameMode() === "P"){
-      Game.setPhase(Phase.poker)
+    let sortedHook = postPokerHooks.hooks.sort((x,y) => x.priority - y.priority)
+    handCount++
+    for(let h of sortedHook){
+      if(h.hook(handCount)) return
     }
-    else{
-      Game.setPhase(Phase.nominate)
-    }
+    Game.setPhase(Phase.poker)
   }
 }
 
@@ -664,3 +665,8 @@ export default function getDealer(){
     minRaise: minRaise
   }
 }
+
+
+export let postPokerHooks: {
+  hooks: {priority: number, hook: (n: number) => boolean}[]
+} = {hooks: []}

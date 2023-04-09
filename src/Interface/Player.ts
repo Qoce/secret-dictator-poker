@@ -1,5 +1,6 @@
 import PokerHand from "./PokerHand"
 import {Role} from "./Role"
+import BPRole from "../Interface/BPRole"
 
 export default interface Player {
   curHand: PokerHand
@@ -14,4 +15,5 @@ export default interface Player {
   dead: boolean
   deadline: number
   timerCount: number
+  bpRole: BPRole
 }

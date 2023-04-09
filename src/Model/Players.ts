@@ -3,6 +3,7 @@ import Player from "./../Interface/Player"
 import Actions from "./Actions"
 import Settings from "./Settings"
 import rng from "./Rng"
+import BPRole from "../Interface/BPRole"
 
 class Players{
   players: Player[]
@@ -50,7 +51,8 @@ class Players{
       host: this.players.length === 0,
       dead: false,
       deadline: 0,
-      timerCount: 0
+      timerCount: 0,
+      bpRole: BPRole.None,
     })
   }
   resetPlayer(p : Player){
@@ -76,10 +78,11 @@ class Players{
       vote: undefined,
     }
     p.dead = false
+    p.bpRole = BPRole.None
   }
   reset(){
     this.apply(this.resetPlayer)
-    this.onBankUpdate = () => {}
+    this.onKill = () => {}
   }
   add(p : Player){
     this.players.push(p)
@@ -105,17 +108,8 @@ class Players{
   get(i : number){
     return this.players[i]
   }
-  setActive(condition : ((p: Player) => boolean) | number | boolean = _ => true){
-    let v = condition
-    if(typeof condition === "number") condition = (p: Player) => this.get(+v) === p
-    else if(typeof condition === "boolean") condition = _ => condition as boolean
-    let f = condition as (p: Player) => boolean
-    this.apply(p => p.canAct = true, f)
-    this.apply(p => p.canAct = false, p => !f(p))
-    Actions.updateTimers()
-  }
-  setActors(condition: (p : Player) => boolean){
-    this.apply(p => p.canAct = condition(p) && !p.dead)
+  setActors(condition: (p : Player) => boolean, includeDead: boolean = false){
+    this.apply(p => p.canAct = condition(p) && (!p.dead || includeDead))
   }
   filter(condition: (p: Player) => boolean){
     return this.players.filter(condition)
@@ -125,6 +119,15 @@ class Players{
   }
   all(condition: (p: Player) => boolean){                              
     return this.filter(condition).length === this.players.length
+  }
+  none(condition: (p: Player) => boolean){
+    return this.all(p => !condition(p))
+  }
+  any(condition: (p: Player) => boolean){
+    return !this.all(p => !condition(p))
+  }
+  living(){
+    return this.filter(p => !p.dead)
   }
   allLiving(condition: (p: Player) => boolean){
     return this.filter(p => !p.dead && condition(p)).length === 
@@ -149,6 +152,14 @@ class Players{
     return this.argMin(p => -func(p))
   }
 
+  kill(func: (p : Player) => boolean){
+    this.living().filter(func).map(p => {
+      p.dead = true
+      Actions.log([p, " has died"])
+    })
+    this.onKill()
+  }
+
   updateBanks(f : (p: Player) => number){
     this.apply(p => {
       p.bank = f(p)
@@ -157,7 +168,7 @@ class Players{
         p.dead = true
       }
     }, p => !p.dead)
-    this.onBankUpdate()
+    this.onKill()
   }
 
   distribute(n : number, inc: (p: Player, n: number) => void, to: (p: Player) => boolean = _ => true){
@@ -173,7 +184,7 @@ class Players{
       l--
     }
   }
-  onBankUpdate(){}
+  onKill(){}
 }
 
 export default new Players()

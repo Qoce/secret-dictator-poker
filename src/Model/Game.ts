@@ -13,6 +13,7 @@ let game = {
       this.onPhaseChange()
     }
     else throw Error("Phase " + phase + " missing a phase listener")
+    return true
   },
   getPhase(){
     return p

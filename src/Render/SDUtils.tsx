@@ -1,4 +1,5 @@
-import SDState, {Policy} from "../Model/SecretDictator"
+import SDState from "../Model/SecretDictator"
+import Policy from "../Interface/Policy"
 import {useState} from 'react'
 import Player from "../Interface/Player"
 import {Team} from "../Interface/Role"
@@ -28,23 +29,28 @@ interface PolicySquareArgs{
   setSelected: (selected : boolean) => void
 }
 
+const pstrings = {
+  [Policy.liberal]: "L",
+  [Policy.fascist]: "F",
+  [Policy.libertarian]: "L",
+  [Policy.bp]: "X"
+}
 export function PolicySquare(props: PolicySquareArgs){
   const [hovered, setHovered] = useState(false)
   let colors = {
     [Policy.liberal]: ["lightBlue", "blue"],
     [Policy.fascist]: ["pink","red"],
-    [Policy.libertarian]: ["LemonChiffon", "yellow"]
+    [Policy.libertarian]: ["LemonChiffon", "yellow"],
+    [Policy.bp]: ["darkRed","crimson"]
   }[props.policy]
-  let string = {
-    [Policy.liberal]: "L",
-    [Policy.fascist]: "F",
-    [Policy.libertarian]: "L" 
-  }[props.policy]
+  let string = pstrings[props.policy]
   let description = {
     [Policy.liberal]: "",
     [Policy.fascist]: "",
     [Policy.libertarian]:
-      "Libertarian policy: Triple the value of the poker big blind or bet."
+      "Libertarian policy: Triple the value of the poker big blind or bet.",
+    [Policy.bp]: "Forms a pact with Xar 'Ah the great devourer. This policy " +
+      "will not show up again."
   }[props.policy]
   let bgColor = colors[props.selected ? 1 : 0]
   return <div className = "square hoverable" style = {{backgroundColor: bgColor, marginLeft: 5 ,
@@ -63,13 +69,10 @@ export function colorPolicy(p: Policy){
   let color = {
     [Policy.liberal]: "blue",
     [Policy.fascist]: "red",
-    [Policy.libertarian]: "yellow" 
+    [Policy.libertarian]: "yellow",
+    [Policy.bp]: "darkRed"
   }[p]
-  let str = {
-    [Policy.liberal]: "L",
-    [Policy.fascist]: "F",
-    [Policy.libertarian]: "L" 
-  }[p]
+  let str = pstrings[p]
   return <span style = {{color: color, fontWeight: "bold"}}>{str}</span>
 }
 

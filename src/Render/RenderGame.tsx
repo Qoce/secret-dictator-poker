@@ -19,6 +19,8 @@ import Settings from "../Model/Settings"
 import settings from '../Model/Settings'
 
 var WebFont = require('webfontloader')
+require("../Model/BloodPact")
+require("../Render/RenderBP")
 require("./RenderPoker")
 require("./RenderSDBottom")
 require("./RenderPokerPlayer")
