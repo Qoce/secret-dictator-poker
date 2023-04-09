@@ -142,8 +142,8 @@ function getMargin(args: PlayerRenderArgs){
   let rightWidth = 0
   for(let c of columns){
     if(c.comp(args) === null) continue
-    if(c.idx < 0) leftWidth += c.width - 1
-    else if(c.idx > 0) rightWidth += c.width - 1
+    if(c.idx < 0) leftWidth += c.width
+    else if(c.idx > 0) rightWidth += c.width
   }
   return rightWidth - leftWidth
 }
@@ -175,7 +175,7 @@ export default function RenderPlayer(args : PlayerRenderArgs){
 export function PlayerTitle(args: PlayerRenderArgs){
   return <div className = "board-row" 
     style =
-    {{marginLeft: getMargin(args)+ "px"}}>
+    {{marginLeft: getMargin(args)+ "px", marginTop: "20px"}}>
     {
       columns.map(c => c.comp(args) && <div className = "name" style = {{
         width: c.width + "px", textAlign: "center"

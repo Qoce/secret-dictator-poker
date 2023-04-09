@@ -4,7 +4,7 @@ import Players from "./Players"
 import Phase from "../Interface/Phase"
 import Game from "./Game"
 import Rng from "./Rng"
-import settings, {gameMode} from "./Settings"
+import {gameMode} from "./Settings"
 
 export type LogContent = false | string | JSX.Element | Player | logElement
 let actions = new Map<Phase, (args: ActionArgs) => boolean>() //{[key in Phase]: (args: ActionArgs) => boolean}
@@ -67,11 +67,14 @@ let a = {
       let am = actions.get(Game.getPhase())
       let player = actionHistory[i].p
       let target = actionHistory[i].t
-      if(Players.get(player).canAct && (!target || Players.get(target).targetable)){
-        if(am) {
-          actionLog.push([])
-          am(actionHistory[i])
-        }
+      if(Players.get(player).canAct && 
+        (!target || Players.get(target).targetable) && am){
+        actionLog.push([])
+        am(actionHistory[i])
+      }
+      else{
+        actionHistory.splice(i, 1)
+        i--
       }
     }
   },

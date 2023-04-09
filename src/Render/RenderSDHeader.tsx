@@ -104,10 +104,10 @@ export default function SDHeader(args: {user: number}){
       {fascistSquares}
     </div>
     <div>
-      {libertarianSquares}
+      {liberalSquares}
     </div>
     <div>
-      {liberalSquares}
+      {libertarianSquares}
     </div>
     <div>
       {Game.getPhase() !== Phase.poker && proposalSquares}

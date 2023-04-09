@@ -1,6 +1,7 @@
 import {BooleanDecision, confirmOrPassRenderer} from "./RenderUtils"
 import Phase from "../Interface/Phase"
 import RenderPhase, { RenderPhaseArgs } from "./RenderPhase"
+import Players from "../Model/Players"
 import { inPact, pactMembers } from "../Model/BloodPact"
 
 import { PlayerRenderArgs } from "./RenderPlayer"
@@ -27,6 +28,7 @@ function BPRoleSquare(args: PlayerRenderArgs){
   let str = ""
   if(args.appState !== "inGame") return null
   if(SDState().bpPassed === 0) return null
+  if(Players.none(p => inPact(p))) return null
   if(args.u.bpRole !== BPRole.None){
     if(args.u.bpRole !== BPRole.Investigator || (args.p === args.u)){
       if(args.p.bpRole === BPRole.Investigator) str = "🧐"

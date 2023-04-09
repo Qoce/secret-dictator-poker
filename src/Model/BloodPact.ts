@@ -121,7 +121,7 @@ Actions.register(Phase.bloodpactView, (args: ActionArgs) => {
       if(Players.get(args.p).role.team !== Team.liberal && 
         Players.filter(p => p.bpRole === BPRole.Founder)[0].role.team
         !== Team.liberal){
-        eligible = eligible.filter(p => p.role.team == Team.liberal)    
+        eligible = eligible.filter(p => p.role.team === Team.liberal)    
       }
       eligible[RNG.nextInt(eligible.length)].bpRole = BPRole.Investigator
     }

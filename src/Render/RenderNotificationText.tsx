@@ -40,7 +40,7 @@ export default function Notification(args: {user: number}){
     setTimeout(() => {
       if(strs === oldStrs && !stateRef.current) setShown(false)
     }, (time || 2000))
-  }, [strs])
+  }, [strs, time])
   if(gone) return null
   return <div className = {"noti hoveree transparent " + (shown ? "" : "hidden")}
     style = {{display: "table-cell", transform: "translateY(0%)"}}

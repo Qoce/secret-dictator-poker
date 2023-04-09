@@ -11,6 +11,7 @@ import {columns, BankVision} from "./RenderPlayer"
 
 
 function Stack(args: PlayerRenderArgs){
+  if(!Settings.atLeast("investigationPower", "Role + Bank")) return null
   if(Game.getPhase() === Phase.poker){
     return BankVision(args, args.p.curHand.stack)
   }

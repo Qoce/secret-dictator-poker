@@ -153,7 +153,7 @@ class Players{
   }
 
   kill(func: (p : Player) => boolean){
-    this.living().filter(func).map(p => {
+    this.living().filter(func).forEach(p => {
       p.dead = true
       Actions.log([p, " has died"])
     })

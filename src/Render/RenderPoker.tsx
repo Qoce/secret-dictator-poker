@@ -48,9 +48,31 @@ function PlayerCards(args: {p: number}){
   return null
 }
 
-function Center(args: RenderPhaseArgs){
-  return  <div>
+function PlayerStack(args: {p: number}){
+  let player = Players.get(args.p)
+  return <div className = "board-row">
+  <div className = "cards">
+    {"Stack:"}
+  </div>
+  <div className = "cards cleanFont">
+    {player.curHand.stack}
+  </div>
+</div>
+}
+
+function PlayerInfo(args: RenderPhaseArgs){
+  let player = Players.get(args.p)
+  let color = {}
+  if(player.curHand.folded) color = {color: "grey"}
+  
+  return <div className = "center" style = {color}>
+    <PlayerStack p = {args.p}/>
     <PlayerCards p = {args.p}/>
+  </div>
+}
+
+function Center(){
+  return  <div>
     <Pot/>
     <CenterCards/>
   </div>
@@ -209,7 +231,8 @@ function PokerAction(args: RenderPhaseArgs){
 
 RenderPhase.set(Phase.poker, function renderPoker(args : RenderPhaseArgs){
   return <div className = "center">
-    <Center p = {args.p}/>
+    <PlayerInfo p = {args.p}/>
+    <Center/>
     <PokerAction p = {args.p} t = {args.t}/>
   </div>
 })
