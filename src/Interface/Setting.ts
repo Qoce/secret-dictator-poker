@@ -7,5 +7,6 @@ export default interface Setting{
   local?: boolean,
   onChange?: (a: any) => void,
   visibleIf?: () => boolean,
+  activeIf?: () => boolean,
   hostOnly?: boolean
 }

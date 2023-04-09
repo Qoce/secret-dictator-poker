@@ -58,6 +58,8 @@ function RenderSetting(key : string, props: {socket: any, lobby: any, isHost: bo
   const setting = s?.value
   const onChange = s?.onChange
   const visibibleIf = s?.visibleIf
+  const activeIf = s?.activeIf
+  if(activeIf && !activeIf()) return null
   if(visibibleIf && !visibibleIf()) return null
   if(typeof setting === "number"){
     return <NumberSetting sKey = {key} 

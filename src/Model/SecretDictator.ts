@@ -131,7 +131,7 @@ export function initSD(){
   policyDeck = Array(Settings.getNumber("fPolicyCount")).fill(Policy.fascist)
     .concat(Array(Settings.getNumber("lPolicyCount")).fill(Policy.liberal))
     .concat(Array(Settings.getNumber("libertarianPolicyCount")).fill(Policy.libertarian))
-   // .concat(Array(Settings.getBool("bloodPact") ? 100 : 0).fill(Policy.bp)) 
+    .concat(Array(Settings.getBool("bloodPact") ? 1 : 0).fill(Policy.bp)) 
   discard = []
   activePolicies = []
   //shuffles policyDeck
