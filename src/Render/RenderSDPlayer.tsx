@@ -39,6 +39,9 @@ function Government(args: PlayerRenderArgs){
   </div>
 }
 
-columns.push({idx: -10, comp: TeamSquare, width: classWidths['square']})
-columns.push({idx: -5, comp: Government, width: classWidths['square']})
-columns.push({idx: 10, comp: Influence, width: classWidths['cards']})
+columns.push({idx: -10, comp: TeamSquare, width: classWidths['square'],
+  title: "T"})
+columns.push({idx: -5, comp: Government, width: classWidths['square'],
+  title: "G"})
+columns.push({idx: 10, comp: Influence, width: classWidths['cards'],
+  title: "Bank"})

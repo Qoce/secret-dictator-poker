@@ -95,7 +95,7 @@ settings.register("voteCostScaling", {value: "3^n", name: "Vote Cost Scaling",
   visibleIf: () => settings.getString("gameMode") === "SDP"})
 settings.register("pokerHands", {value: 1, name: "Hands Per Round", min: 1,
   visibleIf: () => settings.getString("gameMode") === "SDP"})
-settings.register("libertarianPolicyCount", {value: 100, name: "Libertarian Policies", min: 0, max: 3000,
+settings.register("libertarianPolicyCount", {value: 0, name: "Libertarian Policies", min: 0, max: 3000,
   visibleIf: () => settings.getString("gameMode") === "SDP", hostOnly: true})  
 settings.register("bloodPact", {value: true, name: "Blood Pact",
   visibleIf: () => settings.getString("gameMode") === "SDP", hostOnly: true})

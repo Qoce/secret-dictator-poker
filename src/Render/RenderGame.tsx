@@ -5,7 +5,7 @@ import getSDState from '../Model/SecretDictator'
 import Lobby from '../Interface/Lobby'
 import Notification from './RenderNotificationText'
 import Phase from '../Interface/Phase'
-import Player from './RenderPlayer'
+import Player, {PlayerTitle} from './RenderPlayer'
 import PlayerType from '../Interface/Player'
 import Players from '../Model/Players'
 import React, {useCallback, useEffect, useState} from 'react'
@@ -282,6 +282,14 @@ export default function SDP(){
           {appState === "inGame" && <SDHeader user = {user}/>}
           <div className = "center">
             <div>
+              {(appState === "inLobby" || appState === "inGame") &&
+                <PlayerTitle key = {0} p = {egSort()[0]}
+                selected = {false}
+                onSelected = {() => {}}
+                setUser = {() => {}}
+                u = {Players.get(user)}
+                appState = {appState}
+              />}
               {(appState === "inLobby" || appState === "inGame") && egSort().map(p => 
                 <Player key = {p.name} p = {p} selected = {selected !== undefined && Players.get(selected) === p}
                 onSelected = {() => setSelected(Players.players.indexOf(p))} u = {Players.get(user)}
@@ -301,15 +309,16 @@ export default function SDP(){
             })}
           </div>
         </div>
-        {appState === "inGame" && Settings.getBool("showActionLog") && <ActionLog p = {user}
-          lobby = {lobbyName || ""}
-          height = {Players.players.length * 40 + 271}
-          socket = {socket}
-        />}
-        {appState === "inGame" &&
-          <SDLog height = {Players.players.length * 40 + 271}/>
-        }
-
+        <div className='center' style={{"width": "450px"}}>
+          {appState === "inGame" &&
+            <SDLog/>
+          }
+          {appState === "inGame" && Settings.getBool("showActionLog") && <ActionLog p = {user}
+            lobby = {lobbyName || ""}
+            height = {400}
+            socket = {socket}
+          />}
+        </div>
       </div>
     </div>
   </div>

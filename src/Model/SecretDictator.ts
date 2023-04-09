@@ -131,7 +131,7 @@ export function initSD(){
   policyDeck = Array(Settings.getNumber("fPolicyCount")).fill(Policy.fascist)
     .concat(Array(Settings.getNumber("lPolicyCount")).fill(Policy.liberal))
     .concat(Array(Settings.getNumber("libertarianPolicyCount")).fill(Policy.libertarian))
-    .concat(Array(Settings.getBool("bloodPact") ? 100 : 0).fill(Policy.bp)) 
+   // .concat(Array(Settings.getBool("bloodPact") ? 100 : 0).fill(Policy.bp)) 
   discard = []
   activePolicies = []
   //shuffles policyDeck
@@ -305,8 +305,8 @@ function checkVotes(){
   }
   Actions.log("✔️: " + yesSum)
   Actions.log("❌: " + noSum)
-  if(yesSum > noSum && president && !president.dead && chancellor && 
-    !chancellor.dead){
+  if(yesSum > noSum && pCandidate && !pCandidate.dead && cCandidate && 
+    !cCandidate.dead){
     Actions.log("The vote passes")
     president = pCandidate
     chancellor = cCandidate
@@ -331,10 +331,10 @@ function checkVotes(){
     else startBribePhase()
   }
   else {
-    if(!president || president.dead){
+    if(!pCandidate || pCandidate.dead){
       Actions.log("The president died during the voting process (what a nerd).")
     }
-    if(!chancellor || chancellor.dead){
+    if(!cCandidate || cCandidate.dead){
       Actions.log("The chancellor died during the voting process (haha, oops!).")
     }
     Actions.log("The vote fails")

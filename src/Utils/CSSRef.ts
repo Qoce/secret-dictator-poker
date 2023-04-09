@@ -1,5 +1,5 @@
 export let classWidths = {
-  "name": 258,
-  "square": 41,
-  "cards": 104
+  "name": 225,
+  "square": 35,
+  "cards": 92
 }

@@ -8,28 +8,51 @@ import {getCardString} from './PokerUtils'
 import {useState, useCallback, useEffect} from 'react'
 
 
-function Center(){
-  let center = null
-  if(PokerState().center.length > 0 || !isStud()) {
-    center = <div className = "board-row">
-    <div className = "cards">
-      {"Center:"}
-    </div>
-    <div className = "cards cleanFont" style = {{width: "200px"}}>
-      {PokerState().center.map(getCardString)}
-    </div>
+function Pot(){
+  return <div className = "board-row">
+  <div className = "cards">
+    {"Pot:"}
   </div>
-  }
-  return  <div>
-    <div className = "board-row">
+  <div className = "cards cleanFont">
+    {PokerState().pot}
+  </div>
+</div>
+}
+
+function CenterCards(){
+  if(PokerState().center.length > 0 || !isStud()) {
+    return <div className = "board-row">
       <div className = "cards">
-        {"Pot:"}
+        {"Center:"}
+      </div>
+      <div className = "cards cleanFont" style = {{width: "200px"}}>
+        {PokerState().center.map(getCardString)}
+      </div>
+    </div>
+  }
+  return null
+}
+
+function PlayerCards(args: {p: number}){
+  let player = Players.get(args.p)
+  if(player.curHand.hand.length > 0){
+    return <div className = "board-row" style = {{"marginBottom" : "20px"}}>
+      <div className = "cards">
+        {"Cards:"}
       </div>
       <div className = "cards cleanFont">
-        {PokerState().pot}
+        {player.curHand.hand.map(getCardString)}
       </div>
     </div>
-    {center}
+  }
+  return null
+}
+
+function Center(args: RenderPhaseArgs){
+  return  <div>
+    <PlayerCards p = {args.p}/>
+    <Pot/>
+    <CenterCards/>
   </div>
 }
 
@@ -186,7 +209,7 @@ function PokerAction(args: RenderPhaseArgs){
 
 RenderPhase.set(Phase.poker, function renderPoker(args : RenderPhaseArgs){
   return <div className = "center">
-    <Center />
+    <Center p = {args.p}/>
     <PokerAction p = {args.p} t = {args.t}/>
   </div>
 })

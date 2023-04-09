@@ -25,17 +25,19 @@ RenderPhase.set(Phase.bloodpactAccuse, confirmOrPassRenderer("Confirm Blood Pact
 
 function BPRoleSquare(args: PlayerRenderArgs){
   let str = ""
-  if(args.appState === "inGame")
-    if(SDState().bpPassed > 0)
-      if(args.u.bpRole !== BPRole.None)
-        if(args.u.bpRole !== BPRole.Investigator || (args.p === args.u)){
-          if(args.p.bpRole === BPRole.Investigator) str = "🧐"
-          else if(args.p.bpRole === BPRole.Founder) str = "😈"
-          else if(args.p.bpRole === BPRole.Member) str = "🩸"
-        }
+  if(args.appState !== "inGame") return null
+  if(SDState().bpPassed === 0) return null
+  if(args.u.bpRole !== BPRole.None){
+    if(args.u.bpRole !== BPRole.Investigator || (args.p === args.u)){
+      if(args.p.bpRole === BPRole.Investigator) str = "🧐"
+      else if(args.p.bpRole === BPRole.Founder) str = "😈"
+      else if(args.p.bpRole === BPRole.Member) str = "🩸"
+    }
+  }
   return <div className = "square">
     {str}
   </div>
 }
 
-columns.push({idx: -20, comp: BPRoleSquare, width: classWidths['square']})
+columns.push({idx: -20, comp: BPRoleSquare, width: classWidths['square'],
+  title: "X"})

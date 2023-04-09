@@ -62,10 +62,10 @@ function getDownCards(){
 }
 
 function Cards(args: PlayerRenderArgs){
+  if(Settings.getString("investigationPower") !== "Role + Bank + Cards")
+    return null
   if(inPoker(args)){
-    const show = args.p === args.u || (
-      Settings.getString("investigationPower") === "Role + Bank + Cards" &&
-      args.u.bankVision.includes(args.p))
+    const show = args.p === args.u || args.u.bankVision.includes(args.p)
     return <div className = "cards cleanFont" style = {{width: (40 * getDownCards()+ 22) + "px"}}>
       {show ? args.p.curHand.hand.map(getCardString) : null}
     </div>
@@ -84,8 +84,13 @@ function UpCards(args: PlayerRenderArgs){
 
   
 
-columns.push({idx: -5, comp: PokerPosition, width: classWidths['square']})
-columns.push({idx: 5, comp: AmtIn, width: classWidths['cards']})
-columns.push({idx: 10, comp: Stack, width: classWidths['cards']})
-columns.push({idx: 15, comp: Cards, width: classWidths['cards']})
-columns.push({idx: 20, comp: UpCards, width: 160})
+columns.push({idx: -5, comp: PokerPosition, width: classWidths['square'],
+  title: "P"})
+columns.push({idx: 5, comp: AmtIn, width: classWidths['cards'],
+  title: "Amt In"})
+columns.push({idx: 10, comp: Stack, width: classWidths['cards'],
+  title: "Bank"})
+columns.push({idx: 15, comp: Cards, width: classWidths['cards'],
+  title: "Cards"})
+columns.push({idx: 20, comp: UpCards, width: 160,
+  title: "Up Cards"})

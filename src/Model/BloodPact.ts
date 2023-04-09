@@ -218,7 +218,7 @@ onCheckVotes.hooks.push(() => {
   if(votes.length === 1){
     livingMembers.map(p => p.role.spent += livingMembers.length - 1)
   }
-  else{
+  else if(votes.length === 2){
     Actions.log("The blood pact has been broken! Xar 'Ah is most displeased.")
     livingMembers.map(p => p.dead = true)
     Players.onKill()

@@ -46,7 +46,8 @@ export function LocalSettingsRender(){
       }>
     ⚙️
     </div>
-    <div style = {{"marginTop": "50px"}}>
+    <div className = "transparent gear" 
+      style = {{"top": "50px", "position": "absolute"}}>
       {opened && stngs}
     </div>
   </div>

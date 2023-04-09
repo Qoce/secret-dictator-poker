@@ -131,17 +131,13 @@ export interface PlayerRenderArgs{
 }
 
 export let columns : {idx: number, comp : React.FunctionComponent<PlayerRenderArgs>,
-  width: number}[] = []
+  width: number, title: string}[] = []
 
-columns.push({idx: 0, comp: Name, width: classWidths['name']})
-columns.push({idx: 5, comp: Bank, width: classWidths['cards']})
-columns.push({idx: -10, comp: Timer, width: classWidths['cards']})
+columns.push({idx: 0, comp: Name, width: classWidths['name'], title: "Name"})
+columns.push({idx: 5, comp: Bank, width: classWidths['cards'], title: "Bank"})
+columns.push({idx: -10, comp: Timer, width: classWidths['cards'], title: "Timer"})
 
-export default function RenderPlayer(args : PlayerRenderArgs){
-  let p = args.p
-  let selected = args.selected
-  const [hovered, setHovered] = useState(false)
-  let i = 0
+function getMargin(args: PlayerRenderArgs){
   let leftWidth = 0
   let rightWidth = 0
   for(let c of columns){
@@ -149,8 +145,15 @@ export default function RenderPlayer(args : PlayerRenderArgs){
     if(c.idx < 0) leftWidth += c.width - 1
     else if(c.idx > 0) rightWidth += c.width - 1
   }
+  return rightWidth - leftWidth
+}
+
+export default function RenderPlayer(args : PlayerRenderArgs){
+  let p = args.p
+  let selected = args.selected
+  const [hovered, setHovered] = useState(false)
   return <div className = "board-row" 
-    style = {{fontWeight: getBoldness(p), marginLeft: rightWidth - leftWidth + "px",
+    style = {{fontWeight: getBoldness(p), marginLeft: getMargin(args)+ "px",
       backgroundColor: bgc(args.u === args.p, hovered, selected), color: getTextColor(args)}}
     onMouseEnter = {() => {if(p.targetable && args.u.canAct) setHovered(true)}}
     onMouseLeave = {() => {if(p.targetable && args.u.canAct) setHovered(false)}}
@@ -169,3 +172,16 @@ export default function RenderPlayer(args : PlayerRenderArgs){
     </div>
 }
 
+export function PlayerTitle(args: PlayerRenderArgs){
+  return <div className = "board-row" 
+    style =
+    {{marginLeft: getMargin(args)+ "px"}}>
+    {
+      columns.map(c => c.comp(args) && <div className = "name" style = {{
+        width: c.width + "px", textAlign: "center"
+      }}>
+        {c.title}
+      </div>)
+    }
+  </div>
+}
