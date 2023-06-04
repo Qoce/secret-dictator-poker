@@ -47,10 +47,21 @@ io.on('connection', (socket) => {
           l.players = l.players.filter(u => u !== uName)
           l.connected.pop()
         }
-        //Delete lobby if everyone is disconnected, even if in game
+        //Delete lobby if everyone is disconnected
+        //If in game, check again in 5 minutes before deleting
         if(l.connected.every(c => !c)){
-          lobbies = lobbies.filter(l => l.name !== lName)
-          updateLobbies()
+          if(l.inGame){
+            setTimeout(() => {
+              if (l.connected.every(c => !c)){
+                lobbies = lobbies.filter(l => l.name !== lName)
+                updateLobbies()
+              }
+            }, 300000)
+          }
+          else{
+            lobbies = lobbies.filter(l => l.name !== lName)
+            updateLobbies()
+          }
         }
         else if(!l.inGame){
           console.log(l)
@@ -140,8 +151,11 @@ io.on('connection', (socket) => {
         callback("Lobby has already started")
       }
     }
+    else if(l){
+      callback("Incorrect password.")
+    }
     else{
-      callback("Incorrect password")
+      callback("Lobby does not exist.")
     }
   })
   socket.on('changeSetting', (lobby, setting, value) => {
