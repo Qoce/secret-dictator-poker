@@ -36,7 +36,7 @@ function startBloodPact(){
     " in the honor of the great devourer.",
     "If the player accepts, the pact forms, otherwise, another randomly "+ 
     "chosen player will get the opportunity to form a pact next round.",
-    "Each member(🩸) of the pact has their votes amplified by 1 for each other member "+
+    "Each member(🩸) of the pact has their votes amplified by 1 for each other living member "+
     "of the pact.",
     "But all the pact members must vote in the same direction, or they all die.",
     "In addition, upon the original formation of the pact, a random player " +
@@ -44,21 +44,20 @@ function startBloodPact(){
     "If the pact is founded between two fascists, the investigator will be " +
     "a liberal.",
     "All pact members know the identity of the investigator.",
-    "Once the pact is formed, the pact's founder has the option, but not the "+
-    "obligation, to invite an additional player to join the pact as an action "+
+    "Once the pact is formed, the pact's founder has the option "+
+    "to invite an additional player to join the pact as an action "+
     "after a poker set.",
     "The invitee will be told the identities of all pact members prior to " +
     "making their decision.",
     "After this invitation process is complete, the investigator has the option " +
-    "but not the obligation, to accuse any other player of being a pact member.",
+    "to accuse any other player of being a pact member.",
     "If the investigator is correct, the pact is destroyed and all members cede " +
     "35% of their bank to the investigator.",
     "If the investigator is wrong, they cede 50% of their bank to the pact.",
     "The investigator may only make one accusation.",
-    "The investigator has the ability to accuse even if they have died in game.",
-    "The pact persists if a pact member dies, but if that member is the founder "+
-    "the pact can no longer invite new players.",
-    "The investigator can only accuse living players."
+    "The investigator has the ability to accuse even if they have died.",
+    "The pact persists if a pact member (including the founder) dies, " + 
+    "but the investigator can only accuse living players."
   ],
   ok: true
   })

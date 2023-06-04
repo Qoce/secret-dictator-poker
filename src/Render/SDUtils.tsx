@@ -49,8 +49,7 @@ export function PolicySquare(props: PolicySquareArgs){
     [Policy.fascist]: "",
     [Policy.libertarian]:
       "Libertarian policy: Triple the value of the poker big blind or bet.",
-    [Policy.bp]: "Forms a pact with Xar 'Ah the great devourer. This policy " +
-      "will not show up again."
+    [Policy.bp]: "Forms a pact with Xar 'Ah the great devourer."
   }[props.policy]
   let bgColor = colors[props.selected ? 1 : 0]
   return <div className = "square hoverable" style = {{backgroundColor: bgColor, marginLeft: 5 ,

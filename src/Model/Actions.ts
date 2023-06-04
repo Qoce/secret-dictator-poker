@@ -30,20 +30,17 @@ let a = {
   fire(args: ActionArgs){
     this.socket.emit("action", this.lobby, args)
   },
-  updateTimers(){
+  updateTimer(player: Player){
     let timer = Game.getPhaseTimer()
-    if(timer) {
-      for(let player of Players.filter(p => p.canAct)){
-        if(this.socket){
-          this.socket.emit("setTimer", this.lobby, Players.players.indexOf(player), 
+    if(timer && this.socket) {
+      let p = Players.players.indexOf(player)
+      if(player.canAct){
+        this.socket.emit("setTimer", this.lobby, p, 
           Date.now() + timer * 1000, ++player.timerCount)
-        }
       }
-      for(let player of Players.filter(p => !p.canAct)){
-        if(this.socket){
-          this.socket.emit("setTimer", this.lobby, Players.players.indexOf(player), 
-          0, ++player.timerCount)
-        }
+      else{
+        this.socket.emit("setTimer", this.lobby, p, 
+        0, ++player.timerCount)
       }
     }
   },
@@ -67,10 +64,13 @@ let a = {
       let am = actions.get(Game.getPhase())
       let player = actionHistory[i].p
       let target = actionHistory[i].t
-      if(Players.get(player).canAct && 
+      let pObj = Players.get(player)
+      if(pObj.canAct && 
         (!target || Players.get(target).targetable) && am){
         actionLog.push([])
         am(actionHistory[i])
+        pObj.timerCount++
+        pObj.deadline = 0
       }
       else{
         actionHistory.splice(i, 1)
@@ -108,7 +108,5 @@ let a = {
     })
   }
 }
-
-Game.onPhaseChange = () => a.updateTimers()
 
 export default a

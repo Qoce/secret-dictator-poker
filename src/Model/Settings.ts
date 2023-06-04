@@ -34,7 +34,9 @@ let settings = {
     if(typeof value === 'undefined') throw Error('Setting ' + key + ' not found!')
     return this.settings.get(key)?.name as string
   },
-  set(key : string, value : number | boolean | string, socket : SocketIO.Socket | undefined = undefined, lobby : string | undefined = undefined){
+  set(key : string, value : number | boolean | string, 
+      socket : SocketIO.Socket | undefined = undefined, 
+      lobby : string | undefined = undefined){
     let s = this.settings.get(key) 
     if(s !== undefined){
       if(typeof s.value === "number" && typeof value === "number"){
@@ -97,7 +99,7 @@ settings.register("pokerHands", {value: 1, name: "Hands Per Round", min: 1,
   activeIf: () => settings.getString("gameMode") === "SDP"})
 settings.register("libertarianPolicyCount", {value: 0, name: "Libertarian Policies", min: 0, max: 3000,
   activeIf: () => settings.getString("gameMode") === "SDP", hostOnly: true})  
-settings.register("bloodPact", {value: true, name: "Blood Pact",
+settings.register("bloodPact", {value: false, name: "Blood Pact",
   activeIf: () => settings.getString("gameMode") === "SDP", hostOnly: true})
 
 //SD 

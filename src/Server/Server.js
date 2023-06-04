@@ -162,6 +162,7 @@ io.on('connection', (socket) => {
     }
   })
   socket.on('action', (lobby, action) => {
+    console.log(action)
     const l = lobbies.find(l => l.name === lobby)
     if(l){
       l.actions.push(action)

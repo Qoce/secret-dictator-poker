@@ -104,6 +104,7 @@ function Timer(args: PlayerRenderArgs){
         setSeconds(args.p.deadline - Date.now())
       }
       else if(args.p.deadline > 0 && args.p === args.u){
+        args.p.deadline = 0
         Actions.fire({p: Players.players.indexOf(args.p)})
         setSeconds(0)
       }

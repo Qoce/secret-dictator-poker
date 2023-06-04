@@ -53,7 +53,7 @@ export function LocalSettingsRender(){
   </div>
 }
 
-function RenderSetting(key : string, props: {socket: any, lobby: any, isHost: boolean}){
+export function RenderSetting(key : string, props: {socket: any, lobby: any, isHost: boolean}){
   const s = Settings.settings.get(key)
   const setting = s?.value
   const onChange = s?.onChange

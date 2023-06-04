@@ -9,8 +9,8 @@ let game = {
     p = phase
     let pl = phaseListeners.get(phase)
     if(pl !== undefined) {
-      pl()
       this.onPhaseChange()
+      pl()
     }
     else throw Error("Phase " + phase + " missing a phase listener")
     return true

@@ -79,6 +79,8 @@ class Players{
     }
     p.dead = false
     p.bpRole = BPRole.None
+    p.timerCount = 0
+    p.deadline = 0
   }
   reset(){
     this.apply(this.resetPlayer)
@@ -108,8 +110,14 @@ class Players{
   get(i : number){
     return this.players[i]
   }
-  setActors(condition: (p : Player) => boolean, includeDead: boolean = false){
-    this.apply(p => p.canAct = condition(p) && (!p.dead || includeDead))
+  setActors(condition: (p : Player) => boolean, includeDead: boolean = false, 
+    soft: boolean = false){
+    //soft set actors means we don't change the timers
+    this.apply(p => {
+      let temp = p.canAct
+      p.canAct = condition(p) && (!p.dead || includeDead)
+      if(!soft || p.canAct !== temp) Actions.updateTimer(p)
+    })
   }
   filter(condition: (p: Player) => boolean){
     return this.players.filter(condition)

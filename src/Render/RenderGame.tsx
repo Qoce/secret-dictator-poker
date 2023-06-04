@@ -63,7 +63,7 @@ socket.on('updateConnected', (l: boolean[]) => updateConnectedCallback(l))
 
 Actions.socket = socket
 
-socket.on("updateTimer", (t: number[]) => {
+socket.on('updateTimer', (t: number[]) => {
   Players.players.map((p: PlayerType, i: number) => p.deadline = t[i])
   Actions.onAction()
 })
@@ -309,16 +309,16 @@ export default function SDP(){
             })}
           </div>
         </div>
-        <div className='center' style={{"width": "450px"}}>
-          {appState === "inGame" &&
+        {appState === "inGame" &&
+          <div className='center' style={{"width": "450px"}}>
             <SDLog/>
-          }
-          {appState === "inGame" && Settings.getBool("showActionLog") && <ActionLog p = {user}
-            lobby = {lobbyName || ""}
-            height = {400}
-            socket = {socket}
-          />}
-        </div>
+            {Settings.getBool("showActionLog") && <ActionLog p = {user}
+              lobby = {lobbyName || ""}
+              height = {400}
+              socket = {socket}
+            />}
+          </div>
+        }
       </div>
     </div>
   </div>

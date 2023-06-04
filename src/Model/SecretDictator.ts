@@ -256,7 +256,7 @@ Actions.register(Phase.vote, (args: ActionArgs) => {
   p.role.spent = bought
   p.role.influence -= cost
   votePool += cost
-  p.canAct = false
+  Players.setActors(pl => pl.canAct && pl !== p, true, true)
   Actions.log([p, " votes",{
     content: ": " + ["✔️", "❌"][p.role.vote ? 0 : 1] + (bought ? bought : ""),
     visibleTo: Players.players.indexOf(p)
@@ -282,8 +282,8 @@ function checkVotes(){
   let alivePlayers = Players.filter(p => !p.dead)
   Players.distribute(votePool, (p, n) => p.role.influence += n)
   votePool = 0
-  sdlog.log[sdlog.log.length - 1].v = mapPlayerVotes()
   for(let hook of onCheckVotes.hooks) hook() //for BP
+  sdlog.log[sdlog.log.length - 1].v = mapPlayerVotes()
   let spents = alivePlayers.map(p => p.role.spent)
   let votes = alivePlayers.map(p => p.role.vote)
   let yesSum = 0
@@ -373,7 +373,7 @@ Actions.register(Phase.bribe, (ActionArgs) => {
     visibleTo: Players.players.indexOf(p)
   }])
   p.role.spent = size
-  p.canAct = false
+  Players.setActors(pl => pl.canAct && pl !== p, true, true)
   if(president === undefined) throw Error("President is undefined in bribe phase")
   if(Players.allDoneActing()) {
     if(settings.getString("bribeInfo") === "Public Bribes" || settings.getString("bribeInfo") === "Show True Government"){
@@ -484,7 +484,7 @@ Actions.register(Phase.president, (args: ActionArgs) => {
   let v = args.v
   if(v === undefined){
     v = 0
-    console.warn("Defualt preisdnet policy choice invoked, first card discarded")
+    console.warn("Defualt president policy choice invoked, first card discarded")
   }
   if(v < 0 || v >= activePolicies.length) return false
   discard = discard.concat(activePolicies.splice(v,1))
@@ -821,6 +821,7 @@ function exitSD(phase = Phase.poker, ub: boolean = true){
 }
 
 for(let p of SDPhases){
+  if([Phase.president, Phase.chancellor].includes(p)) continue
   Game.setPhaseTimer(p, () => Settings.getBool("sdTimed") ? 
     Settings.getNumber("sdTime") : 0)
 }
