@@ -1,5 +1,6 @@
 import  Settings, {gameMode} from "../Model/Settings"
 import SocketIO from 'socket.io'
+import {RegisterRowElement} from "./RenderTopRow"
 
 import react from 'react'
 
@@ -31,27 +32,17 @@ interface SettingsProps {
   onChange?: any
 }
 
-export function LocalSettingsRender(){
-  const [opened, setOpened] = react.useState(false)
-  
+function LocalSettingsRender(){
   const stngs : any[] = []
   Settings.settings.forEach((val, key) => {
     if(!val.local) return
     stngs.push(RenderSetting(key, {socket: null, lobby: null, isHost: true}))
   })
-
-  return <div className = "inLineRow">
-    <div className = "gear" onClick = {
-      () => setOpened(!opened)
-      }>
-    ⚙️
-    </div>
-    <div className = "transparent gear" 
-      style = {{"top": "50px", "position": "absolute"}}>
-      {opened && stngs}
-    </div>
-  </div>
+  return <div>
+    {stngs}
+  </div> 
 }
+RegisterRowElement('⚙️',LocalSettingsRender)
 
 export function RenderSetting(key : string, props: {socket: any, lobby: any, isHost: boolean}){
   const s = Settings.settings.get(key)

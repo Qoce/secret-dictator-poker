@@ -12,7 +12,8 @@ import React, {useCallback, useEffect, useState} from 'react'
 import RenderJoinLobby from "./RenderJoinLobby"
 import RenderLobbyList from "./RenderLobbyList"
 import RenderPhase from "./RenderPhase"
-import {SettingsRender, LocalSettingsRender} from "./RenderSettings"
+import { RenderTopRow } from './RenderTopRow'
+import {SettingsRender} from "./RenderSettings"
 import SDLog from './RenderSDLog'
 import SDHeader from "./RenderSDHeader"
 import Settings from "../Model/Settings"
@@ -235,7 +236,7 @@ export default function SDP(){
   <div>
     <div className = "center">
       <div className = "wrapper">
-        <LocalSettingsRender/>
+        {RenderTopRow()}
         <div className = 'inLineRow'>
           {appState === "browsing" && <RenderLobbyList
             ls = {lobbies || []}

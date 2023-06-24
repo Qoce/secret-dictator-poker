@@ -1,8 +1,10 @@
 import {BooleanDecision, confirmOrPassRenderer} from "./RenderUtils"
 import Phase from "../Interface/Phase"
 import RenderPhase, { RenderPhaseArgs } from "./RenderPhase"
+import {RegisterRowElement} from "./RenderTopRow"
+import {Notifier} from "./RenderNotificationText"
 import Players from "../Model/Players"
-import { inPact, pactMembers } from "../Model/BloodPact"
+import { inPact, pactMembers, instructions } from "../Model/BloodPact"
 
 import { PlayerRenderArgs } from "./RenderPlayer"
 import SDState from "../Model/SecretDictator"
@@ -41,5 +43,12 @@ function BPRoleSquare(args: PlayerRenderArgs){
   </div>
 }
 
+function SendInstructions(){
+  Notifier.customNotify({
+    s: instructions,
+    ok: true
+  })
+}
+RegisterRowElement("🩸", undefined, () => pactMembers().length > 0, SendInstructions)
 columns.push({idx: -20, comp: BPRoleSquare, width: classWidths['square'],
   title: "X"})

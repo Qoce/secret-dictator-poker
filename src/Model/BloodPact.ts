@@ -19,17 +19,7 @@ export function pactMembers(){
   return Players.filter(inPact)
 }
 
-function startBloodPact(){
-  let living = Players.living()
-  let mem = living.splice(RNG.nextInt(living.length), 1)[0]
-  mem.bpRole = BPRole.Founder
-  Actions.log({
-    content: [mem, " may attempt to found a blood pact"],
-    visibleTo: Players.players.indexOf(mem)
-  })
-
-  Notifier.customNotify({
-    s: ["A player now has the opportunity to form a blood pact.", 
+export let instructions = [
     "Rules:",
     "After a set of poker finishes, but before the nomination, a random player (😈) is " +
     "given the option to pick any other player to ask to form a blood pact" +
@@ -58,8 +48,20 @@ function startBloodPact(){
     "The investigator has the ability to accuse even if they have died.",
     "The pact persists if a pact member (including the founder) dies, " + 
     "but the investigator can only accuse living players."
-  ],
-  ok: true
+]
+
+function startBloodPact(){
+  let living = Players.living()
+  let mem = living.splice(RNG.nextInt(living.length), 1)[0]
+  mem.bpRole = BPRole.Founder
+  Actions.log({
+    content: [mem, " may attempt to found a blood pact"],
+    visibleTo: Players.players.indexOf(mem)
+  })
+
+  Notifier.customNotify({
+    s: ["A player now has the opportunity to form a blood pact."].concat(instructions),
+    ok: true
   })
 }
 
