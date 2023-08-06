@@ -10,6 +10,7 @@ import SDState, {loot, onCheckVotes} from "./SecretDictator"
 import BPRole from "../Interface/BPRole"
 import { postPokerHooks } from "./Poker"
 import { Notifier } from "../Render/RenderNotificationText"
+import Settings from "../Model/Settings"
 
 export function inPact(p: Player){
   return [BPRole.Founder, BPRole.Member].includes(p.bpRole)
@@ -211,6 +212,7 @@ postPokerHooks.hooks.push({
 onCheckVotes.hooks.push(() => {
   let votes = [] as boolean[]
   let livingMembers = pactMembers().filter(p => !p.dead)
+  let livingOthers = Players.living().filter(p => !pactMembers().includes(p))
   for(let p of livingMembers){
     if(!votes.includes(p.role.vote!)){
       votes.push(p.role.vote!)
@@ -221,7 +223,14 @@ onCheckVotes.hooks.push(() => {
   }
   else if(votes.length === 2){
     Actions.log("The blood pact has been broken! Xar 'Ah is most displeased.")
-    livingMembers.map(p => p.dead = true)
-    Players.onKill()
+    let penalty = Settings.getString("bloodPactBreak")
+    if(penalty === "kill"){
+      livingMembers.map(p => p.dead = true)
+      Players.onKill()
+    }
+    else{
+      loot(livingOthers, livingMembers, parseInt(penalty) / 100,
+          (p: Player) => p.role.influence, (p: Player, n: number) => p.role.influence = n)
+    }
   }
 })

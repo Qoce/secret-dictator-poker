@@ -58,6 +58,7 @@ function inGovernment(){
 function getBoldness(p : Player){
   if(inGovernment() && Settings.getString("bribeInfo") !== "Show True Government"
     && gameMode() === "SDP") return "normal"
+  if([Phase.bloodpactView, Phase.bloodpactAccuse, Phase.bloodpactPropose].includes(Game.getPhase())) return "normal"
   if(p.canAct) return "bold"
   return "normal"
 }

@@ -101,6 +101,8 @@ settings.register("libertarianPolicyCount", {value: 0, name: "Libertarian Polici
   activeIf: () => settings.getString("gameMode") === "SDP", hostOnly: true})  
 settings.register("bloodPact", {value: false, name: "Blood Pact",
   activeIf: () => settings.getString("gameMode") === "SDP", hostOnly: true})
+settings.register("bloodPactBreak", {value: "35", name: "BP Violation Penalty", values: ["5", "10", "15", "30", "50",
+                  "75", "death"], activeIf: () => settings.getBool("bloodPact"), hostOnly: true})
 
 //SD 
 settings.register("fPolicyCount", {value: 11, name: "Fascist Policy Cards",

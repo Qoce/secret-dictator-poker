@@ -753,20 +753,21 @@ Actions.register(Phase.veto, (args: ActionArgs) => {
 
 Game.setPhaseListener(Phase.endgame, () => {
   Players.apply(p => p.targetable = false)
-  Players.setActors(p => false)
+  Players.setActors(_ => false)
 })
 
-export function loot(w: Player[], l: Player[], rat: number = 0.5){
+export function loot(w: Player[], l: Player[], rat: number = 0.5,
+                    gBank = (p: Player) => p.bank, sBank = (p: Player, n: number) => p.bank = n){
   if(gameMode() === "SD"){
-    l.forEach(p => p.bank = 0)
-    w.forEach(p => p.bank = 1)
+    l.forEach(p => sBank(p, 0))
+    w.forEach(p => sBank(p, 1))
   }
   else{
-    let totalLooted = l.map(p => Math.ceil(p.bank * rat)).reduce((a,b) => a+b)
+    let totalLooted = l.map(p => Math.ceil(gBank(p) * rat)).reduce((a,b) => a+b)
     if(w.length > 0){
-      l.forEach(p => p.bank = Math.floor(p.bank * (1 - rat)))
+      l.forEach(p => sBank(p, Math.floor(gBank(p) * (1 - rat))))
     }
-    Players.distribute(totalLooted, (p, n) => p.bank += n,
+    Players.distribute(totalLooted, (p, n) => sBank(p, gBank(p) + n),
       p => w.includes(p))
   }
 }
