@@ -20,7 +20,7 @@ export interface logElement{
 let a = {
   startingSeed: 0,
   socket: undefined as any,
-  lobby: undefined as any,
+  lobby: undefined as string | undefined,
   onAction(){},
   onReset: [] as (() => void)[],
   register(phase: Phase, action: (args: ActionArgs) => boolean){
@@ -30,22 +30,21 @@ let a = {
   fire(args: ActionArgs){
     this.socket.emit("action", this.lobby, args)
   },
-  setTimer(){
+  updateTimer(player: Player){
     let timer = Game.getPhaseTimer()
-    if(timer) {
-      for(let player of Players.filter(p => p.canAct)){
-        player.deadline = Date.now() + timer * 1000 
+    if(timer && this.socket) {
+      let p = Players.players.indexOf(player)
+      if(player.canAct){
+        this.socket.emit("setTimer", this.lobby, p, 
+          Date.now() + timer * 1000, ++player.timerCount)
       }
-      for(let player of Players.filter(p => !p.canAct)){
-        player.deadline = 0
+      else{
+        this.socket.emit("setTimer", this.lobby, p, 
+        0, ++player.timerCount)
       }
     }
   },
-  clearHistory(){
-    actionHistory = []
-    actionLog = [[]]
-  },
-  resimulate(upTo : number = actionHistory.length){
+  reset(){
     Rng.setSeed(this.startingSeed)
     Players.reset()
     this.onReset.forEach(f => f())
@@ -55,8 +54,9 @@ let a = {
     //TODO: this should be moved... this code should work outside of this specific game
     if(gameMode() !== "P") Game.setPhase(Phase.nominate)
     if(gameMode() !== "SD") Game.setPhase(Phase.poker)
-
-    for(let i in actionHistory){
+  },
+  resimulate(from: number = 0, upTo: number = actionHistory.length){
+    for(let i = from; i < actionHistory.length; i++){
       if(+i >= upTo) {
         actionLog.splice(upTo + 1)
         break
@@ -64,19 +64,19 @@ let a = {
       let am = actions.get(Game.getPhase())
       let player = actionHistory[i].p
       let target = actionHistory[i].t
-      if(Players.get(player).canAct && (!target || Players.get(target).targetable)){
-        if(am) {
-          actionLog.push([])
-          am(actionHistory[i])
-        }
+      let pObj = Players.get(player)
+      if(pObj.canAct && 
+        (!target || Players.get(target).targetable) && am){
+        actionLog.push([])
+        am(actionHistory[i])
+        pObj.timerCount++
+        pObj.deadline = 0
+      }
+      else{
+        actionHistory.splice(i, 1)
+        i--
       }
     }
-    this.setTimer()
-    this.onAction()
-  },
-  reset(){
-    this.clearHistory()
-    this.resimulate()
   },
   log(emts : (LogContent)[] | (LogContent)){
     if(!Array.isArray(emts)) emts = [emts]
@@ -86,8 +86,26 @@ let a = {
     return actionLog
   },
   loadActions(actions : ActionArgs[]){
-    actionHistory = actions
-    this.resimulate()
+    let wasEmpty = actionHistory.length === 0
+    //If actionHistory is not equal to the start of actions fully resimulate
+    if(actions.length <= actionHistory.length || !actionHistory.every(
+      (val, idx) => val.p === actions[idx].p && val.t === actions[idx].t &&
+        val.v === actions[idx].v
+    )){
+      actionHistory = actions
+      this.reset()
+      this.resimulate()
+    }
+    else{
+      let n = actionHistory.length
+      actionHistory = actions
+      this.resimulate(n)
+    }
+    this.onAction()
+    if(wasEmpty) this.socket.emit("getTimers", this.lobby, (ts: number[]) => {
+      Players.players.map((p: Player, i : number) => p.deadline = ts[i])
+      this.onAction()
+    })
   }
 }
 

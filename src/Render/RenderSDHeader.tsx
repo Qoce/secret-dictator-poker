@@ -7,8 +7,8 @@ import Players from "../Model/Players"
 
 
 interface SHSquareArgs{
-  passed: boolean,
-  liberal: boolean,
+  passed?: boolean,
+  liberal?: boolean,
   typeStr: string,
   shift?: number,
   colorOverride?: string,
@@ -76,6 +76,18 @@ export default function SDHeader(args: {user: number}){
       />
     )
   }
+  let libertarianSquares: JSX.Element[] = []
+  if(gameMode() === "SDP" && Settings.getNumber("libertarianPolicyCount") > 0
+    && data.libertarianPassed > 0){
+    for(let i = 0; i < Settings.getNumber("libertarianPolicyCount"); i++){
+      libertarianSquares.push(
+        <SHSquare typeStr = {"🐍"} index = {i}
+          colorOverride = {data.libertarianPassed > i ? "yellow" :
+          "lightYellow"}
+        />
+      )
+    }
+  }
   let liberalSquares: JSX.Element[] = []
   for(let i = 0; i < 5; i++){
     liberalSquares.push( 
@@ -93,6 +105,9 @@ export default function SDHeader(args: {user: number}){
     </div>
     <div>
       {liberalSquares}
+    </div>
+    <div>
+      {libertarianSquares}
     </div>
     <div>
       {Game.getPhase() !== Phase.poker && proposalSquares}

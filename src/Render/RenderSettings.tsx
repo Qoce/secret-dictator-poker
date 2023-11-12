@@ -1,5 +1,6 @@
 import  Settings, {gameMode} from "../Model/Settings"
 import SocketIO from 'socket.io'
+import {RegisterRowElement} from "./RenderTopRow"
 
 import react from 'react'
 
@@ -8,6 +9,7 @@ export function SettingsRender(props:
   const stngs : any[] = []
   Settings.settings.forEach((val, key) => {
     if(val.local) return
+    if(val.hostOnly && !props.isHost) return
     stngs.push(RenderSetting(key, props))
   })
   let playersNeeded = gameMode() === "P" ? 2 : 5
@@ -30,32 +32,25 @@ interface SettingsProps {
   onChange?: any
 }
 
-export function LocalSettingsRender(){
-  const [opened, setOpened] = react.useState(false)
-  
+function LocalSettingsRender(){
   const stngs : any[] = []
   Settings.settings.forEach((val, key) => {
     if(!val.local) return
     stngs.push(RenderSetting(key, {socket: null, lobby: null, isHost: true}))
   })
-
-  return <div className = "inLineRow">
-    <div className = "gear" onClick = {
-      () => setOpened(!opened)
-      }>
-    ⚙️
-    </div>
-    <div style = {{"marginTop": "50px"}}>
-      {opened && stngs}
-    </div>
-  </div>
+  return <div>
+    {stngs}
+  </div> 
 }
+RegisterRowElement('⚙️',LocalSettingsRender)
 
-function RenderSetting(key : string, props: {socket: any, lobby: any, isHost: boolean}){
+export function RenderSetting(key : string, props: {socket: any, lobby: any, isHost: boolean}){
   const s = Settings.settings.get(key)
   const setting = s?.value
   const onChange = s?.onChange
   const visibibleIf = s?.visibleIf
+  const activeIf = s?.activeIf
+  if(activeIf && !activeIf()) return null
   if(visibibleIf && !visibibleIf()) return null
   if(typeof setting === "number"){
     return <NumberSetting sKey = {key} 

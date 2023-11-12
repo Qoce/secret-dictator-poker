@@ -6,6 +6,7 @@ import Phase from "../Interface/Phase"
 import Player from './../Interface/Player'
 import Players from './Players'
 import Rng from "./Rng"
+import SDState from "./SecretDictator"
 import Settings, { gameMode } from "./Settings"
 
 //Hand types:
@@ -186,7 +187,7 @@ let leftOver: number = 0
 let handCount: number = 0
 
 let BB = Settings.getNumber("BB")
-
+let libMultiplier = 1
 
 Actions.onReset.push(() => {
   dealer = 0
@@ -206,6 +207,8 @@ Actions.onReset.push(() => {
 
 function startHand() : void{
   if(!initialized) initPoker()
+  updatePoker()
+
   Players.apply(p => {
     p.targetable = false
     p.curHand.stack = p.bank
@@ -245,7 +248,8 @@ Game.setPhaseTimer(Phase.poker, () => Settings.getBool("pokerTimed") ?
   Settings.getNumber("pokerTime") : 0)
 
 function setDM(newDM : number | false){
-  Players.setActive(newDM)
+  Players.setActors((p : Player) => newDM !== false &&
+    p === Players.get(newDM))
   dm = newDM
   return dm
 }
@@ -420,12 +424,12 @@ function endHand(log = true) : void{
   Players.updateBanks(p => p.curHand.stack)
   Players.apply(p => p.curHand.hand = [])
   if(Game.getPhase() !== Phase.endgame){
-    if(++handCount % Settings.getNumber("pokerHands") || gameMode() === "P"){
-      Game.setPhase(Phase.poker)
+    let sortedHook = postPokerHooks.hooks.sort((x,y) => x.priority - y.priority)
+    handCount++
+    for(let h of sortedHook){
+      if(h.hook(handCount)) return
     }
-    else{
-      Game.setPhase(Phase.nominate)
-    }
+    Game.setPhase(Phase.poker)
   }
 }
 
@@ -522,8 +526,8 @@ function roundDownToBet(n: number, b: number){
 export function studBetOptions(p: Player) : number[] {
   let h = p.curHand
   let options : number[] = []
-  let bet = Settings.getNumber("bet")
-  let ante = Settings.getNumber("ante")
+  let bet = Settings.getNumber("bet") * libMultiplier
+  let ante = Settings.getNumber("ante") * libMultiplier
   if(street === 0 && maxAmtIn === ante){
     options.push(ante)
   }
@@ -634,8 +638,15 @@ function bet(p : Player, amt : number, f = false) : boolean {
 
 let initialized = false
 
-function initPoker(){
+function updatePoker(){
   BB = Settings.getNumber("BB")
+  if(gameMode() === "SDP") {
+    libMultiplier = 1 + 2 * SDState().libertarianPassed
+  }
+  BB *= libMultiplier
+}
+
+function initPoker(){
   dealer = Rng.nextInt(Players.players.length)
   initialized = true
 }
@@ -654,3 +665,8 @@ export default function getDealer(){
     minRaise: minRaise
   }
 }
+
+
+export let postPokerHooks: {
+  hooks: {priority: number, hook: (n: number) => boolean}[]
+} = {hooks: []}

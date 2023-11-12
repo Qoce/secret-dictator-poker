@@ -1,3 +1,4 @@
+import {Notifier} from "../Render/RenderNotificationText"
 import Players from "./Players"
 import Player from '../Interface/Player'
 import RNG from "./Rng"
@@ -10,6 +11,8 @@ import Settings, { gameMode } from "./Settings"
 import ActionArgs from "../Interface/Action"
 import {colorPolicy} from '../Render/SDUtils'
 import settings from "./Settings"
+import Policy from "../Interface/Policy"
+import { postPokerHooks } from "./Poker"
 
 let SpecialPhases = [
   //5,6
@@ -24,9 +27,6 @@ let SDPhases = [Phase.assassinate, Phase.bribe, Phase.chanBribe, Phase.chancello
   Phase.investigate, Phase.nominate, Phase.peak, Phase.president, Phase.presBribe,
  Phase.pickPres, Phase.veto, Phase.vote]
 
-export enum Policy{
-  liberal, fascist
-}
 
 export interface SDLogElement {
   p?: Player,
@@ -55,6 +55,8 @@ let discard : Policy[] = []
 let activePolicies : Policy[] = []
 let lPassed = 0
 let fPassed = 0
+let libertarianPassed = 0
+let bpPassed = 0
 let initalized = false
 let dictatorElected = false
 let vetoOverriden = false
@@ -69,6 +71,8 @@ export function initSD(){
   activeBriber = undefined
   lPassed = 0
   fPassed = 0
+  libertarianPassed = 0
+  bpPassed = 0
   president = undefined
   chancellor = undefined
   lastElectedPresident = undefined
@@ -120,17 +124,29 @@ export function initSD(){
     }
     Actions.log({content: [p, ": " + Team[p.role.team]], visibleTo: Players.players.indexOf(p)})
   })
-  Players.onBankUpdate = onBankUpdate
+  Players.onKill = onKill
   pCandidate = players[RNG.nextInt(players.length)]
   normalPCandidate = pCandidate
 
   policyDeck = Array(Settings.getNumber("fPolicyCount")).fill(Policy.fascist)
     .concat(Array(Settings.getNumber("lPolicyCount")).fill(Policy.liberal))
+    .concat(Array(Settings.getNumber("libertarianPolicyCount")).fill(Policy.libertarian))
+    .concat(Array(Settings.getBool("bloodPact") ? 1 : 0).fill(Policy.bp)) 
   discard = []
   activePolicies = []
   //shuffles policyDeck
   RNG.randomize(policyDeck)
 }
+
+postPokerHooks.hooks.push({
+  priority: 0,
+  hook: (n: number) => {
+    if(gameMode() !== "P" && !(n % Settings.getNumber("pokerHands"))){
+      return Game.setPhase(Phase.nominate)
+    }
+    return false
+  }
+})
 
 function getFascistPlayers(){
   return Players.getIndices(p => p.role.team !== Team.liberal)
@@ -240,7 +256,7 @@ Actions.register(Phase.vote, (args: ActionArgs) => {
   p.role.spent = bought
   p.role.influence -= cost
   votePool += cost
-  p.canAct = false
+  Players.setActors(pl => pl.canAct && pl !== p, true, true)
   Actions.log([p, " votes",{
     content: ": " + ["✔️", "❌"][p.role.vote ? 0 : 1] + (bought ? bought : ""),
     visibleTo: Players.players.indexOf(p)
@@ -258,10 +274,15 @@ function mapPlayerVotes(){
   return voteMap
 }
 
+export let onCheckVotes = {
+  hooks: []
+} as {hooks: (() => void)[]}
+
 function checkVotes(){
   let alivePlayers = Players.filter(p => !p.dead)
   Players.distribute(votePool, (p, n) => p.role.influence += n)
   votePool = 0
+  for(let hook of onCheckVotes.hooks) hook() //for BP
   sdlog.log[sdlog.log.length - 1].v = mapPlayerVotes()
   let spents = alivePlayers.map(p => p.role.spent)
   let votes = alivePlayers.map(p => p.role.vote)
@@ -284,7 +305,8 @@ function checkVotes(){
   }
   Actions.log("✔️: " + yesSum)
   Actions.log("❌: " + noSum)
-  if(yesSum > noSum){
+  if(yesSum > noSum && pCandidate && !pCandidate.dead && cCandidate && 
+    !cCandidate.dead){
     Actions.log("The vote passes")
     president = pCandidate
     chancellor = cCandidate
@@ -300,12 +322,21 @@ function checkVotes(){
         dictatorElected = true
         Actions.log({content: [chancellor, " is the dictator"], 
           visibleTo: getFascistPlayers()})
-          startBribePhase()
+          if(fPassed < 6)
+            startBribePhase()
+          else
+            fascistWin()
       }
     }
     else startBribePhase()
   }
   else {
+    if(!pCandidate || pCandidate.dead){
+      Actions.log("The president died during the voting process (what a nerd).")
+    }
+    if(!cCandidate || cCandidate.dead){
+      Actions.log("The chancellor died during the voting process (haha, oops!).")
+    }
     Actions.log("The vote fails")
     failGovernment()
   }
@@ -342,7 +373,7 @@ Actions.register(Phase.bribe, (ActionArgs) => {
     visibleTo: Players.players.indexOf(p)
   }])
   p.role.spent = size
-  p.canAct = false
+  Players.setActors(pl => pl.canAct && pl !== p, true, true)
   if(president === undefined) throw Error("President is undefined in bribe phase")
   if(Players.allDoneActing()) {
     if(settings.getString("bribeInfo") === "Public Bribes" || settings.getString("bribeInfo") === "Show True Government"){
@@ -453,7 +484,7 @@ Actions.register(Phase.president, (args: ActionArgs) => {
   let v = args.v
   if(v === undefined){
     v = 0
-    console.warn("Defualt preisdnet policy choice invoked, first card discarded")
+    console.warn("Defualt president policy choice invoked, first card discarded")
   }
   if(v < 0 || v >= activePolicies.length) return false
   discard = discard.concat(activePolicies.splice(v,1))
@@ -535,31 +566,27 @@ function passPolicy(a: number, topCard = false, exit = true){
   }
   if(!topCard && (pCandidate === undefined || cCandidate === undefined)){
     throw Error("pCandidate or cCandidate is undefined while passing policy")
-  } 
+  }
+  let policyLogStr = {
+    [Policy.liberal]: "liberal",
+    [Policy.fascist]: "fascist",
+    [Policy.libertarian]: "libertarian",
+    [Policy.bp]: "Xar' ah"
+  }[policy]
+  if(topCard) Actions.log(["Top card is ", policyLogStr])
+  else {
+    Actions.log(["\"", pCandidate, "\"", " and ", "\"", cCandidate as Player,
+     "\"", " have passed a ", policyLogStr, " policy"])
+    if(settings.getString("bribeInfo") === "Show True Government") 
+      Actions.log(["Shadow government: ", pCandidate, " => ",
+        cCandidate as Player])
+  }
   if(policy === Policy.liberal){
-    if(topCard) Actions.log(["Top card is liberal"])
-    else {
-      Actions.log(["\"", pCandidate, "\"", " and ", "\"", cCandidate as Player, "\"", " have passed a liberal policy"])
-      if(settings.getString("bribeInfo") === "Show True Government") Actions.log(["Shadow government: ", pCandidate, " => ", cCandidate as Player])
-    }
     lPassed++
-    if(lPassed === 5){
-      liberalWin()
-    }
-    else{
-      if(exit){
-        exitSD()
-      }
-    }
+    if(lPassed === 5) liberalWin()
+    else if(exit) exitSD()
   }
   else if(policy === Policy.fascist){
-    if(topCard) Actions.log(["Top card is fascist"])
-    else {
-      Actions.log(["\"", pCandidate, "\"", " and ", "\"", cCandidate as Player, "\"", " have passed a fascist policy"])
-      if(settings.getString("bribeInfo") === "Show True Government") 
-        Actions.log(["Shadow government: ", pCandidate, " → ", 
-        cCandidate as Player])
-    }
     let special = getSpecialPhase(fPassed++)
     if(special === Phase.endgame){
       let dictatorWin = Settings.getString("dictatorWin")
@@ -575,6 +602,29 @@ function passPolicy(a: number, topCard = false, exit = true){
       if(exit) exitSD()
     }
     else if(exit) Game.setPhase(special)
+  }
+  else if(policy === Policy.libertarian){
+    libertarianPassed++
+    let blindStr = "big blind"
+    let total = Settings.getNumber("BB") * (2 * libertarianPassed + 1)
+    if(Settings.getString("pokerType") === "7 Card STud"){
+      blindStr = "small bet"
+      total = Settings.getNumber("bet") * (2 * libertarianPassed + 1)
+    }
+    Notifier.notify("A libertarian policy has been passed. \n The " + blindStr 
+    + " has increased to " + total)
+    if(exit) exitSD()
+  }
+  else if(policy === Policy.bp){
+    bpPassed++
+    Notifier.customNotify({
+      s: "You feel an intrinsic sense of decay... as if " + 
+      "an essential part of you has withered away forever. The boundry " + 
+      "between our world and the domain of Xar' Ah the great devourer " +
+      "has been breached. This may have a serious effect on your " + 
+      "credit score.", 
+      timeout: 10000})
+    if(exit) exitSD()
   }
 }
 /*
@@ -703,20 +753,22 @@ Actions.register(Phase.veto, (args: ActionArgs) => {
 
 Game.setPhaseListener(Phase.endgame, () => {
   Players.apply(p => p.targetable = false)
-  Players.setActors(p => false)
+  Players.setActors(_ => false)
 })
 
-function loot(w: Player[], l: Player[]){
+export function loot(w: Player[], l: Player[], rat: number = 0.5,
+                    gBank = (p: Player) => p.bank, sBank = (p: Player, n: number) => p.bank = n){
   if(gameMode() === "SD"){
-    l.forEach(p => p.bank = 0)
-    w.forEach(p => p.bank = 1)
+    l.forEach(p => sBank(p, 0))
+    w.forEach(p => sBank(p, 1))
   }
   else{
-    let totalLooted = w.map(p => Math.ceil(p.bank / 2)).reduce((a,b) => a+b)
+    let totalLooted = l.map(p => Math.ceil(gBank(p) * rat)).reduce((a,b) => a+b)
     if(w.length > 0){
-      l.forEach(p => p.bank = Math.floor(p.bank / 2))
+      l.forEach(p => sBank(p, Math.floor(gBank(p) * (1 - rat))))
     }
-    Players.distribute(totalLooted, (p, n) => p.bank += n)
+    Players.distribute(totalLooted, (p, n) => sBank(p, gBank(p) + n),
+      p => w.includes(p))
   }
 }
 
@@ -743,7 +795,7 @@ function doesDictatorDeathEndGame(){
   else return !dictatorElected
 }
 
-function onBankUpdate() {
+function onKill() {
   let aliveLiberalCount = Players.filter(p => p.role.team === Team.liberal &&
     !p.dead).length
   let aliveFascistCount = Players.filter(p => p.role.team !== Team.liberal &&
@@ -770,6 +822,7 @@ function exitSD(phase = Phase.poker, ub: boolean = true){
 }
 
 for(let p of SDPhases){
+  if([Phase.president, Phase.chancellor].includes(p)) continue
   Game.setPhaseTimer(p, () => Settings.getBool("sdTimed") ? 
     Settings.getNumber("sdTime") : 0)
 }
@@ -788,6 +841,8 @@ export default function getSDState(){
     failCount: failCount,
     fPassed: fPassed,
     lPassed: lPassed,
+    libertarianPassed: libertarianPassed,
+    bpPassed: bpPassed,
     pCandidate: pCandidate,
     president: president,
     bg: Math.floor(240 + (5 - lPassed) / (11 - lPassed - fPassed)  * 120),

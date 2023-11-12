@@ -1,3 +1,4 @@
+import {classWidths} from '../Utils/CSSRef'
 import React, {useState, useEffect} from 'react'
 import Game from '../Model/Game'
 import Phase from '../Interface/Phase'
@@ -33,7 +34,7 @@ import Settings, {gameMode} from '../Model/Settings'
 //}
 
 function bgc(isUser: boolean, hovered: boolean, selected: boolean){
-  if(isUser) return "hsl(" + SDData().bg + ",100%,40%)"
+  if(isUser && Settings.getBool("debug")) return "hsl(" + SDData().bg + ",100%,40%)"
   else if(hovered) return "hsl(" + SDData().bg + ",80%,60%)"
   else if(selected) return "hsl(" + SDData().bg + ",80%,60%)"
 }
@@ -57,6 +58,7 @@ function inGovernment(){
 function getBoldness(p : Player){
   if(inGovernment() && Settings.getString("bribeInfo") !== "Show True Government"
     && gameMode() === "SDP") return "normal"
+  if([Phase.bloodpactView, Phase.bloodpactAccuse, Phase.bloodpactPropose].includes(Game.getPhase())) return "normal"
   if(p.canAct) return "bold"
   return "normal"
 }
@@ -81,7 +83,7 @@ function getTextColorArial(args: PlayerRenderArgs){
 //Display a number if the player has bank vision on the user
 export function BankVision(args: PlayerRenderArgs, n: number){
   if(args.appState !== "inGame") return null
-  return <div className = "cards">
+  return <div className = "cards cleanFont">
     {((args.u.bankVision.includes(args.p) && Settings.getString("investigationPower") !== "Role")
     || Game.getPhase() === Phase.endgame || args.u === args.p)
     && n}
@@ -102,16 +104,20 @@ function Timer(args: PlayerRenderArgs){
       if(args.p.deadline > Date.now()){
         setSeconds(args.p.deadline - Date.now())
       }
-      else if(args.p.deadline > 0 && args.p == args.u){
+      else if(args.p.deadline > 0 && args.p === args.u){
+        args.p.deadline = 0
         Actions.fire({p: Players.players.indexOf(args.p)})
         setSeconds(0)
       }
     }, 10)
     return () => clearInterval(interval)
-  }, [args.p])
+  }, [args.p, args.u])
   if(args.appState !== "inGame") return null
   if(!Game.getPhaseTimer()) return null
-  if(args.p.deadline === 0) return <div className = "cards"></div>
+  if(args.p.deadline === 0 || (getBoldness(args.p) === 'normal'
+    && args.p !== args.u)) {
+    return <div className = "cards"></div>
+  }
   return <div className = "cards" style = {{'textAlign': 'left'}}>
     {"⏰" + Math.floor(seconds / 1000)}
   </div>
@@ -126,19 +132,30 @@ export interface PlayerRenderArgs{
   appState: "browsing" | "joining" | "inLobby" | "inGame" 
 }
 
-export let columns : {idx: number, comp : React.FunctionComponent<PlayerRenderArgs>}[] = []
+export let columns : {idx: number, comp : React.FunctionComponent<PlayerRenderArgs>,
+  width: number, title: string}[] = []
 
-columns.push({idx: 0, comp: Name})
-columns.push({idx: 5, comp: Bank})
-columns.push({idx: -10, comp: Timer})
+columns.push({idx: 0, comp: Name, width: classWidths['name'], title: "Name"})
+columns.push({idx: 5, comp: Bank, width: classWidths['cards'], title: "Bank"})
+columns.push({idx: -10, comp: Timer, width: classWidths['cards'], title: "Timer"})
+
+function getMargin(args: PlayerRenderArgs){
+  let leftWidth = 0
+  let rightWidth = 0
+  for(let c of columns){
+    if(c.comp(args) === null) continue
+    if(c.idx < 0) leftWidth += c.width
+    else if(c.idx > 0) rightWidth += c.width
+  }
+  return rightWidth - leftWidth
+}
 
 export default function RenderPlayer(args : PlayerRenderArgs){
   let p = args.p
   let selected = args.selected
   const [hovered, setHovered] = useState(false)
-
   return <div className = "board-row" 
-    style = {{fontWeight: getBoldness(p), 
+    style = {{fontWeight: getBoldness(p), marginLeft: getMargin(args)+ "px",
       backgroundColor: bgc(args.u === args.p, hovered, selected), color: getTextColor(args)}}
     onMouseEnter = {() => {if(p.targetable && args.u.canAct) setHovered(true)}}
     onMouseLeave = {() => {if(p.targetable && args.u.canAct) setHovered(false)}}
@@ -150,10 +167,23 @@ export default function RenderPlayer(args : PlayerRenderArgs){
         args.setUser()
       }
     }}
-  >
-    {columns.sort((a, b) => a.idx - b.idx).map((c, _) => React.createElement(
-      c.comp, args
-    ))}
-  </div>
+    >
+      {columns.sort((a, b) => a.idx - b.idx).map((c, _) => React.createElement(
+        c.comp, args
+      ))}
+    </div>
 }
 
+export function PlayerTitle(args: PlayerRenderArgs){
+  return <div className = "board-row" 
+    style =
+    {{marginLeft: getMargin(args)+ "px", marginTop: "20px"}}>
+    {
+      columns.map(c => c.comp(args) && <div className = "name" style = {{
+        width: c.width + "px", textAlign: "center"
+      }}>
+        {c.title}
+      </div>)
+    }
+  </div>
+}

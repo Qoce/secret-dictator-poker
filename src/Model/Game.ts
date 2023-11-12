@@ -8,8 +8,12 @@ let game = {
   setPhase(phase : Phase){
     p = phase
     let pl = phaseListeners.get(phase)
-    if(pl !== undefined) pl()
+    if(pl !== undefined) {
+      this.onPhaseChange()
+      pl()
+    }
     else throw Error("Phase " + phase + " missing a phase listener")
+    return true
   },
   getPhase(){
     return p
@@ -18,6 +22,7 @@ let game = {
     let tfunc = phaseTimers.get(p)
     return tfunc ? tfunc() : 0
   },
+  onPhaseChange() : void {},
   setPhaseListener(phase: Phase, listener: () => void){
     if(phase in phaseListeners) throw Error("Phase listener " + phase + " set twice!")
     else phaseListeners.set(phase, listener)

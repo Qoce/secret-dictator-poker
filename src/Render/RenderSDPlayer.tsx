@@ -1,3 +1,4 @@
+import {classWidths} from "../Utils/CSSRef"
 import Game from "../Model/Game"
 import Phase from "../Interface/Phase"
 import {PlayerRenderArgs} from "./RenderPlayer"
@@ -31,13 +32,16 @@ function Government(args: PlayerRenderArgs){
   if(args.appState !== "inGame") return null
   if(!inSD()) return null
   let str = ""
-  if(args.p === pres) str = "P"
-  else if(args.p === chan) str = "C"
-  return <div className = "square">
-    {str}
+    if(args.p === pres) str = "P"
+    else if(args.p === chan) str = "C"
+      return <div className = "square">
+      {str}
   </div>
 }
 
-columns.push({idx: -10, comp: TeamSquare})
-columns.push({idx: -5, comp: Government})
-columns.push({idx: 10, comp: Influence})
+columns.push({idx: -10, comp: TeamSquare, width: classWidths['square'],
+  title: "T"})
+columns.push({idx: -5, comp: Government, width: classWidths['square'],
+  title: "G"})
+columns.push({idx: 10, comp: Influence, width: classWidths['cards'],
+  title: "Bank"})

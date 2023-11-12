@@ -3,20 +3,25 @@ import Actions from '../Model/Actions'
 import Game from '../Model/Game'
 import getSDState from '../Model/SecretDictator'
 import Lobby from '../Interface/Lobby'
+import Notification from './RenderNotificationText'
 import Phase from '../Interface/Phase'
-import Player from './RenderPlayer'
+import Player, {PlayerTitle} from './RenderPlayer'
+import PlayerType from '../Interface/Player'
 import Players from '../Model/Players'
 import React, {useCallback, useEffect, useState} from 'react'
 import RenderJoinLobby from "./RenderJoinLobby"
 import RenderLobbyList from "./RenderLobbyList"
 import RenderPhase from "./RenderPhase"
-import {SettingsRender, LocalSettingsRender} from "./RenderSettings"
+import { RenderTopRow } from './RenderTopRow'
+import {SettingsRender} from "./RenderSettings"
 import SDLog from './RenderSDLog'
 import SDHeader from "./RenderSDHeader"
 import Settings from "../Model/Settings"
 import settings from '../Model/Settings'
 
 var WebFont = require('webfontloader')
+require("../Model/BloodPact")
+require("../Render/RenderBP")
 require("./RenderPoker")
 require("./RenderSDBottom")
 require("./RenderPokerPlayer")
@@ -59,6 +64,10 @@ socket.on('updateConnected', (l: boolean[]) => updateConnectedCallback(l))
 
 Actions.socket = socket
 
+socket.on('updateTimer', (t: number[]) => {
+  Players.players.map((p: PlayerType, i: number) => p.deadline = t[i])
+  Actions.onAction()
+})
 export default function SDP(){
   let sel : undefined | number
   const [selected,setSelected] = useState(sel)
@@ -227,7 +236,7 @@ export default function SDP(){
   <div>
     <div className = "center">
       <div className = "wrapper">
-        <LocalSettingsRender/>
+        {RenderTopRow()}
         <div className = 'inLineRow'>
           {appState === "browsing" && <RenderLobbyList
             ls = {lobbies || []}
@@ -270,9 +279,18 @@ export default function SDP(){
             isHost = {Players.get(user).host}
             numPlayers = {Players.players.length}
           />}
+          <Notification user = {user}/>
           {appState === "inGame" && <SDHeader user = {user}/>}
           <div className = "center">
             <div>
+              {(appState === "inLobby" || appState === "inGame") &&
+                <PlayerTitle key = {0} p = {egSort()[0]}
+                selected = {false}
+                onSelected = {() => {}}
+                setUser = {() => {}}
+                u = {Players.get(user)}
+                appState = {appState}
+              />}
               {(appState === "inLobby" || appState === "inGame") && egSort().map(p => 
                 <Player key = {p.name} p = {p} selected = {selected !== undefined && Players.get(selected) === p}
                 onSelected = {() => setSelected(Players.players.indexOf(p))} u = {Players.get(user)}
@@ -292,15 +310,16 @@ export default function SDP(){
             })}
           </div>
         </div>
-        {appState === "inGame" && Settings.getBool("showActionLog") && <ActionLog p = {user}
-          lobby = {lobbyName || ""}
-          height = {Players.players.length * 40 + 271}
-          socket = {socket}
-        />}
         {appState === "inGame" &&
-          <SDLog height = {Players.players.length * 40 + 271}/>
+          <div className='center' style={{"width": "450px"}}>
+            <SDLog/>
+            {Settings.getBool("showActionLog") && <ActionLog p = {user}
+              lobby = {lobbyName || ""}
+              height = {400}
+              socket = {socket}
+            />}
+          </div>
         }
-
       </div>
     </div>
   </div>

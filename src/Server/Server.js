@@ -47,10 +47,21 @@ io.on('connection', (socket) => {
           l.players = l.players.filter(u => u !== uName)
           l.connected.pop()
         }
-        //Delete lobby if everyone is disconnected, even if in game
+        //Delete lobby if everyone is disconnected
+        //If in game, check again in 5 minutes before deleting
         if(l.connected.every(c => !c)){
-          lobbies = lobbies.filter(l => l.name !== lName)
-          updateLobbies()
+          if(l.inGame){
+            setTimeout(() => {
+              if (l.connected.every(c => !c)){
+                lobbies = lobbies.filter(l => l.name !== lName)
+                updateLobbies()
+              }
+            }, 300000)
+          }
+          else{
+            lobbies = lobbies.filter(l => l.name !== lName)
+            updateLobbies()
+          }
         }
         else if(!l.inGame){
           console.log(l)
@@ -88,6 +99,8 @@ io.on('connection', (socket) => {
       password: lobby.password,
       players: [lobby.username],
       connected: [true],
+      //[a,b], where a is the id and b is the timestamp of timer start
+      timers: [null],
       inGame: false,
       seed: Math.floor(Math.random() * 1000000),
       actions: [],
@@ -115,6 +128,7 @@ io.on('connection', (socket) => {
           if(idx === -1){
             l.players.push(lobby.username)
             l.connected.push(true)
+            l.timers.push(null)
             socket.to(l.name).emit('updateLobby', l)
             if(l.players.length == 10){
               updateLobbies()
@@ -137,8 +151,11 @@ io.on('connection', (socket) => {
         callback("Lobby has already started")
       }
     }
+    else if(l){
+      callback("Incorrect password.")
+    }
     else{
-      callback("Incorrect password")
+      callback("Lobby does not exist.")
     }
   })
   socket.on('changeSetting', (lobby, setting, value) => {
@@ -156,15 +173,33 @@ io.on('connection', (socket) => {
       l.inGame = true
       //TODO, randomize player order?
       io.sockets.in(l.name).emit('startGame', l)
-    //  callback(l)
     }
   })
   socket.on('action', (lobby, action) => {
+    console.log(action)
     const l = lobbies.find(l => l.name === lobby)
     if(l){
       l.actions.push(action)
       io.sockets.in(l.name).emit('updateGame', l)
     } 
+  })
+  socket.on('setTimer', (lobby, player, timer, timerIdx) => {
+    const l = lobbies.find(l => l.name === lobby)
+    let updatedAny = false
+    if(l){
+      let oldT = l.timers[player]
+      if(!oldT || oldT[0] < timerIdx) {
+        l.timers[player]= [timerIdx, timer]
+        updatedAny = true
+      }
+    }
+    if(updatedAny) io.sockets.in(l.name).emit('updateTimer', l.timers.map(x => x ? x[1] : null))
+  })
+  socket.on('getTimers', (lobby, callback) => {
+    const l = lobbies.find(l => l.name === lobby)
+    if(l){
+      callback(l.timers.map(x => x ? x[1] : null))
+    }
   })
   socket.on('rollback', (lobby, n) => {
     const l = lobbies.find(l => l.name === lobby)

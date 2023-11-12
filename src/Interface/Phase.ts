@@ -12,6 +12,9 @@ enum phase {
   investigate,
   pickPres,
   veto,
-  endgame
+  endgame,
+  bloodpactPropose,
+  bloodpactView,
+  bloodpactAccuse
 }
 export default phase

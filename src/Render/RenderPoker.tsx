@@ -8,28 +8,73 @@ import {getCardString} from './PokerUtils'
 import {useState, useCallback, useEffect} from 'react'
 
 
-function Center(){
-  let center = null
-  if(PokerState().center.length > 0 || !isStud()) {
-    center = <div className = "board-row">
-    <div className = "cards">
-      {"Center:"}
-    </div>
-    <div className = "cards" style = {{width: "172px"}}>
-      {PokerState().center.map(getCardString)}
-    </div>
+function Pot(){
+  return <div className = "board-row">
+  <div className = "cards">
+    {"Pot:"}
   </div>
-  }
-  return  <div>
-    <div className = "board-row">
+  <div className = "cards cleanFont">
+    {PokerState().pot}
+  </div>
+</div>
+}
+
+function CenterCards(){
+  if(PokerState().center.length > 0 || !isStud()) {
+    return <div className = "board-row">
       <div className = "cards">
-        {"Pot:"}
+        {"Center:"}
       </div>
-      <div className = "cards">
-        {PokerState().pot}
+      <div className = "cards cleanFont" style = {{width: "200px"}}>
+        {PokerState().center.map(getCardString)}
       </div>
     </div>
-    {center}
+  }
+  return null
+}
+
+function PlayerCards(args: {p: number}){
+  let player = Players.get(args.p)
+  if(player.curHand.hand.length > 0){
+    return <div className = "board-row" style = {{"marginBottom" : "20px"}}>
+      <div className = "cards">
+        {"Cards:"}
+      </div>
+      <div className = "cards cleanFont">
+        {player.curHand.hand.map(getCardString)}
+      </div>
+    </div>
+  }
+  return null
+}
+
+function PlayerStack(args: {p: number}){
+  let player = Players.get(args.p)
+  return <div className = "board-row">
+  <div className = "cards">
+    {"Stack:"}
+  </div>
+  <div className = "cards cleanFont">
+    {player.curHand.stack}
+  </div>
+</div>
+}
+
+function PlayerInfo(args: RenderPhaseArgs){
+  let player = Players.get(args.p)
+  let color = {}
+  if(player.curHand.folded) color = {color: "grey"}
+  
+  return <div className = "center" style = {color}>
+    <PlayerStack p = {args.p}/>
+    <PlayerCards p = {args.p}/>
+  </div>
+}
+
+function Center(){
+  return  <div>
+    <Pot/>
+    <CenterCards/>
   </div>
 }
 
@@ -56,7 +101,7 @@ function BetButton(args: {amt: number, callCost: number, stack: number, p: numbe
   if(args.amt === args.stack){
     str += " All In"
   }
-  return <button className = "button" onClick = {() => {fire(args.amt)}} 
+  return <button className = "button cleanFont" onClick = {() => {fire(args.amt)}} 
     disabled = {!args.enabled && (args.amt > 0 && args.amt !== args.callCost) && 
       (args.amt < args.callCost + PokerState().minRaise || 
       args.amt > Math.min(getBetLimit(Players.get(args.p)), args.stack))}>
@@ -159,7 +204,7 @@ function PokerAction(args: RenderPhaseArgs){
         let limit = getBetLimit(user)
         let maxBet = Math.min(stack, limit)
         input = <div className = "board-row">
-          <input className = "textInput" type = 'number' step = {1} min = {0} max = {maxBet} 
+          <input className = "textInput cleanFont" type = 'number' step = {1} min = {0} max = {maxBet} 
             value = {betAmt}
             onChange = {(event) => {
               return setBetAmt(Math.floor(+event.target.value))
@@ -186,7 +231,8 @@ function PokerAction(args: RenderPhaseArgs){
 
 RenderPhase.set(Phase.poker, function renderPoker(args : RenderPhaseArgs){
   return <div className = "center">
-    <Center />
+    <PlayerInfo p = {args.p}/>
+    <Center/>
     <PokerAction p = {args.p} t = {args.t}/>
   </div>
 })

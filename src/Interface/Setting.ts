@@ -6,5 +6,7 @@ export default interface Setting{
   min?: number,
   local?: boolean,
   onChange?: (a: any) => void,
-  visibleIf?: () => boolean
+  visibleIf?: () => boolean,
+  activeIf?: () => boolean,
+  hostOnly?: boolean
 }

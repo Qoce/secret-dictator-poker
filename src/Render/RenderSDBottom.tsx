@@ -1,4 +1,5 @@
 import Actions from "../Model/Actions"
+import {confirmRenderer, BooleanDecision} from "../Render/RenderUtils"
 import Phase from "../Interface/Phase"
 import Players from "../Model/Players"
 import RenderPhase from "./RenderPhase"
@@ -7,36 +8,6 @@ import Settings, {gameMode} from "../Model/Settings"
 import SDState, {getVoteCost} from "../Model/SecretDictator"
 import {useState} from 'react'
 import {VoteSquare, PolicySquare} from "./SDUtils"
-
-
-interface CRArgs extends RenderPhaseArgs{
-  title: string
-}
-
-function Confirm(args: CRArgs){
-  //needs to have the same state as other phases
-  let target = args.t
-  let onClick : () => void = () => {return}
-  if(target !== undefined){
-    let targetable = Players.get(target).targetable
-    onClick = () => {if(targetable && Players.get(args.p).canAct) Actions.fire({
-      p: args.p,
-      t: args.t
-    })}
-  }
-  
-  return <button className = "button" onClick = {onClick} disabled = {target === undefined}>
-    {args.title}
-  </button>
-  
-}
-
-function confirmRenderer(title: string){
-  return (args: RenderPhaseArgs) => {
-    if(!Players.get(args.p).canAct) return null
-    return <Confirm title = {title} p = {args.p} t = {args.t}/>
-  }
-}
 
 RenderPhase.set(Phase.nominate, confirmRenderer("Confirm Nomination"))
 RenderPhase.set(Phase.assassinate, confirmRenderer("Confirm Assasination"))
@@ -103,30 +74,11 @@ function Bribe(args: RenderPhaseArgs){
 RenderPhase.set(Phase.bribe, (args: RenderPhaseArgs) => {return <Bribe p = {args.p} t = {args.t}/>})
 
 function ConsiderBribe(args: RenderPhaseArgs){
-  function decision(accept: boolean){
-    return () => Actions.fire({
-      p: args.p,
-      v: accept ? 1 : 0
-    })
-  }
-
-  if(!Players.get(args.p).canAct) return null
-
   let influence = SDState().activeBriber?.role.spent
   let briberName = Settings.atLeast("bribeInfo", "Before Acceptance")
     ? " from " + SDState().activeBriber?.name : ""
-  if(!influence) throw Error("bribe size is 0 or undefined and we are trying to render the bribe ui")
-  return <div className = "center">
-    <div>
-      {"Best Bribe: " + influence + briberName}
-    </div>
-    <button className = "button" onClick = {decision(true)}>
-      {"Accept Bribe"}
-    </button>
-    <button className = "button" onClick = {decision(false)}>
-      {"Decline Bribe"}
-    </button>
-  </div>
+  return <BooleanDecision p = {args.p} t = {args.t} 
+    title = {() => "Accept bribe of " + influence + briberName}/>
 }
 
 RenderPhase.set(Phase.presBribe, (args: RenderPhaseArgs) => {return <ConsiderBribe p = {args.p} t = {args.t}/>})
@@ -174,7 +126,7 @@ function Policies(args: PolicyArgs){
 
   return <div className = "center">
     <div className = "board-row">
-      {indicies.map(i => <PolicySquare key = {i} team = {policies[i]} selectable = {args.selectable}
+      {indicies.map(i => <PolicySquare key = {i} policy = {policies[i]} selectable = {args.selectable}
         selected = {selections[i]} setSelected = {(s: boolean) => {
           selections[i] = s
           //sets selections to copy of itself
